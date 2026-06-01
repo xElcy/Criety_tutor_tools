@@ -89,6 +89,18 @@
                         <div class="calendar-day">31</div><div class="calendar-day">1</div><div class="calendar-day">2</div><div class="calendar-day">3</div><div class="calendar-day">4</div><div class="calendar-day">5</div><div class="calendar-day">6</div>
                     </div>
                 </div>
+                <div class="panel" style="border: 2px solid var(--accent-color); margin-top: 20px;">
+            <h3 style="color: var(--accent-color);">🤖 自学サポートAIログ（リアルタイム監視）</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">授業時間外で生徒がAIチューターに質問した内容をモニタリングできます。次回の指導の参考にしてください。</p>
+            
+            <div id="teacher-chat-monitor" style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                <div style="text-align: center; color: #999; margin-top: 50px;">まだ生徒からの質問はありません。</div>
+            </div>
+            
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn-submit" style="width: auto; padding: 8px 15px; font-size: 12px; margin-top: 0; background: #666;" onclick="clearChatLog()">ログをクリア</button>
+            </div>
+        </div>
                 <div class="panel task-box">
                     <h3>クイック宿題追加</h3>
                     <label>期日</label>

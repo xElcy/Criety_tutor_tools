@@ -15,9 +15,13 @@
         
         .mid-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .mid-card h3 { font-size: 14px; color: #333; margin: 0 0 10px 0; border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
-        .mid-task { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
-        .mid-task:last-child { border-bottom: none; }
+        .mid-task { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14px; transition: all 0.3s; }
+        .mid-task.completed { background: #e8f5e9 !important; border-color: #c8e6c9 !important; opacity: 0.8; }
         .mid-badge { background: #ff4757; color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+        
+        .btn-complete { padding: 8px 15px; background: #28a745; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-complete:hover { background: #218838; }
+        .btn-complete.done { background: #6c757d; cursor: default; }
     </style>
 </head>
 <body>
@@ -28,40 +32,63 @@
         </div>
         
         <div class="mid-card">
-            <h3>⚠️ 提出物チェックリスト（内申点対策）</h3>
-            <div class="mid-task">
-                <div><input type="checkbox" style="margin-right: 8px;">理科 ワーク P.20〜30</div>
-                <span class="mid-badge">明日まで</span>
-            </div>
-        </div>
-
-        <div class="mid-card">
             <h3>📚 今日の指導宿題</h3>
             <div id="dynamic-mid-task"></div>
 
-            <div class="mid-task">
+            <div class="mid-task" id="static-task">
                 <div>数学：連立方程式の応用 3問</div>
-                <button style="padding: 5px 15px; background: #28a745; color: #fff; border: none; border-radius: 4px; font-weight: bold;">完了</button>
+                <button class="btn-complete" onclick="markDone('static-task', this)">完了にする</button>
             </div>
         </div>
     </div>
 
     <script>
+        // 画面読み込み時に先生からの宿題を取得
         window.onload = function() {
             const savedTask = localStorage.getItem('criety_new_task');
+            const isCompleted = localStorage.getItem('criety_task_status') === 'completed';
+
             if(savedTask) {
                 const task = JSON.parse(savedTask);
                 const targetArea = document.getElementById('dynamic-mid-task');
-                if(targetArea) {
+                
+                // 完了状態によって見た目を変える
+                if(isCompleted) {
                     targetArea.innerHTML = `
-                        <div class="mid-task" style="background: #e6f7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
+                        <div class="mid-task completed" id="dynamic-task" style="padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
+                            <div style="font-weight: bold; text-decoration: line-through;">✅ ${task.content}</div>
+                            <button class="btn-complete done">完了済</button>
+                        </div>
+                    `;
+                } else {
+                    targetArea.innerHTML = `
+                        <div class="mid-task" id="dynamic-task" style="background: #e6f7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
                             <div style="font-weight: bold;">🆕 ${task.content}</div>
-                            <span class="mid-badge" style="background: #1976d2;">期日: ${task.date}</span>
+                            <button class="btn-complete" onclick="markDynamicDone(this)">完了にする</button>
                         </div>
                     `;
                 }
             }
         };
+
+        // 完了ボタンを押した時の処理（先生側にデータを送る）
+        function markDynamicDone(btn) {
+            btn.innerText = "完了済";
+            btn.classList.add("done");
+            document.getElementById('dynamic-task').classList.add("completed");
+            
+            // LocalStorageに完了フラグを立てる（これが先生側に通知される）
+            localStorage.setItem('criety_task_status', 'completed');
+            
+            // 完了のちょっとした演出
+            alert("🎉 よく頑張りました！先生に完了報告を送りました。");
+        }
+
+        function markDone(taskId, btn) {
+            btn.innerText = "完了済";
+            btn.classList.add("done");
+            document.getElementById(taskId).classList.add("completed");
+        }
     </script>
 </body>
 </html>

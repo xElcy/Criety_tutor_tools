@@ -7,35 +7,59 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Hiragino Maru Gothic ProN', '丸ゴシック', sans-serif; background-color: #f4f6f8; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 400px; height: 100vh; background: #fff9e6; position: relative; overflow-y: auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fff9e6; position: relative; overflow-y: auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding-bottom: 100px; }
         
         .kids-header { text-align: center; margin-bottom: 30px; }
         .kids-header h1 { color: #ff8c00; font-size: 24px; text-shadow: 1px 1px 0 #fff; margin-bottom: 5px; }
         
-        .kids-task-card { background: #fff; border: 4px solid #ffcc00; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 0 #ffcc00; }
-        .btn-kids-done { background: #ff4757; color: #fff; border: none; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #ff0000; width: 100%; }
+        .kids-task-card { background: #fff; border: 4px solid #ffcc00; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 0 #ffcc00; transition: 0.3s; }
+        .kids-task-card.completed { border-color: #2ed573; box-shadow: 0 4px 0 #2ed573; opacity: 0.8; }
+        .btn-kids-done { background: #ff4757; color: #fff; border: none; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #ff0000; width: 100%; transition: 0.2s; }
         .btn-kids-done:active { transform: translateY(6px); box-shadow: none; }
+        .btn-kids-done.done { background: #2ed573; box-shadow: 0 6px 0 #1e90ff; pointer-events: none; }
         
         .kids-stamp-area { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
         .stamp-slot { width: 50px; height: 50px; border: 3px dashed #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #fff; }
+
+        /* --- くま先生（AIチャット） --- */
+        .chat-fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: #ffcc00; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 4px 15px rgba(255,140,0,0.4); cursor: pointer; z-index: 9999; border: 3px solid #fff; }
+        .chat-window { position: fixed; bottom: 100px; right: 20px; width: calc(100% - 40px); max-width: 360px; height: 350px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 9998; border: 4px solid #ffcc00; }
+        .chat-header { background: #ffcc00; color: #333; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #fffde7; display: flex; flex-direction: column; gap: 10px; }
+        .chat-input-area { display: flex; padding: 10px; border-top: 2px solid #ffcc00; background: #fff; }
+        .chat-input-area input { flex: 1; padding: 10px; border: 2px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
+        .chat-input-area button { background: #ff8c00; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; font-weight: bold; }
+        .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
+        .msg-ai { background: #fff; border: 2px solid #ffcc00; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-student { background: #ff8c00; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="kids-header">
-            <h1>✨きょうのミッション✨</h1>
-        </div>
+        <div class="kids-header"><h1>✨きょうのミッション✨</h1></div>
         
         <div id="dynamic-kids-task"></div>
 
-        <div class="kids-task-card">
+        <div class="kids-task-card" id="static-task">
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">さんすう プリント 1まい</div>
-            <button class="btn-kids-done">おわった！</button>
+            <button class="btn-kids-done" onclick="markDone('static-task', this)">おわった！</button>
         </div>
         
         <div style="text-align: center; margin-top: 30px; font-weight: bold; color: #ff8c00;">シールをあつめよう！</div>
         <div class="kids-stamp-area">
-            <div class="stamp-slot">🌟</div><div class="stamp-slot">🌟</div><div class="stamp-slot"></div><div class="stamp-slot"></div>
+            <div class="stamp-slot">🌟</div><div class="stamp-slot">🌟</div><div class="stamp-slot" id="reward-stamp"></div><div class="stamp-slot"></div>
+        </div>
+
+        <div class="chat-fab" onclick="toggleChat()">🐻</div>
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header"><span>🐻 くませんせい</span><span style="cursor: pointer; font-size: 20px;" onclick="toggleChat()">×</span></div>
+            <div class="chat-body" id="chat-body">
+                <div class="msg-bubble msg-ai">わからないところがあったら、くま先生にきいてね！</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="ここに入力してね">
+                <button onclick="sendMessage()">➤</button>
+            </div>
         </div>
     </div>
 
@@ -44,19 +68,53 @@
             const savedTask = localStorage.getItem('criety_new_task');
             if(savedTask) {
                 const task = JSON.parse(savedTask);
-                const targetArea = document.getElementById('dynamic-kids-task');
-                if(targetArea) {
-                    targetArea.innerHTML = `
-                        <div class="kids-task-card" style="border-color: #2ed573; box-shadow: 0 4px 0 #2ed573;">
-                            <div style="font-size: 14px; color: #2ed573; font-weight:bold;">✨せんせいから あたらしいしゅくだい！</div>
-                            <div style="font-size: 18px; font-weight: bold; margin: 10px 0;">${task.content}</div>
-                            <div style="font-size: 12px; color: #666; margin-bottom: 15px;">いつまで: ${task.date}</div>
-                            <button class="btn-kids-done" style="background: #2ed573; box-shadow: 0 6px 0 #1e90ff;">おわった！</button>
-                        </div>
-                    `;
-                }
+                document.getElementById('dynamic-kids-task').innerHTML = `
+                    <div class="kids-task-card" id="dynamic-task" style="border-color: #1e90ff; box-shadow: 0 4px 0 #1e90ff;">
+                        <div style="font-size: 14px; color: #1e90ff; font-weight:bold;">✨せんせいから あたらしいしゅくだい！</div>
+                        <div style="font-size: 18px; font-weight: bold; margin: 10px 0;">${task.content}</div>
+                        <button class="btn-kids-done" style="background: #1e90ff; box-shadow: 0 6px 0 #0056b3;" onclick="markDynamicDone(this)">おわった！</button>
+                    </div>`;
             }
         };
+
+        function markDynamicDone(btn) {
+            btn.innerHTML = "はなまる！💮"; btn.classList.add("done");
+            document.getElementById('dynamic-task').classList.add("completed");
+            document.getElementById('reward-stamp').innerHTML = "💮";
+            localStorage.setItem('criety_task_status', 'completed');
+        }
+
+        function markDone(taskId, btn) {
+            btn.innerHTML = "はなまる！💮"; btn.classList.add("done");
+            document.getElementById(taskId).classList.add("completed");
+        }
+
+        function toggleChat() {
+            const chat = document.getElementById('chat-window');
+            chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+            const chatBody = document.getElementById('chat-body');
+            
+            chatBody.innerHTML += `<div class="msg-bubble msg-student">${text}</div>`;
+            input.value = ''; chatBody.scrollTop = chatBody.scrollHeight;
+
+            let chatLog = JSON.parse(localStorage.getItem('criety_chat_log')) || [];
+            chatLog.push({ sender: 'student', text: text, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
+            localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
+
+            setTimeout(() => {
+                const aiReply = "えらいね！まずは、もんだいをもう一回ゆっくりよんでみようか？";
+                chatBody.innerHTML += `<div class="msg-bubble msg-ai">${aiReply}</div>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+                chatLog.push({ sender: 'ai', text: aiReply, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
+                localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
+            }, 1000);
+        }
     </script>
 </body>
 </html>

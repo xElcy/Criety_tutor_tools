@@ -145,6 +145,12 @@
             .sidebar li { border-bottom: none; background-color: rgba(255, 255, 255, 0.1); padding: 8px 15px; border-radius: 20px; margin-bottom: 0; }
             .main-content { padding: 15px; }
             .workspace, .calendar-container { flex-direction: column; }
+            /* ヘッダーを縦並びにして綺麗に見せる */
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            
+            /* カレンダーを横スクロール可能にする */
+            .calendar-box { width: 100%; overflow-x: auto; }
+            .calendar { min-width: 500px; padding-bottom: 10px; } /* 最小幅を指定して潰れないようにする */
         }
     </style>
 </head>
@@ -165,8 +171,17 @@
         
         <div id="home" class="page active">
             <div class="header">
-                <h1>ホーム・ダッシュボード</h1>
-                <span>次回指導: 6月3日(水) A君</span>
+                <div>
+                    <h1>ホーム・ダッシュボード</h1>
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                        <label style="margin: 0; font-weight: normal;">表示中の生徒:</label>
+                        <select style="width: auto; padding: 5px 10px;">
+                            <option>A君 (次回: 6月3日)</option>
+                            <option>Bさん (次回: 6月5日)</option>
+                            <option>➕ 新規生徒を追加</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="calendar-container">
                 <div class="panel calendar-box">
@@ -261,6 +276,7 @@
             <div class="header">
                 <h1>学習進捗データ分析</h1>
             </div>
+            
             <div class="panel">
                 <h3>理解度＆宿題達成率の推移（直近5回）</h3>
                 <div class="bar-chart">
@@ -271,6 +287,18 @@
                     <div class="bar-group"><div class="bar" style="height: 95%;">95%</div><span>6/01</span></div>
                 </div>
                 <p style="text-align:center; font-size:12px; margin-top:10px;">📊 濃ネイビー：小テスト正答率 / 金：宿題達成率</p>
+            </div>
+
+            <div class="panel" style="border: 2px solid var(--accent-color); position: relative;">
+                <div style="position: absolute; top: -12px; right: 20px; background: var(--accent-color); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">Premium機能</div>
+                <h3>🤖 弱点克服・自動問題生成</h3>
+                <p style="font-size: 14px; margin-bottom: 15px;">上記のテスト結果や、入力した苦手分野のデータから、AIが最適な対策プリントを自動生成します。</p>
+                
+                <label>対象のテストデータ / 苦手分野</label>
+                <input type="text" placeholder="例: 中間テスト 数学 二次関数、計算ミス多め">
+                
+                <button class="btn-submit" style="background-color: #e0e4e8; color: #666; cursor: not-allowed; margin-top: 20px;" disabled>👑 プレミアムプランで問題を生成する</button>
+                <p style="text-align: right; margin-top: 10px; font-size: 12px;"><a href="#" onclick="switchPage('settings')" style="color: var(--accent-color);">プランのアップグレードはこちら ＞</a></p>
             </div>
         </div>
 

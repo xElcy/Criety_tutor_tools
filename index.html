@@ -179,24 +179,42 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- 連携テスト：画面を定期的にチェックして通知を出す ---
+        // --- 連携テスト：画面を定期的にチェックして通知とログを更新 ---
         setInterval(() => {
+            // 1. 完了通知のチェック
             const isCompleted = localStorage.getItem('criety_task_status');
             const savedTask = localStorage.getItem('criety_new_task');
-            
-            // 生徒側で完了が押されたら、通知バナーを表示！
             if(isCompleted === 'completed' && savedTask) {
                 const task = JSON.parse(savedTask);
                 document.getElementById('notification-text').innerText = `生徒が宿題「${task.content}」を完了しました！`;
                 document.getElementById('student-notification').style.display = 'flex';
-                
-                // 確認したら二度出ないようにステータスをリセット
                 localStorage.setItem('criety_task_status', 'notified');
+            }
+
+            // 2. AIチャットログの監視（新規追加！）
+            const chatLogStr = localStorage.getItem('criety_chat_log');
+            const monitorArea = document.getElementById('teacher-chat-monitor');
+            if(chatLogStr) {
+                const chatLog = JSON.parse(chatLogStr);
+                if(chatLog.length > 0) {
+                    monitorArea.innerHTML = ''; // 一旦クリア
+                    chatLog.forEach(log => {
+                        if(log.sender === 'student') {
+                            monitorArea.innerHTML += `<div style="background: #e0f7fa; padding: 8px; border-radius: 4px; border-left: 3px solid #00bcd4;"><strong>👦 生徒 (${log.time}):</strong> ${log.text}</div>`;
+                        } else {
+                            monitorArea.innerHTML += `<div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee; color: #666;"><strong>🤖 AI (${log.time}):</strong> ${log.text}</div>`;
+                        }
+                    });
+                    // 自動で一番下までスクロール
+                    monitorArea.scrollTop = monitorArea.scrollHeight;
+                }
             }
         }, 1000); // 1秒ごとにチェック
 
-        function clearNotification() {
-            document.getElementById('student-notification').style.display = 'none';
+        // ログクリア機能
+        function clearChatLog() {
+            localStorage.removeItem('criety_chat_log');
+            document.getElementById('teacher-chat-monitor').innerHTML = '<div style="text-align: center; color: #999; margin-top: 50px;">まだ生徒からの質問はありません。</div>';
         }
 
         function addHomework() {

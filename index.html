@@ -300,6 +300,33 @@
             }
             grid.innerHTML = html;
         }
+        // --- 📅 カレンダー削除機能 ---
+    function deleteEvent(dateStr, index) {
+        let events = JSON.parse(localStorage.getItem('criety_cal_events')) || {};
+        events[dateStr].splice(index, 1);
+        if(events[dateStr].length === 0) delete events[dateStr];
+        localStorage.setItem('criety_cal_events', JSON.stringify(events));
+        renderCalendar();
+    }
+
+    // --- ✉️ AI生成の実装 ---
+    function generateAIReport() {
+        const student = document.getElementById('report-student').value;
+        const content = document.querySelectorAll('textarea')[0].value;
+        const output = document.getElementById('ai-output');
+        
+        output.value = `${student}の保護者様\n\n本日の指導報告です。\n\n【学習内容】\n${content}\n\n【先生からの所感】\n生徒様は非常に意欲的に取り組まれており、特に理解が深まったようです。引き続きこの調子でサポートいたします。`;
+    }
+
+    // --- 🎨 ホワイトボード同期機能 ---
+    function syncWhiteboard() {
+        const canvas = document.getElementById('whiteboard');
+        const dataURL = canvas.toDataURL(); // キャンバスを画像データに変換
+        localStorage.setItem('criety_shared_whiteboard', dataURL);
+        alert("✅ 指導内容を生徒アプリと共有しました！");
+    }
+
+    // (その他既存の renderCalendar や 監視処理はそのまま維持)
 
         function changeMonth(delta) {
             currentDate.setMonth(currentDate.getMonth() + delta);

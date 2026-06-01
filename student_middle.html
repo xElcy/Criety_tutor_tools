@@ -17,77 +17,111 @@
         .mid-card h3 { font-size: 14px; color: #333; margin: 0 0 10px 0; border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
         .mid-task { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14px; transition: all 0.3s; }
         .mid-task.completed { background: #e8f5e9 !important; border-color: #c8e6c9 !important; opacity: 0.8; }
-        .mid-badge { background: #ff4757; color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
-        
         .btn-complete { padding: 8px 15px; background: #28a745; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-complete:hover { background: #218838; }
         .btn-complete.done { background: #6c757d; cursor: default; }
+
+        /* ★ 新規：AIチャットボタン＆ウィンドウ ★ */
+        .chat-fab { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #d4af37; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 15px rgba(212,175,55,0.4); cursor: pointer; z-index: 100; transition: transform 0.2s; }
+        .chat-fab:active { transform: scale(0.9); }
+        
+        .chat-window { position: absolute; bottom: 90px; right: 20px; width: calc(100% - 40px); height: 400px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 99; animation: slideUp 0.3s forwards; border: 2px solid #d4af37; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .chat-header { background: #1a2530; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #fafafa; display: flex; flex-direction: column; gap: 10px; }
+        .chat-input-area { display: flex; padding: 10px; border-top: 1px solid #eee; background: #fff; }
+        .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
+        .chat-input-area button { background: #d4af37; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; cursor: pointer; font-weight: bold; }
+
+        .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
+        .msg-ai { background: #e3f2fd; color: #0d47a1; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-student { background: #1a2530; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="mid-countdown">
-            <h2>🔥 1学期 期末テストまであと</h2>
-            <div class="days">14 日</div>
+            <h2>🔥 1学期 期末テストまであと</h2><div class="days">14 日</div>
         </div>
         
         <div class="mid-card">
             <h3>📚 今日の指導宿題</h3>
             <div id="dynamic-mid-task"></div>
-
             <div class="mid-task" id="static-task">
                 <div>数学：連立方程式の応用 3問</div>
                 <button class="btn-complete" onclick="markDone('static-task', this)">完了にする</button>
             </div>
         </div>
+
+        <div class="chat-fab" onclick="toggleChat()">🤖</div>
+
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <span>🤖 AIチューター（先生に共有中）</span>
+                <span style="cursor: pointer; font-size: 20px;" onclick="toggleChat()">×</span>
+            </div>
+            <div class="chat-body" id="chat-body">
+                <div class="msg-bubble msg-ai">わからない問題があったら、いつでも聞いてね！この内容は先生も見てくれているよ。</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="質問を入力...">
+                <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 画面読み込み時に先生からの宿題を取得
+        // 既存の宿題読み込み処理
         window.onload = function() {
             const savedTask = localStorage.getItem('criety_new_task');
-            const isCompleted = localStorage.getItem('criety_task_status') === 'completed';
-
             if(savedTask) {
                 const task = JSON.parse(savedTask);
-                const targetArea = document.getElementById('dynamic-mid-task');
-                
-                // 完了状態によって見た目を変える
-                if(isCompleted) {
-                    targetArea.innerHTML = `
-                        <div class="mid-task completed" id="dynamic-task" style="padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
-                            <div style="font-weight: bold; text-decoration: line-through;">✅ ${task.content}</div>
-                            <button class="btn-complete done">完了済</button>
-                        </div>
-                    `;
-                } else {
-                    targetArea.innerHTML = `
-                        <div class="mid-task" id="dynamic-task" style="background: #e6f7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
-                            <div style="font-weight: bold;">🆕 ${task.content}</div>
-                            <button class="btn-complete" onclick="markDynamicDone(this)">完了にする</button>
-                        </div>
-                    `;
-                }
+                document.getElementById('dynamic-mid-task').innerHTML = `
+                    <div class="mid-task" id="dynamic-task" style="background: #e6f7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
+                        <div style="font-weight: bold;">🆕 ${task.content}</div>
+                        <button class="btn-complete" onclick="markDynamicDone(this)">完了にする</button>
+                    </div>`;
             }
         };
 
-        // 完了ボタンを押した時の処理（先生側にデータを送る）
         function markDynamicDone(btn) {
-            btn.innerText = "完了済";
-            btn.classList.add("done");
+            btn.innerText = "完了済"; btn.classList.add("done");
             document.getElementById('dynamic-task').classList.add("completed");
-            
-            // LocalStorageに完了フラグを立てる（これが先生側に通知される）
             localStorage.setItem('criety_task_status', 'completed');
-            
-            // 完了のちょっとした演出
-            alert("🎉 よく頑張りました！先生に完了報告を送りました。");
         }
 
-        function markDone(taskId, btn) {
-            btn.innerText = "完了済";
-            btn.classList.add("done");
-            document.getElementById(taskId).classList.add("completed");
+        // ★ チャット機能の処理 ★
+        function toggleChat() {
+            const chat = document.getElementById('chat-window');
+            chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const chatBody = document.getElementById('chat-body');
+            
+            // 生徒のメッセージを表示
+            chatBody.innerHTML += `<div class="msg-bubble msg-student">${text}</div>`;
+            input.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight; // 一番下へスクロール
+
+            // 先生側にデータを送るためにLocalStorageに保存
+            let chatLog = JSON.parse(localStorage.getItem('criety_chat_log')) || [];
+            chatLog.push({ sender: 'student', text: text, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
+            localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
+
+            // AIの返答（モック）を1秒後に表示
+            setTimeout(() => {
+                const aiReply = "なるほど、そこの計算で迷っているんだね！まずは x と y をどちらの式に代入するか、整理してみようか？（この質問は先生にも共有しておいたよ！）";
+                chatBody.innerHTML += `<div class="msg-bubble msg-ai">${aiReply}</div>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                chatLog.push({ sender: 'ai', text: aiReply, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
+                localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
+            }, 1000);
         }
     </script>
 </body>

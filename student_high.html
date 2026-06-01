@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criety - 生徒アプリ（高校生）</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f8; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 400px; height: 100vh; background: #fafafa; position: relative; overflow-y: auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        
+        .time-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .time-header h1 { font-size: 24px; font-weight: 800; color: #333; margin: 0; }
+        
+        .time-block { background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 15px; display: flex; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .time-label { background: #333; color: #fff; width: 60px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .time-content { padding: 15px; flex: 1; }
+        .time-content.club { background: #f1f8e9; color: #558b2f; font-weight: bold; }
+        
+        .check-task { display: flex; align-items: center; font-size: 14px; margin-bottom: 8px; }
+        .check-task input { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="time-header">
+            <h1>TODAY</h1>
+            <div style="font-size: 14px; color: #666; font-weight: bold;">Available Study: 2.5h</div>
+        </div>
+        
+        <div class="time-block">
+            <div class="time-label">16:00</div>
+            <div class="time-content club">⚽️ サッカー部 部活</div>
+        </div>
+
+        <div class="time-block">
+            <div class="time-label" style="background: #0288d1;">20:00</div>
+            <div class="time-content">
+                <div style="font-size: 12px; color: #0288d1; font-weight: bold; margin-bottom: 5px;">帰宅後のスキマ時間</div>
+                
+                <div id="dynamic-high-reg-task"></div>
+
+                <div class="check-task"><input type="checkbox"> 英単語 ターゲット 1-100</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const savedTask = localStorage.getItem('criety_new_task');
+            if(savedTask) {
+                const task = JSON.parse(savedTask);
+                const targetArea = document.getElementById('dynamic-high-reg-task');
+                if(targetArea) {
+                    targetArea.innerHTML = `
+                        <div class="check-task" style="background: #e3f2fd; padding: 5px; border-radius: 4px;">
+                            <input type="checkbox"> <span style="font-weight: bold; color: #0288d1;">[NEW] ${task.content}</span>
+                        </div>
+                    `;
+                }
+            }
+        };
+    </script>
+</body>
+</html>

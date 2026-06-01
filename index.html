@@ -11,99 +11,42 @@
             --sidebar-bg: #1a2530;
             --text-main: #333333;
             --text-light: #ffffff;
-            --accent-color: #d4af37; /* 淡いゴールド */
+            --accent-color: #d4af37;
             --border-color: #dddddd;
         }
 
         * { box-sizing: border-box; }
 
         body {
-            margin: 0;
-            display: flex;
-            height: 100vh;
+            margin: 0; display: flex; height: 100vh;
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-color); color: var(--text-main);
         }
 
         /* --- 左側：サイドバー --- */
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-bg);
-            color: var(--text-light);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar h2 {
-            margin-top: 0;
-            margin-bottom: 30px;
-            font-size: 24px;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar li {
-            padding: 15px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-
-        .sidebar li:hover, .sidebar li.active {
-            color: var(--accent-color);
-            background-color: rgba(255, 255, 255, 0.05);
-        }
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { margin-top: 0; margin-bottom: 30px; font-size: 24px; font-weight: bold; }
+        .sidebar ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar li { padding: 15px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: all 0.2s; border-radius: 4px; margin-bottom: 5px; }
+        .sidebar li:hover, .sidebar li.active { color: var(--accent-color); background-color: rgba(255, 255, 255, 0.05); }
 
         /* --- 右側：メインコンテンツエリア --- */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .header {
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-        }
-
+        .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .header h1 { margin: 0; font-size: 24px; }
 
-        /* --- 画面切り替え用の制御 --- */
+        /* --- 画面切り替え --- */
         .page { display: none; }
-        .page.active { display: block; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- 共通パネルデザイン --- */
-        .panel {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
+        /* --- 共通パネル --- */
+        .panel { background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .panel h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; border-left: 4px solid var(--sidebar-bg); padding-left: 10px; }
 
         /* --- フォーム部品 --- */
         label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
-        input[type="text"], input[type="number"], select, textarea {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 14px;
-        }
+        input[type="text"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
         textarea { resize: vertical; }
         
         .btn-submit {
@@ -111,46 +54,42 @@
             font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: background 0.2s;
         }
         .btn-submit:hover { background-color: var(--accent-color); }
+        .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        /* --- 2カラムレイアウト（報告作成など） --- */
+        /* --- 2カラムレイアウト --- */
         .workspace { display: flex; gap: 20px; }
         .workspace .panel { flex: 1; margin-bottom: 0; }
 
-        /* --- カレンダー（ホーム画面用） --- */
+        /* --- カレンダー --- */
         .calendar-container { display: flex; gap: 20px; }
-        .calendar-box { flex: 2; }
+        .calendar-box { flex: 2; width: 100%; overflow-x: auto;}
         .task-box { flex: 1; }
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-top: 15px; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-top: 15px; min-width: 500px; padding-bottom: 10px;}
         .calendar-day-head { font-weight: bold; padding: 10px; background-color: #eee; border-radius: 4px; }
-        .calendar-day { border: 1px solid var(--border-color); padding: 15px 5px; min-height: 70px; border-radius: 4px; position: relative; background: #fff; text-align: left; font-size: 12px;}
+        .calendar-day { border: 1px solid var(--border-color); padding: 15px 5px; min-height: 70px; border-radius: 4px; background: #fff; text-align: left; font-size: 12px;}
         .calendar-day .date-num { font-weight: bold; margin-bottom: 4px; display: block;}
         .calendar-day .badge { background: #e0e4e8; padding: 2px 4px; border-radius: 3px; font-size: 10px; display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
         .calendar-day .badge.homework { background: #ffebee; color: #c62828; border-left: 2px solid #c62828;}
 
-        /* --- 進捗データ（グラフモック） --- */
+        /* --- 進捗データ --- */
         .bar-chart { display: flex; align-items: flex-end; gap: 20px; height: 200px; padding-top: 20px; border-bottom: 2px solid #333; }
         .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .bar { width: 100%; background-color: var(--sidebar-bg); border-radius: 4px 4px 0 0; transition: height 0.5s; text-align: center; color: white; font-size: 12px; padding-top: 5px;}
-        .bar.homework-bar { background-color: var(--accent-color); }
+        .bar { width: 100%; background-color: var(--sidebar-bg); border-radius: 4px 4px 0 0; text-align: center; color: white; font-size: 12px; padding-top: 5px;}
 
-        /* --- ホワイトボードモック --- */
-        .board-canvas-mock { width: 100%; height: 300px; background-color: #f9f9f9; border: 2px dashed #ccc; display: flex; justify-content: center; align-items: center; color: #999; margin-bottom: 15px; border-radius: 4px;}
+        /* --- ホワイトボードツール --- */
+        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; }
+        .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; font-weight: bold; }
+        canvas { border: 1px solid #ccc; background-color: #ffffff; cursor: crosshair; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); border-radius: 4px; display: block; width: 100%; max-width: 800px; height: 400px; }
 
-        /* --- レスポンシブ（スマホ向け） --- */
+        /* --- レスポンシブ --- */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; }
             .sidebar { width: 100%; padding: 15px; }
-            .sidebar h2 { margin-bottom: 15px; text-align: center; }
             .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; }
             .sidebar li { border-bottom: none; background-color: rgba(255, 255, 255, 0.1); padding: 8px 15px; border-radius: 20px; margin-bottom: 0; }
             .main-content { padding: 15px; }
-            .workspace, .calendar-container { flex-direction: column; }
-            /* ヘッダーを縦並びにして綺麗に見せる */
             .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            
-            /* カレンダーを横スクロール可能にする */
-            .calendar-box { width: 100%; overflow-x: auto; }
-            .calendar { min-width: 500px; padding-bottom: 10px; } /* 最小幅を指定して潰れないようにする */
+            .workspace, .calendar-container { flex-direction: column; }
         }
     </style>
 </head>
@@ -199,13 +138,11 @@
                 </div>
                 <div class="panel task-box">
                     <h3>クイック宿題追加</h3>
-                    <label>対象の生徒</label>
-                    <select><option>A君</option><option>Bさん</option></select>
                     <label>期日</label>
-                    <input type="date">
+                    <input type="date" id="hw-date">
                     <label>宿題・課題内容</label>
-                    <input type="text" placeholder="例: テキストP.24〜25">
-                    <button class="btn-submit" style="padding:10px; margin-top:15px;">カレンダーに追加</button>
+                    <input type="text" id="hw-content" placeholder="例: テキストP.24〜25">
+                    <button class="btn-submit" onclick="addHomework()" style="padding:10px; margin-top:15px;">カレンダーに追加</button>
                 </div>
             </div>
         </div>
@@ -213,94 +150,64 @@
         <div id="ai-report" class="page">
             <div class="header">
                 <h1>指導報告・メッセージ作成</h1>
-                <span style="font-size: 14px; color: #666;">残り回数: 10 / 10 (Free)</span>
             </div>
             <div class="workspace">
                 <div class="panel">
                     <h3>条件入力（詳細）</h3>
-                    <label>生徒選択</label>
-                    <select><option value="A">A君</option><option value="B">Bさん</option></select>
-
-                    <label>① 本人が新しく学んだ、または理解が進んだ内容</label>
-                    <textarea rows="3" placeholder="例: 連立方程式の代入法をマスターし、符号のミスなく解けるようになった。"></textarea>
-
-                    <label>② 使用した教材</label>
-                    <input type="text" placeholder="例: 学校の教科書、新演習 数学Ⅰ">
-
-                    <label>③ 教えていて気になったこと（集中度、癖など）</label>
-                    <textarea rows="3" placeholder="例: 集中力は高いが、文章題になると途中で計算を焦る傾向がある。"></textarea>
-
-                    <label>④ 教師としてできたこと・できなかったこと</label>
-                    <textarea rows="3" placeholder="例: [できた]図解による解説、[できなかった]類題演習の時間を十分に確保すること。"></textarea>
-
-                    <label>文章のトーン</label>
-                    <select><option>標準（丁寧）</option><option>褒め重視（モチベーション向上）</option><option>客観的・少し厳しめ</option></select>
-
-                    <button class="btn-submit">✨ 報告文・連絡文を生成する</button>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;"><label>生徒選択</label><select id="report-student"><option value="A君">A君</option><option value="Bさん">Bさん</option></select></div>
+                        <div style="flex: 1;"><label>学年・ターゲット層</label><select id="report-grade"><option value="小学生">小学生</option><option value="中学生" selected>中学生</option><option value="高校生">高校生</option></select></div>
+                    </div>
+                    <label>① 本人が新しく学んだ、または理解が進んだ内容</label><textarea rows="2"></textarea>
+                    <label>② 使用した教材</label><input type="text">
+                    <label>③ 教えていて気になったこと</label><textarea rows="2"></textarea>
+                    <label>④ 教師としてできたこと・できなかったこと</label><textarea rows="2"></textarea>
+                    <button id="btn-generate" class="btn-submit" onclick="generateAIReport()">✨ 報告文・連絡文を生成する</button>
                 </div>
                 <div class="panel">
                     <h3>プレビュー＆編集</h3>
-                    <textarea rows="22" placeholder="詳細条件を入力して生成すると、ここに保護者宛ての綺麗な連絡文が作成されます。"></textarea>
-                    <div style="margin-top:15px; display:flex; gap:10px;">
-                        <button style="padding:10px; flex:1;">📋 LINE用にコピー</button>
-                        <button style="padding:10px; flex:1;">💾 PDF報告書保存</button>
-                    </div>
+                    <textarea id="ai-output" rows="22" placeholder="ここに生成された文章が表示されます。"></textarea>
                 </div>
             </div>
         </div>
 
         <div id="notes" class="page">
-            <div class="header">
-                <h1>指導ノート＆ホワイトボード</h1>
-            </div>
-            
+            <div class="header"><h1>指導ノート＆ホワイトボード</h1></div>
             <div class="workspace">
                 <div class="panel" style="flex: 2;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-                        <div style="display: flex; gap: 10px;">
-                            <button style="padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff;">✏️ ペン</button>
-                            <button style="padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff;">🧽 消しゴム</button>
-                            <button style="padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff;">🔤 文字</button>
-                            <input type="color" value="#000000" style="padding: 0; width: 35px; height: 35px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
+                            <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
+                            <input type="color" id="color-picker" value="#1a2530" style="padding: 0; width: 35px; height: 35px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;" onchange="setColor(this.value)">
+                            <span style="font-size: 12px; color: #666; margin-left: 10px;">太さ:</span>
+                            <input type="range" id="line-width" min="1" max="10" value="3" onchange="setLineWidth(this.value)">
                         </div>
-                        <button style="padding: 8px 12px; cursor: pointer; border: 1px solid #ffcdd2; color: #c62828; border-radius: 4px; background: #fff;">🗑️ 全て消去</button>
+                        <button class="tool-btn" style="border-color: #ffcdd2; color: #c62828;" onclick="clearBoard()">🗑️ 全て消去</button>
                     </div>
                     
-                    <div class="board-canvas-mock" style="height: 400px; background-color: #ffffff; border: 1px solid #ccc; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);">
-                        🎨 [ここに自由に書き込めるキャンバス]
-                    </div>
+                    <canvas id="whiteboard" width="800" height="400"></canvas>
+                    <p style="font-size: 12px; color: #999; margin-top: 10px;">※マウスをドラッグ（スマホならスワイプ）で自由に書き込めます。</p>
                 </div>
-
+                
                 <div class="panel" style="flex: 1;">
                     <h3>保存済みの教材・ノート</h3>
-                    <button class="btn-submit" style="margin-top: 0; margin-bottom: 15px; padding: 10px; font-size: 14px;">➕ 新しいファイルをアップロード</button>
-                    
+                    <button class="btn-submit" style="margin-top: 0; margin-bottom: 15px; padding: 10px; font-size: 14px;">➕ 新ファイルをアップロード</button>
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         <li style="padding: 12px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
                             <span style="font-size: 20px;">📄</span>
                             <div style="flex: 1; overflow: hidden;">
-                                <div style="font-size: 14px; font-weight: bold; white-space: nowrap; text-overflow: ellipsis;">数学_2次関数_基礎.pdf</div>
+                                <div style="font-size: 14px; font-weight: bold;">数学_2次関数_基礎.pdf</div>
                                 <div style="font-size: 11px; color: #666;">6月1日 アップロード</div>
                             </div>
                         </li>
-                        <li style="padding: 12px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <span style="font-size: 20px;">🖼️</span>
-                            <div style="flex: 1; overflow: hidden;">
-                                <div style="font-size: 14px; font-weight: bold; white-space: nowrap; text-overflow: ellipsis;">英語_不規則動詞.png</div>
-                                <div style="font-size: 11px; color: #666;">5月28日 アップロード</div>
-                            </div>
-                        </li>
                     </ul>
-                    <p style="font-size: 12px; color: #999; margin-top: 15px;">※ファイルをキャンバスにドラッグして貼り付けられます。</p>
                 </div>
             </div>
         </div>
 
         <div id="data" class="page">
-            <div class="header">
-                <h1>学習進捗データ分析</h1>
-            </div>
-            
+            <div class="header"><h1>学習進捗データ分析</h1></div>
             <div class="panel">
                 <h3>理解度＆宿題達成率の推移（直近5回）</h3>
                 <div class="bar-chart">
@@ -310,83 +217,148 @@
                     <div class="bar-group"><div class="bar" style="height: 85%;">85%</div><span>5/25</span></div>
                     <div class="bar-group"><div class="bar" style="height: 95%;">95%</div><span>6/01</span></div>
                 </div>
-                <p style="text-align:center; font-size:12px; margin-top:10px;">📊 濃ネイビー：小テスト正答率 / 金：宿題達成率</p>
-            </div>
-
-            <div class="panel" style="border: 2px solid var(--accent-color); position: relative;">
-                <div style="position: absolute; top: -12px; right: 20px; background: var(--accent-color); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">Premium機能</div>
-                <h3>🤖 弱点克服・自動問題生成</h3>
-                <p style="font-size: 14px; margin-bottom: 15px;">上記のテスト結果や、入力した苦手分野のデータから、AIが最適な対策プリントを自動生成します。</p>
-                
-                <label>対象のテストデータ / 苦手分野</label>
-                <input type="text" placeholder="例: 中間テスト 数学 二次関数、計算ミス多め">
-                
-                <button class="btn-submit" style="background-color: #e0e4e8; color: #666; cursor: not-allowed; margin-top: 20px;" disabled>👑 プレミアムプランで問題を生成する</button>
-                <p style="text-align: right; margin-top: 10px; font-size: 12px;"><a href="#" onclick="switchPage('settings')" style="color: var(--accent-color);">プランのアップグレードはこちら ＞</a></p>
             </div>
         </div>
 
         <div id="settings" class="page">
-            <div class="header">
-                <h1>アカウント・プラン設定</h1>
-            </div>
-            
+            <div class="header"><h1>アカウント・プラン設定</h1></div>
             <div class="workspace">
                 <div class="panel">
                     <h3>基本プロフィール</h3>
-                    <label>お名前</label>
-                    <input type="text" value="家庭教師 アカウント">
-                    
-                    <label>メールアドレス</label>
-                    <input type="text" value="teacher@criety.com">
-                    
-                    <label>通知設定</label>
-                    <div class="checkbox-group" style="margin-top: 5px;">
-                        <label><input type="checkbox" checked> 指導日の前日にリマインドを受け取る</label>
-                    </div>
-
+                    <label>お名前</label><input type="text" value="家庭教師 アカウント">
                     <button class="btn-submit" style="width: auto; padding: 10px 20px;">変更を保存する</button>
-                </div>
-
-                <div class="panel">
-                    <h3>プラン設定</h3>
-                    
-                    <div style="border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; background: #fffcf5; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 5px 0; font-size: 18px;">現在のプラン: <span style="color: #666;">Free (無料)</span></h4>
-                        <ul style="font-size: 14px; margin-top: 10px; padding-left: 20px; color: #444;">
-                            <li>AI連絡文生成: 月10回まで</li>
-                            <li>ホワイトボード保存容量: 50MB</li>
-                            <li>AI自動問題生成: <span style="color: red;">利用不可</span></li>
-                        </ul>
-                        <button style="width: 100%; margin-top: 15px; background-color: var(--accent-color); color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer;">👑 プレミアム(月額500円)にアップグレード</button>
-                    </div>
-
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
-                        <h4 style="margin: 0 0 5px 0;">法人・企業向けプラン</h4>
-                        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">塾運営・家庭教師派遣会社での一括管理システムのご利用はこちらから。</p>
-                        <button style="width: 100%; background: #e0e4e8; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">お問い合わせ・資料請求</button>
-                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
+        // --- 画面切り替え ---
         function switchPage(pageId) {
-            // すべてのページを非表示にする
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
-
-            // すべてのナビゲーションのactiveクラスを外す
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => item.classList.remove('active'));
-
-            // 指定されたページとナビゲーションをactiveにする
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            
-            // クリックされたメニューにアクティブ色をつけるための処理
             event.currentTarget.classList.add('active');
+        }
+
+        // --- 宿題追加（生徒アプリへデータ送信） ---
+        function addHomework() {
+            const date = document.getElementById('hw-date').value;
+            const content = document.getElementById('hw-content').value;
+            if(!date || !content) { alert("⚠️ 期日と内容を入力してください。"); return; }
+            
+            const taskData = { date: date, content: content };
+            localStorage.setItem('criety_new_task', JSON.stringify(taskData));
+            alert(`✅ 生徒用アプリにデータを送信しました！\n内容: ${content}`);
+            document.getElementById('hw-content').value = "";
+        }
+
+        // --- AI報告生成モック ---
+        function generateAIReport() {
+            const btn = document.getElementById('btn-generate');
+            const output = document.getElementById('ai-output');
+            btn.innerText = "⏳ 生成中..."; btn.disabled = true;
+            setTimeout(() => {
+                output.value = "【学習の様子】\n本日は集中して取り組めました。基礎の理解はバッチリです！\n引き続きよろしくお願いいたします。";
+                btn.innerText = "✨ 生成する"; btn.disabled = false;
+            }, 800);
+        }
+
+        // ==========================================
+        // ★ ホワイトボード（Canvas）の処理 ★
+        // ==========================================
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        
+        let isDrawing = false;
+        let currentTool = 'pen';
+        let currentColor = '#1a2530';
+        let lineWidth = 3;
+
+        // PC（マウス）用イベント
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // スマホ（タッチ）用イベント対応
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // 描画の開始
+        function startDrawing(e) {
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+
+        // 描画中
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+            ctx.lineWidth = currentTool === 'eraser' ? 20 : lineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        // 描画の終了
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        // タッチイベントの座標変換処理
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+            ctx.lineWidth = currentTool === 'eraser' ? 20 : lineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        // ツール切り替え（ペン / 消しゴム）
+        function setTool(tool) {
+            currentTool = tool;
+            document.getElementById('btn-pen').classList.remove('active');
+            document.getElementById('btn-eraser').classList.remove('active');
+            document.getElementById(`btn-${tool}`).classList.add('active');
+        }
+
+        // 色と太さの変更
+        function setColor(color) {
+            currentColor = color;
+            setTool('pen'); // 色を変えたら自動でペンに戻す
+        }
+        function setLineWidth(width) {
+            lineWidth = width;
+        }
+
+        // 全て消去
+        function clearBoard() {
+            if(confirm('ホワイトボードを全て消去しますか？')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
         }
     </script>
 </body>

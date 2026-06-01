@@ -161,6 +161,49 @@
             cursor: pointer;
             font-weight: bold;
         }
+                /* --- スマホ向けレスポンシブ対応 --- */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* 全体を縦並びに変更 */
+                height: auto;
+            }
+
+            /* サイドバーを上部に配置して横スクロール化 */
+            .sidebar {
+                width: 100%;
+                padding: 15px 20px;
+            }
+
+            .sidebar h2 {
+                margin-bottom: 15px;
+            }
+
+            .sidebar ul {
+                display: flex;
+                overflow-x: auto; /* はみ出た分を横スクロール */
+                white-space: nowrap; /* テキストを折り返さない */
+                gap: 10px;
+                padding-bottom: 5px;
+            }
+
+            .sidebar li {
+                border-bottom: none;
+                background-color: rgba(255, 255, 255, 0.1); /* ボタンっぽくする */
+                padding: 8px 15px;
+                border-radius: 20px;
+            }
+
+            /* メインコンテンツの余白調整 */
+            .main-content {
+                padding: 15px;
+            }
+
+            /* 入力パネルと出力パネルを縦並びに */
+            .workspace {
+                flex-direction: column;
+            }
+        }
+
     </style>
 </head>
 <body>

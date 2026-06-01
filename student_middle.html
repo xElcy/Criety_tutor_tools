@@ -71,6 +71,29 @@
     </style>
 </head>
 <body>
+    <div class="mid-card">
+    <h3>📝 先生からの板書・ノート</h3>
+    <img id="shared-whiteboard" style="width: 100%; border: 1px solid #ccc; border-radius: 8px;" src="" alt="先生からの板書がここに表示されます">
+</div>
+
+<script>
+    // 画面読み込み時に先生の板書を取得
+    window.onload = function() {
+        const boardData = localStorage.getItem('criety_shared_whiteboard');
+        if(boardData) {
+            document.getElementById('shared-whiteboard').src = boardData;
+        }
+    };
+    
+    // 5秒ごとに先生の板書が更新されていないかチェック
+    setInterval(() => {
+        const boardData = localStorage.getItem('criety_shared_whiteboard');
+        const img = document.getElementById('shared-whiteboard');
+        if(boardData && img.src !== boardData) {
+            img.src = boardData;
+        }
+    }, 5000);
+</script>
     <div class="app-container">
         <div class="mid-countdown">
             <h2>🔥 1学期 期末テストまであと</h2><div class="days">14 日</div>

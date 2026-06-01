@@ -330,15 +330,43 @@
             <div class="header">
                 <h1>アカウント・プラン設定</h1>
             </div>
-            <div class="panel">
-                <h3>現在のプラン: フリープラン（機能制限あり）</h3>
-                <p>月額 500円 のプレミアムプランにアップグレードすると、AI生成が無制限になり、ホワイトボードの保存容量が大幅にアップします。</p>
-                <button style="background-color:var(--accent-color); color:white; border:none; padding:10px 20px; font-weight:bold; border-radius:4px; cursor:pointer;">プレミアムプランに登録する</button>
-            </div>
-            <div class="panel">
-                <h3>法人・企業向けプラン</h3>
-                <p>塾運営・家庭教師派遣会社での一括管理システムのご利用はこちらから。</p>
-                <button style="padding:10px 20px;">お問い合わせ・資料請求</button>
+            
+            <div class="workspace">
+                <div class="panel">
+                    <h3>基本プロフィール</h3>
+                    <label>お名前</label>
+                    <input type="text" value="家庭教師 アカウント">
+                    
+                    <label>メールアドレス</label>
+                    <input type="text" value="teacher@criety.com">
+                    
+                    <label>通知設定</label>
+                    <div class="checkbox-group" style="margin-top: 5px;">
+                        <label><input type="checkbox" checked> 指導日の前日にリマインドを受け取る</label>
+                    </div>
+
+                    <button class="btn-submit" style="width: auto; padding: 10px 20px;">変更を保存する</button>
+                </div>
+
+                <div class="panel">
+                    <h3>プラン設定</h3>
+                    
+                    <div style="border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; background: #fffcf5; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 5px 0; font-size: 18px;">現在のプラン: <span style="color: #666;">Free (無料)</span></h4>
+                        <ul style="font-size: 14px; margin-top: 10px; padding-left: 20px; color: #444;">
+                            <li>AI連絡文生成: 月10回まで</li>
+                            <li>ホワイトボード保存容量: 50MB</li>
+                            <li>AI自動問題生成: <span style="color: red;">利用不可</span></li>
+                        </ul>
+                        <button style="width: 100%; margin-top: 15px; background-color: var(--accent-color); color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer;">👑 プレミアム(月額500円)にアップグレード</button>
+                    </div>
+
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                        <h4 style="margin: 0 0 5px 0;">法人・企業向けプラン</h4>
+                        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">塾運営・家庭教師派遣会社での一括管理システムのご利用はこちらから。</p>
+                        <button style="width: 100%; background: #e0e4e8; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">お問い合わせ・資料請求</button>
+                    </div>
+                </div>
             </div>
         </div>
 

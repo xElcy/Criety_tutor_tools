@@ -172,25 +172,26 @@
         <div id="notes" class="page">
             <div class="header"><h1>指導ノート＆ホワイトボード</h1></div>
             <div class="workspace">
-                <div class="panel" style="flex: 2;">
+                <div class="panel" id="whiteboard-panel" style="flex: 2; position: relative;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
                             <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
                             <input type="color" id="color-picker" value="#1a2530" style="padding: 0; width: 35px; height: 35px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;" onchange="setColor(this.value)">
                             <span style="font-size: 12px; color: #666; margin-left: 10px;">太さ:</span>
-                            <input type="range" id="line-width" min="1" max="10" value="3" onchange="setLineWidth(this.value)">
+                            <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
                         </div>
                         <div style="display: flex; gap: 10px;">
+                            <button class="tool-btn" style="background: #1a2530; color: white;" onclick="toggleFullscreen()">🔲 大画面モード</button>
                             <button class="tool-btn" style="background: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold;" onclick="syncWhiteboard()">📡 生徒アプリに共有</button>
                             <button class="tool-btn" style="border-color: #ffcdd2; color: #c62828;" onclick="clearBoard()">🗑️ 全て消去</button>
                         </div>
                     </div>
                     
-                    <canvas id="whiteboard" width="800" height="400"></canvas>
+                    <canvas id="whiteboard" width="1600" height="800" style="width: 100%; max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; cursor: crosshair; touch-action: none; background: white;"></canvas>
                 </div>
                 
-                <div class="panel" style="flex: 1;">
+                <div class="panel" id="file-panel" style="flex: 1;">
                     <h3>保存済みのファイル</h3>
                     <button class="btn-submit" style="margin-top: 0; margin-bottom: 15px; padding: 10px; font-size: 14px;">➕ アップロード</button>
                     <ul style="list-style: none; padding: 0; margin: 0;">
@@ -261,6 +262,28 @@
     </div>
 
     <script>
+        // ★ ホワイトボード全画面化の処理
+        function toggleFullscreen() {
+            const panel = document.getElementById('whiteboard-panel');
+            const filePanel = document.getElementById('file-panel');
+            
+            if (panel.style.position === 'fixed') {
+                // 元に戻す
+                panel.style.position = 'relative';
+                panel.style.top = 'auto'; panel.style.left = 'auto';
+                panel.style.width = 'auto'; panel.style.height = 'auto';
+                panel.style.zIndex = '1';
+                filePanel.style.display = 'block';
+            } else {
+                // 全画面にする
+                panel.style.position = 'fixed';
+                panel.style.top = '20px'; panel.style.left = '20px';
+                panel.style.width = 'calc(100vw - 40px)'; 
+                panel.style.height = 'calc(100vh - 40px)';
+                panel.style.zIndex = '9999';
+                filePanel.style.display = 'none'; // 横のファイル一覧を隠す
+            }
+        }
         // --- 画面切り替え ---
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));

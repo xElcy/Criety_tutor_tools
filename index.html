@@ -141,30 +141,30 @@
                 <div class="panel">
                     <h3>条件入力（詳細）</h3>
                     <div style="display: flex; gap: 10px;">
-                        <div style="flex: 1;"><label>生徒選択</label><select><option>A君</option><option>Bさん</option></select></div>
-                        <div style="flex: 1;"><label>学年・ターゲット</label><select><option>小学生</option><option selected>中学生</option><option>高校生</option></select></div>
+                        <div style="flex: 1;"><label>生徒選択</label><select id="report-student"><option>A君</option><option>Bさん</option></select></div>
+                        <div style="flex: 1;"><label>学年・ターゲット</label><select id="report-grade"><option>小学生</option><option selected>中学生</option><option>高校生</option></select></div>
                     </div>
                     
                     <label>① 新しく学んだ、理解が進んだ内容</label>
-                    <textarea rows="2" placeholder="例: 連立方程式の代入法をマスターした"></textarea>
+                    <textarea id="rep-learned" rows="2" placeholder="例: 連立方程式の代入法をマスターした"></textarea>
                     
                     <label>② 使用した教材</label>
-                    <input type="text" placeholder="例: 学校の教科書、新演習">
+                    <input type="text" id="rep-material" placeholder="例: 学校の教科書、新演習">
                     
                     <label>③ 教えていて気になったこと（集中度、癖など）</label>
-                    <textarea rows="2" placeholder="例: 集中力は高いが、計算を焦る傾向がある"></textarea>
+                    <textarea id="rep-concern" rows="2" placeholder="例: 集中力は高いが、計算を焦る傾向がある"></textarea>
                     
                     <label>④ 教師としてできたこと・できなかったこと</label>
-                    <textarea rows="2" placeholder="例: 図解による解説はできたが、演習時間が不足した"></textarea>
+                    <textarea id="rep-eval" rows="2" placeholder="例: 図解による解説はできたが、演習時間が不足した"></textarea>
 
                     <label>文章のトーン</label>
-                    <select><option>標準（丁寧）</option><option>褒め重視（モチベーション向上）</option><option>客観的・少し厳しめ</option></select>
+                    <select id="rep-tone"><option>標準（丁寧）</option><option>褒め重視（モチベーション向上）</option><option>客観的・少し厳しめ</option></select>
 
-                    <button class="btn-submit" onclick="this.innerText='生成中...'; setTimeout(()=>this.innerText='✨ 報告文・連絡文を生成する', 1000);">✨ 報告文・連絡文を生成する</button>
+                    <button id="btn-generate-ai" class="btn-submit" onclick="generateAIReport()">✨ 報告文・連絡文を生成する</button>
                 </div>
                 <div class="panel">
                     <h3>プレビュー＆編集</h3>
-                    <textarea rows="25" placeholder="詳細条件を入力して生成すると、ここに保護者宛ての綺麗な連絡文が作成されます。"></textarea>
+                    <textarea id="ai-output" rows="25" placeholder="詳細条件を入力して生成すると、ここに保護者宛ての綺麗な連絡文が作成されます。"></textarea>
                 </div>
             </div>
         </div>
@@ -181,7 +181,10 @@
                             <span style="font-size: 12px; color: #666; margin-left: 10px;">太さ:</span>
                             <input type="range" id="line-width" min="1" max="10" value="3" onchange="setLineWidth(this.value)">
                         </div>
-                        <button class="tool-btn" style="border-color: #ffcdd2; color: #c62828;" onclick="clearBoard()">🗑️ 全て消去</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="tool-btn" style="background: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold;" onclick="syncWhiteboard()">📡 生徒アプリに共有</button>
+                            <button class="tool-btn" style="border-color: #ffcdd2; color: #c62828;" onclick="clearBoard()">🗑️ 全て消去</button>
+                        </div>
                     </div>
                     
                     <canvas id="whiteboard" width="800" height="400"></canvas>
@@ -199,7 +202,24 @@
 
         <div id="data" class="page">
             <div class="header"><h1>学習進捗データ分析</h1></div>
-            <div class="panel"><p>データグラフエリア</p></div>
+            <div class="panel">
+                <h3>宿題・課題の達成率推移</h3>
+                <p style="font-size: 12px; color: #666;">直近の生徒アプリでの完了状況を可視化しています。</p>
+                <div style="display: flex; gap: 20px; align-items: flex-end; height: 200px; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 20px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                        <div style="width: 60%; background: #1565c0; height: 60%; border-radius: 4px 4px 0 0; color: white; text-align: center; font-size: 12px; padding-top: 5px;">60%</div>
+                        <span style="font-size: 12px; margin-top: 5px;">2週前</span>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                        <div style="width: 60%; background: #1565c0; height: 80%; border-radius: 4px 4px 0 0; color: white; text-align: center; font-size: 12px; padding-top: 5px;">80%</div>
+                        <span style="font-size: 12px; margin-top: 5px;">先週</span>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                        <div id="dynamic-graph" style="width: 60%; background: var(--accent-color); height: 0%; border-radius: 4px 4px 0 0; color: white; text-align: center; font-size: 12px; padding-top: 5px; transition: height 1s;">未計測</div>
+                        <span style="font-size: 12px; margin-top: 5px; font-weight: bold;">今週(最新)</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="settings" class="page">
@@ -250,33 +270,29 @@
         }
 
         // ==========================================
-        // 📅 カレンダー機能
+        // 📅 カレンダー機能（削除機能付き）
         // ==========================================
-        let currentDate = new Date(); // 現在表示している月
-        let selectedDateStr = ""; // 選択中の日付(YYYY-MM-DD)
+        let currentDate = new Date(); 
+        let selectedDateStr = ""; 
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             document.getElementById('cal-month-year').innerText = `${year}年 ${month + 1}月`;
             
-            const firstDay = new Date(year, month, 1).getDay(); // 月の最初の日の曜日
-            const daysInMonth = new Date(year, month + 1, 0).getDate(); // 月の日数
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); 
             
             const grid = document.getElementById('calendar-grid');
             
-            // 曜日ヘッダー
             const days = ['日', '月', '火', '水', '木', '金', '土'];
             let html = days.map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             
-            // 空白セル
             for(let i = 0; i < firstDay; i++) {
-                html += `<div class="calendar-day" style="background:#f9f9f9; border-color:transparent;"></div>`;
+                html += `<div class="calendar-day" style="background:#f9f9f9; border-color:transparent; cursor:default;"></div>`;
             }
             
-            // 日付セル
             const today = new Date();
-            // LocalStorageからイベント取得
             const events = JSON.parse(localStorage.getItem('criety_cal_events')) || {};
             
             for(let i = 1; i <= daysInMonth; i++) {
@@ -286,13 +302,19 @@
                 if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) classes += ' today';
                 if(dateStr === selectedDateStr) classes += ' selected';
                 
-                // イベントのバッジ生成
                 let badgesHtml = '';
                 if(events[dateStr]) {
-                    events[dateStr].forEach(ev => {
-                        if(ev.type === 'lesson') badgesHtml += `<span class="badge lesson">👨‍🏫 指導日</span>`;
-                        if(ev.type === 'test') badgesHtml += `<span class="badge test">📝 ${ev.text}</span>`;
-                        if(ev.type === 'hw') badgesHtml += `<span class="badge hw">宿: ${ev.text}</span>`;
+                    events[dateStr].forEach((ev, index) => {
+                        let badgeClass = '';
+                        let icon = '';
+                        if(ev.type === 'lesson') { badgeClass = 'lesson'; icon = '👨‍🏫 指導日'; }
+                        if(ev.type === 'test') { badgeClass = 'test'; icon = `📝 ${ev.text}`; }
+                        if(ev.type === 'hw') { badgeClass = 'hw'; icon = `宿: ${ev.text}`; }
+                        
+                        // イベントバッジに削除(×)ボタンを設置。stopPropagationでクリック時の日付選択を防止。
+                        badgesHtml += `<span class="badge ${badgeClass}">${icon} 
+                            <span style="color:red; cursor:pointer; padding:0 4px; font-weight:bold;" onclick="event.stopPropagation(); deleteEvent('${dateStr}', ${index})">×</span>
+                        </span>`;
                     });
                 }
                 
@@ -300,33 +322,15 @@
             }
             grid.innerHTML = html;
         }
-        // --- 📅 カレンダー削除機能 ---
-    function deleteEvent(dateStr, index) {
-        let events = JSON.parse(localStorage.getItem('criety_cal_events')) || {};
-        events[dateStr].splice(index, 1);
-        if(events[dateStr].length === 0) delete events[dateStr];
-        localStorage.setItem('criety_cal_events', JSON.stringify(events));
-        renderCalendar();
-    }
 
-    // --- ✉️ AI生成の実装 ---
-    function generateAIReport() {
-        const student = document.getElementById('report-student').value;
-        const content = document.querySelectorAll('textarea')[0].value;
-        const output = document.getElementById('ai-output');
-        
-        output.value = `${student}の保護者様\n\n本日の指導報告です。\n\n【学習内容】\n${content}\n\n【先生からの所感】\n生徒様は非常に意欲的に取り組まれており、特に理解が深まったようです。引き続きこの調子でサポートいたします。`;
-    }
-
-    // --- 🎨 ホワイトボード同期機能 ---
-    function syncWhiteboard() {
-        const canvas = document.getElementById('whiteboard');
-        const dataURL = canvas.toDataURL(); // キャンバスを画像データに変換
-        localStorage.setItem('criety_shared_whiteboard', dataURL);
-        alert("✅ 指導内容を生徒アプリと共有しました！");
-    }
-
-    // (その他既存の renderCalendar や 監視処理はそのまま維持)
+        // 削除ロジック
+        function deleteEvent(dateStr, index) {
+            let events = JSON.parse(localStorage.getItem('criety_cal_events')) || {};
+            events[dateStr].splice(index, 1);
+            if(events[dateStr].length === 0) delete events[dateStr];
+            localStorage.setItem('criety_cal_events', JSON.stringify(events));
+            renderCalendar();
+        }
 
         function changeMonth(delta) {
             currentDate.setMonth(currentDate.getMonth() + delta);
@@ -336,20 +340,17 @@
         function selectDate(dateStr) {
             selectedDateStr = dateStr;
             document.getElementById('selected-date-display').innerText = dateStr;
-            renderCalendar(); // 選択枠を再描画
+            renderCalendar(); 
         }
 
-        // イベントの追加（指導日・テスト・宿題）
         function addCalendarEvent(type, text) {
             if(!selectedDateStr) { alert("カレンダーから日付を選択してください。"); return; }
-            
             let events = JSON.parse(localStorage.getItem('criety_cal_events')) || {};
             if(!events[selectedDateStr]) events[selectedDateStr] = [];
             
             events[selectedDateStr].push({type: type, text: text});
             localStorage.setItem('criety_cal_events', JSON.stringify(events));
-            
-            renderCalendar(); // カレンダー更新
+            renderCalendar(); 
         }
 
         function addQuickEvent(type) {
@@ -364,10 +365,8 @@
             const content = document.getElementById('hw-content').value;
             if(!selectedDateStr || !content) { alert("日付を選択し、宿題内容を入力してください。"); return; }
             
-            // カレンダーへの追加
             addCalendarEvent('hw', content);
             
-            // 生徒アプリへの送信（既存の機能）
             const taskData = { date: selectedDateStr, content: content };
             localStorage.setItem('criety_new_task', JSON.stringify(taskData));
             localStorage.setItem('criety_task_status', 'pending');
@@ -381,7 +380,46 @@
 
 
         // ==========================================
-        // 🎨 ホワイトボード（ズレ完全修正版！）
+        // ✉️ AI連絡・報告作成ロジック
+        // ==========================================
+        function generateAIReport() {
+            const btn = document.getElementById('btn-generate-ai');
+            const student = document.getElementById('report-student').value;
+            const learned = document.getElementById('rep-learned').value || '(未入力)';
+            const material = document.getElementById('rep-material').value || '(未入力)';
+            const concern = document.getElementById('rep-concern').value || '(特になし)';
+            const evaluation = document.getElementById('rep-eval').value || '(特になし)';
+            const tone = document.getElementById('rep-tone').value;
+            const output = document.getElementById('ai-output');
+
+            btn.innerText = "⏳ AIが生成中...";
+            btn.style.background = "#999";
+            output.value = "AIが思考中です...\nしばらくお待ちください。";
+
+            // 1秒後に結果を表示する演出
+            setTimeout(() => {
+                let text = `${student}の保護者様\n\n本日の指導報告をお送りいたします。\n\n`;
+                text += `【本日の使用教材】\n${material}\n\n`;
+                text += `【新しく学んだ・理解が進んだ内容】\n${learned}\n\n`;
+                text += `【授業の様子・気になった点】\n${concern}\n\n`;
+                text += `【講師としての自己評価・所感】\n${evaluation}\n\n`;
+                
+                if(tone === '褒め重視（モチベーション向上）') {
+                    text += `今日は非常に集中して取り組めていました！この調子で次回も一緒に頑張りたいと思います。\n引き続きよろしくお願いいたします。`;
+                } else if (tone === '客観的・少し厳しめ') {
+                    text += `次回は宿題の範囲を確実に終わらせるよう、ご家庭でもお声がけいただけますと幸いです。\n引き続きよろしくお願いいたします。`;
+                } else {
+                    text += `引き続き、目標達成に向けてしっかりとサポートしてまいります。\nよろしくお願いいたします。`;
+                }
+                
+                output.value = text;
+                btn.innerText = "✨ 報告文・連絡文を生成する";
+                btn.style.background = "var(--sidebar-bg)";
+            }, 1000);
+        }
+
+        // ==========================================
+        // 🎨 ホワイトボード（ズレ完全修正版＆共有機能）
         // ==========================================
         const canvas = document.getElementById('whiteboard');
         const ctx = canvas.getContext('2d');
@@ -391,17 +429,13 @@
         let lineWidth = 3;
 
         // ★ 座標を正確に取得する魔法の関数 ★
-        // iframeの縮小やCSSのレイアウトによるズレをすべて吸収します
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            // 実際のキャンバスサイズ(800x400)と画面上の表示サイズの比率を計算
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            
             let clientX = e.clientX;
             let clientY = e.clientY;
             
-            // タッチイベントの場合
             if (e.touches && e.touches.length > 0) {
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
@@ -422,7 +456,7 @@
         
         function draw(e) {
             if (!isDrawing) return;
-            e.preventDefault(); // スマホでのスクロール防止
+            e.preventDefault(); 
             const pos = getPos(e);
             ctx.lineTo(pos.x, pos.y);
             ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
@@ -437,18 +471,15 @@
             ctx.closePath(); 
         }
 
-        // PCイベント
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
         
-        // スマホイベント
         canvas.addEventListener('touchstart', startDrawing, {passive: false});
         canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', stopDrawing);
 
-        // ツール操作
         function setTool(tool) {
             currentTool = tool;
             document.getElementById('btn-pen').classList.remove('active');
@@ -459,9 +490,41 @@
         function setLineWidth(width) { lineWidth = width; }
         function clearBoard() { if(confirm('全て消去しますか？')) ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
+        // ★ ホワイトボードを生徒のスマホに送信（LocalStorage経由）
+        function syncWhiteboard() {
+            const dataURL = canvas.toDataURL();
+            localStorage.setItem('criety_shared_whiteboard', dataURL);
+            alert("📡 現在のキャンバスを生徒のアプリに共有しました！");
+        }
 
-        // --- AIログ監視 ---
+
+        // ==========================================
+        // 📊 AIログ監視 ＆ 学習進捗グラフ更新
+        // ==========================================
+        function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
+
         setInterval(() => {
+            // 通知チェック
+            const isCompleted = localStorage.getItem('criety_task_status');
+            const savedTask = localStorage.getItem('criety_new_task');
+            if(isCompleted === 'completed' && savedTask) {
+                const task = JSON.parse(savedTask);
+                document.getElementById('notification-text').innerText = `生徒が宿題「${task.content}」を完了しました！`;
+                document.getElementById('student-notification').style.display = 'flex';
+                localStorage.setItem('criety_task_status', 'notified');
+            }
+
+            // グラフ更新（完了していれば100%、未完了なら0%をアニメーション）
+            const graph = document.getElementById('dynamic-graph');
+            if (isCompleted === 'completed' || isCompleted === 'notified') {
+                graph.style.height = '100%';
+                graph.innerText = '100%';
+            } else if (isCompleted === 'pending') {
+                graph.style.height = '0%';
+                graph.innerText = '進行中';
+            }
+
+            // チャットログ更新
             const chatLogStr = localStorage.getItem('criety_chat_log');
             const monitorArea = document.getElementById('teacher-chat-monitor');
             if(chatLogStr && monitorArea) {
@@ -470,11 +533,12 @@
                     monitorArea.innerHTML = ''; 
                     chatLog.forEach(log => {
                         if(log.sender === 'student') {
-                            monitorArea.innerHTML += `<div style="background: #e0f7fa; padding: 8px; border-radius: 4px; border-left: 3px solid #00bcd4;"><strong>👦 生徒:</strong> ${log.text}</div>`;
+                            monitorArea.innerHTML += `<div style="background: #e0f7fa; padding: 8px; border-radius: 4px; border-left: 3px solid #00bcd4;"><strong>👦 生徒 (${log.time}):</strong> ${log.text}</div>`;
                         } else {
-                            monitorArea.innerHTML += `<div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee; color: #666;"><strong>🤖 AI:</strong> ${log.text}</div>`;
+                            monitorArea.innerHTML += `<div style="background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee; color: #666;"><strong>🤖 AI (${log.time}):</strong> ${log.text}</div>`;
                         }
                     });
+                    // 下までスクロール
                     monitorArea.scrollTop = monitorArea.scrollHeight;
                 }
             }

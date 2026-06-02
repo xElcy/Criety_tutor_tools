@@ -10,7 +10,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; display: flex; height: 100vh; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); }
         
-        /* --- 🔒 ログイン画面のオーバーレイ --- */
+        /* --- 🔒 ログイン・認証画面 --- */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--sidebar-bg); z-index: 99999; display: flex; justify-content: center; align-items: center; }
         .auth-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
@@ -68,10 +68,13 @@
         .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; font-size: 14px;}
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; font-weight: bold; }
         
+        /* --- プレミアム機能ロック --- */
+        .premium-overlay { position: relative; }
+        .premium-lock { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; border-radius: 8px; border: 2px dashed var(--accent-color); }
+
         /* --- その他 --- */
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; }
         
-        /* --- レスポンシブ --- */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; }
             .sidebar { width: 100%; padding: 15px; }
@@ -85,13 +88,24 @@
 <body>
 
     <div id="auth-overlay">
-        <div class="auth-box">
+        <div class="auth-box" id="auth-step-1">
             <h2 id="auth-title">システム ログイン</h2>
             <p style="font-size: 12px; color: #666; margin-bottom: 20px;">※個人情報保護のため、認証が必要です。</p>
-            <input type="text" id="auth-email" placeholder="メールアドレス (例: admin@test.com)">
+            <input type="text" id="auth-email" placeholder="メールアドレス (例: xelcys@gmail.com)">
             <input type="password" id="auth-password" placeholder="パスワード">
-            <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">実行</button>
+            <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">次へ (認証コード送信)</button>
             <div class="auth-toggle" onclick="toggleAuthMode()">アカウントをお持ちでない場合は新規作成</div>
+        </div>
+
+        <div class="auth-box" id="auth-step-2" style="display: none;">
+            <h2>メール認証</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 20px;">
+                <span id="display-auth-email" style="font-weight:bold; color:#1a2530;"></span> 宛に送信された6桁の認証コードを入力してください。
+                <br><br><span style="color:red;">※GitHub Pagesでのデモ環境のため、実際にはメールは送信されません。「123456」と入力して進んでください。</span>
+            </p>
+            <input type="text" id="auth-code" placeholder="認証コード (123456)">
+            <button class="btn-submit" style="margin-top: 10px;" onclick="verifyCode()">認証してログイン</button>
+            <div class="auth-toggle" onclick="location.reload()">最初からやり直す</div>
         </div>
     </div>
 
@@ -123,7 +137,8 @@
                         <h3 id="cal-month-year" style="margin: 0;">2026年 6月</h3>
                         <button class="cal-btn" onclick="changeMonth(1)">次月 ▶</button>
                     </div>
-                    <div class="calendar" id="calendar-grid"></div>
+                    <div class="calendar" id="calendar-grid">
+                        </div>
                 </div>
                 
                 <div class="panel task-box">
@@ -209,6 +224,7 @@
 
         <div id="data" class="page">
             <div class="header"><h1>学習進捗データ分析</h1></div>
+            
             <div class="panel">
                 <h3>宿題・課題の達成率推移</h3>
                 <p style="font-size: 12px; color: #666;">直近の生徒アプリでの完了状況を可視化しています。</p>
@@ -227,25 +243,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="panel premium-overlay" style="border: 2px solid var(--accent-color);">
+                <div id="premium-lock" class="premium-lock">
+                    <h3 style="color: var(--accent-color); margin-bottom: 10px;">👑 Premium プラン限定機能</h3>
+                    <p style="font-size: 14px; margin-bottom: 15px;">弱点克服用の演習プリントをAIが自動生成します。</p>
+                    <button style="background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="switchPage('settings')">プランをアップグレード</button>
+                </div>
+                
+                <h3 style="color: var(--accent-color);">🤖 弱点克服・自動プリント生成</h3>
+                <label>プリントのテーマや苦手な単元を入力</label>
+                <input type="text" placeholder="例：中3 数学 二次方程式の展開、符号ミス対策">
+                <button class="btn-submit" style="margin-top: 15px;">✨ AIでプリントを自動生成する</button>
+            </div>
         </div>
 
         <div id="settings" class="page">
             <div class="header"><h1>設定・アカウント管理</h1></div>
             <div class="workspace">
                 <div class="panel">
-                    <h3>基本プロフィール</h3>
+                    <h3>アカウント情報</h3>
+                    <label>ログイン中のメールアドレス</label>
+                    <input type="text" id="setting-email" readonly style="background: #eee; cursor: not-allowed; color: #666;">
+                    
                     <label>表示名</label><input type="text" value="家庭教師 太郎">
-                    <label>メールアドレス</label><input type="text" value="taro.tutor@criety.com">
-                    <label>パスワードの変更</label><input type="password" placeholder="新しいパスワードを入力">
                     
                     <h3 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">通知設定</h3>
                     <div style="margin-bottom: 10px;"><input type="checkbox" checked> 生徒が宿題を完了した時に通知を受け取る</div>
                     
-                    <button class="btn-submit" style="width: auto; padding: 10px 20px;">変更を保存する</button>
+                    <button class="btn-submit" style="width: auto; padding: 10px 20px;">設定を保存する</button>
                 </div>
                 <div class="panel">
-                    <h3>システム制御</h3>
-                    <p style="font-size: 12px; color: #666;">現在のセッションを破棄し、ログイン画面に戻ります。</p>
+                    <h3>プラン管理</h3>
+                    <div style="border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; background: #fffcf5; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 5px 0; font-size: 18px;">現在のプラン: <span id="plan-status" style="color: #666;">Free (無料)</span></h4>
+                        <button id="btn-upgrade-premium" style="width: 100%; margin-top: 15px; background-color: var(--accent-color); color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer;">👑 プレミアム(月額500円)にアップグレード</button>
+                    </div>
+
+                    <h3 style="border-top: 1px solid #eee; padding-top: 20px;">システム制御</h3>
                     <button style="width: 100%; padding: 12px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#c62828'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#c62828';" onclick="logout()">ログアウト</button>
                 </div>
             </div>
@@ -255,16 +290,19 @@
 
     <script>
         // ==========================================
-        // 🔒 認証 (ログイン/新規登録) システム
+        // 🔒 認証 (ログイン/新規登録/メール認証) システム
         // ==========================================
         let isLoginMode = true;
+        let tempEmail = ""; // 認証フロー中の一時保持用
 
         document.addEventListener("DOMContentLoaded", () => {
-            // ログイン済みかチェック
-            if(localStorage.getItem('criety_logged_in') === 'true') {
+            const loggedInUser = localStorage.getItem('criety_logged_in_user');
+            if(loggedInUser) {
+                // ログイン済みの場合、オーバーレイを消してセットアップ
                 document.getElementById('auth-overlay').style.display = 'none';
+                setupUserSession(loggedInUser);
+                renderCalendar(); 
             }
-            renderCalendar(); // カレンダーの初期化
         });
 
         function toggleAuthMode() {
@@ -276,30 +314,63 @@
         function handleAuth() {
             const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
-            
             if(!email || !pass) return alert("メールアドレスとパスワードを入力してください。");
 
             if(isLoginMode) {
-                // ログイン処理
                 const savedPass = localStorage.getItem('criety_user_' + email);
                 if(savedPass === pass) {
-                    localStorage.setItem('criety_logged_in', 'true');
-                    document.getElementById('auth-overlay').style.display = 'none';
+                    tempEmail = email; // メールアドレスを保持してステップ2へ
+                    startVerificationFlow();
                 } else {
                     alert("メールアドレスまたはパスワードが間違っています。");
                 }
             } else {
-                // 新規登録処理
                 localStorage.setItem('criety_user_' + email, pass);
-                alert("アカウントを作成しました！ログインしてください。");
-                toggleAuthMode();
+                tempEmail = email;
+                startVerificationFlow();
+            }
+        }
+
+        function startVerificationFlow() {
+            document.getElementById('auth-step-1').style.display = 'none';
+            document.getElementById('auth-step-2').style.display = 'block';
+            document.getElementById('display-auth-email').innerText = tempEmail;
+        }
+
+        function verifyCode() {
+            const code = document.getElementById('auth-code').value.trim();
+            if(code === '123456') { // デモ用の固定パスコード
+                localStorage.setItem('criety_logged_in_user', tempEmail);
+                document.getElementById('auth-overlay').style.display = 'none';
+                setupUserSession(tempEmail);
+                renderCalendar();
+            } else {
+                alert("認証コードが間違っています。(※テスト用コードは 123456 です)");
             }
         }
 
         function logout() {
-            localStorage.removeItem('criety_logged_in');
+            localStorage.removeItem('criety_logged_in_user');
             location.reload();
         }
+
+        // ログイン後のユーザー情報のセットアップ（設定への反映＆プレミアム判定）
+        function setupUserSession(email) {
+            // 1. 設定画面にメールアドレスを反映
+            document.getElementById('setting-email').value = email;
+
+            // 2. xelcys@gmail.com の場合はプレミアム権限を付与
+            if(email === 'xelcys@gmail.com') {
+                document.getElementById('plan-status').innerHTML = '👑 <span style="color:var(--accent-color); font-weight:bold;">永久プレミアムプラン (VIP)</span>';
+                document.getElementById('btn-upgrade-premium').style.display = 'none'; // アップグレードボタンを隠す
+                document.getElementById('premium-lock').style.display = 'none'; // Data画面のロックを解除する
+            } else {
+                document.getElementById('plan-status').innerHTML = '<span style="color:#666;">Free (無料)</span>';
+                document.getElementById('btn-upgrade-premium').style.display = 'block';
+                document.getElementById('premium-lock').style.display = 'flex';
+            }
+        }
+
 
         // ==========================================
         // 🖥️ 画面切り替え
@@ -414,7 +485,6 @@
             btn.style.background = "#999";
             output.value = "AIがあなたのメモを解析し、最適な報告書を構築しています...\nしばらくお待ちください。";
 
-            // ★ 画像から取得したAPIキーを使用
             const apiKey = "AQ.Ab8RN6LYzOjVNE0Fd6y5MDLv7tjMdfI2mwJ_U0IQWNqA475bgw";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
@@ -447,7 +517,7 @@ ${note}`;
                 console.error("Gemini API Error:", error);
                 output.value = "⚠️ エラーが発生しました。APIキーが正しいか、または通信環境を確認してください。\n詳細: " + error.message;
             } finally {
-                btn.innerText = "✨ Geminiで報告文・連絡文を生成する";
+                btn.innerText = "✨ Geminiで報告文を生成する";
                 btn.style.background = "var(--sidebar-bg)";
             }
         }
@@ -462,7 +532,6 @@ ${note}`;
         let currentColor = '#1a2530';
         let lineWidth = 5;
 
-        // 全画面モード切替
         function toggleFullscreen() {
             const panel = document.getElementById('whiteboard-panel');
             const filePanel = document.getElementById('file-panel');
@@ -499,7 +568,7 @@ ${note}`;
             if (!isDrawing) return; e.preventDefault(); 
             const pos = getPos(e); ctx.lineTo(pos.x, pos.y);
             ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
-            ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; // 高解像度なので太めに
+            ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; 
             ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
         }
         function stopDrawing() { isDrawing = false; ctx.closePath(); }
@@ -534,7 +603,6 @@ ${note}`;
         function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
 
         setInterval(() => {
-            // 通知チェック
             const isCompleted = localStorage.getItem('criety_task_status');
             const savedTask = localStorage.getItem('criety_new_task');
             if(isCompleted === 'completed' && savedTask) {
@@ -544,7 +612,6 @@ ${note}`;
                 localStorage.setItem('criety_task_status', 'notified');
             }
 
-            // グラフ更新
             const graph = document.getElementById('dynamic-graph');
             if (isCompleted === 'completed' || isCompleted === 'notified') {
                 graph.style.height = '100%'; graph.innerText = '100%';
@@ -552,7 +619,6 @@ ${note}`;
                 graph.style.height = '0%'; graph.innerText = '進行中';
             }
 
-            // チャットログ更新
             const chatLogStr = localStorage.getItem('criety_chat_log');
             const monitorArea = document.getElementById('teacher-chat-monitor');
             if(chatLogStr && monitorArea) {

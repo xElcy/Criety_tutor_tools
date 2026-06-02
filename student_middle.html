@@ -3,143 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criety - 生徒アプリ（中学生）</title>
+    <title>Criety - 生徒アプリ</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f8; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #f0f4f8; position: relative; overflow-y: auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding-bottom: 100px; }
         
-        .mid-countdown { background: #0056b3; color: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,86,179,0.2); }
-        .mid-countdown h2 { font-size: 16px; margin: 0 0 5px 0; font-weight: normal; }
-        .mid-countdown .days { font-size: 32px; font-weight: bold; }
-        
-        .mid-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .mid-card h3 { font-size: 14px; color: #333; margin: 0 0 10px 0; border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
-        .mid-task { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14px; transition: all 0.3s; }
-        .mid-task.completed { background: #e8f5e9 !important; border-color: #c8e6c9 !important; opacity: 0.8; }
-        .btn-complete { padding: 8px 15px; background: #28a745; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-complete.done { background: #6c757d; cursor: default; }
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0056b3; z-index: 99999; display: flex; justify-content: center; align-items: center; }
+        .auth-box { background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 320px; text-align: center; }
+        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-auth { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-        /* AIチャット */
-        .chat-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #d4af37; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 15px rgba(212,175,55,0.4); cursor: pointer; z-index: 9999; transition: transform 0.2s; }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #f0f4f8; position: relative; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .mid-countdown { background: #0056b3; color: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .mid-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .btn-complete { padding: 8px 15px; background: #28a745; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        /* チャット */
+        .chat-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #d4af37; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 15px rgba(212,175,55,0.4); cursor: pointer; z-index: 9999; }
         .chat-window { position: fixed; bottom: 100px; right: 20px; width: calc(100% - 40px); max-width: 360px; height: 400px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 9998; border: 2px solid #d4af37; }
-        .chat-header { background: #1a2530; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #fafafa; display: flex; flex-direction: column; gap: 10px; }
         .chat-input-area { display: flex; padding: 10px; border-top: 1px solid #eee; background: #fff; }
-        .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
-        .chat-input-area button { background: #d4af37; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; cursor: pointer; font-weight: bold; }
-        .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
-        .msg-ai { background: #e3f2fd; color: #0d47a1; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-student { background: #1a2530; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; }
+        .msg-ai { background: #e3f2fd; color: #0d47a1; align-self: flex-start; }
+        .msg-student { background: #1a2530; color: #fff; align-self: flex-end; }
         
-        /* ★ 板書更新バッジのアニメーション */
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .update-badge { display: none; background: #ff4757; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: bold; animation: pulse 1.5s infinite; margin-left: 10px; }
+        /* 設定ボタン（ログアウト用） */
+        .settings-btn { text-align: center; margin-top: 30px; color: #999; font-size: 12px; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="mid-countdown">
-            <h2>🔥 1学期 期末テストまであと</h2><div class="days">14 日</div>
+
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <h2 style="margin-bottom: 20px; color: #0056b3;">生徒ログイン</h2>
+            <input type="text" id="student-email" placeholder="メールアドレス">
+            <input type="password" id="student-password" placeholder="パスワード">
+            <button class="btn-auth" onclick="studentLogin()">ログイン</button>
+            <p style="font-size: 11px; color: #666; margin-top: 15px;">※先生から渡されたアカウント情報を入力してください。<br>（テスト用: 任意の文字でログイン可能です）</p>
         </div>
+    </div>
+
+    <div class="app-container">
+        <div class="mid-countdown"><h2>🔥 期末テストまであと</h2><div style="font-size:32px; font-weight:bold;">14 日</div></div>
         
         <div class="mid-card" id="shared-board-card" style="display: none; border: 2px solid #1a2530;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <h3 style="margin: 0; border: none; padding: 0;">👨‍🏫 先生のホワイトボード</h3>
-                <span id="board-update-badge" class="update-badge">NEW!</span>
-            </div>
-            <img id="shared-whiteboard-img" src="" style="width: 100%; border: 1px solid #ccc; border-radius: 8px; background: #fff;">
-            <p style="font-size: 11px; color: #666; margin-top: 8px; text-align: center;">※先生が共有すると自動で更新されます</p>
+            <h3>👨‍🏫 先生からのホワイトボード <span id="board-update-badge" style="display:none; background:red; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">NEW!</span></h3>
+            <img id="shared-whiteboard-img" src="" style="width: 100%; border: 1px solid #ccc; border-radius: 8px;">
         </div>
         
         <div class="mid-card">
             <h3>📚 今日の指導宿題</h3>
             <div id="dynamic-mid-task"></div>
-            <div class="mid-task" id="static-task">
-                <div>数学：連立方程式の応用 3問</div>
-                <button class="btn-complete" onclick="markDone('static-task', this)">完了にする</button>
-            </div>
         </div>
+
+        <div class="settings-btn" onclick="studentLogout()">ログアウト</div>
 
         <div class="chat-fab" onclick="toggleChat()">🤖</div>
         <div class="chat-window" id="chat-window">
-            <div class="chat-header"><span>🤖 AIチューター</span><span style="cursor: pointer; font-size: 20px;" onclick="toggleChat()">×</span></div>
+            <div style="background:#1a2530; color:#fff; padding:15px; font-weight:bold; display:flex; justify-content:space-between;"><span>🤖 AIチューター</span><span onclick="toggleChat()" style="cursor:pointer;">×</span></div>
             <div class="chat-body" id="chat-body"><div class="msg-bubble msg-ai">わからない問題があったら、いつでも聞いてね！</div></div>
             <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="質問を入力...">
-                <button onclick="sendMessage()">➤</button>
+                <input type="text" id="chat-input" placeholder="質問を入力... (※APIキー設定必須)">
+                <button onclick="sendMessage()" style="background:#d4af37; border:none; width:40px; height:40px; border-radius:50%; color:white;">➤</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 宿題の読み込み
-        window.onload = function() {
-            const savedTask = localStorage.getItem('criety_new_task');
-            if(savedTask) {
-                const task = JSON.parse(savedTask);
-                document.getElementById('dynamic-mid-task').innerHTML = `
-                    <div class="mid-task" id="dynamic-task" style="background: #e6f7ff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #90caf9;">
-                        <div style="font-weight: bold;">🆕 ${task.content}</div>
-                        <button class="btn-complete" onclick="markDynamicDone(this)">完了にする</button>
-                    </div>`;
+        // 🔒 ログイン処理
+        document.addEventListener("DOMContentLoaded", () => {
+            if(localStorage.getItem('student_logged_in') === 'true') {
+                document.getElementById('auth-overlay').style.display = 'none';
             }
-        };
+        });
+        function studentLogin() {
+            localStorage.setItem('student_logged_in', 'true');
+            document.getElementById('auth-overlay').style.display = 'none';
+        }
+        function studentLogout() {
+            localStorage.removeItem('student_logged_in');
+            location.reload();
+        }
 
-        function markDynamicDone(btn) {
-            btn.innerText = "完了済"; btn.classList.add("done");
-            document.getElementById('dynamic-task').classList.add("completed");
+        // 宿題とホワイトボードの同期
+        setInterval(() => {
+            const t = localStorage.getItem('criety_new_task');
+            if(t && !document.getElementById('dynamic-task')) {
+                const task = JSON.parse(t);
+                document.getElementById('dynamic-mid-task').innerHTML = `<div id="dynamic-task" style="background:#e6f7ff; padding:10px; border-radius:8px;"><strong>${task.content}</strong><br><button class="btn-complete" style="margin-top:10px;" onclick="markDone()">完了にする</button></div>`;
+            }
+            
+            const board = localStorage.getItem('criety_shared_whiteboard');
+            const img = document.getElementById('shared-whiteboard-img');
+            if(board) {
+                document.getElementById('shared-board-card').style.display = 'block';
+                if(img.src !== board) {
+                    img.src = board;
+                    const badge = document.getElementById('board-update-badge');
+                    badge.style.display = 'inline-block';
+                    setTimeout(() => badge.style.display = 'none', 3000);
+                }
+            }
+        }, 1000);
+
+        function markDone() {
+            document.getElementById('dynamic-task').style.opacity = '0.5';
             localStorage.setItem('criety_task_status', 'completed');
         }
 
-        function markDone(taskId, btn) {
-            btn.innerText = "完了済"; btn.classList.add("done");
-            document.getElementById(taskId).classList.add("completed");
-        }
-
-        // ★ ホワイトボードの自動受信システム ★
-        let currentBoardData = "";
-        setInterval(() => {
-            const boardData = localStorage.getItem('criety_shared_whiteboard');
-            const card = document.getElementById('shared-board-card');
-            const img = document.getElementById('shared-whiteboard-img');
-            const badge = document.getElementById('board-update-badge');
-            
-            if(boardData) {
-                card.style.display = 'block'; // 画像データがあればカードを表示
-                // 新しい画像に更新された場合のみ差し替えて「NEW」バッジを光らせる
-                if(boardData !== currentBoardData) {
-                    img.src = boardData;
-                    currentBoardData = boardData;
-                    badge.style.display = 'inline-block';
-                    // 3秒後にNEWバッジを消す
-                    setTimeout(() => { badge.style.display = 'none'; }, 3000);
-                }
-            }
-        }, 1000); // 1秒ごとに先生の画面を監視
-
-        // チャット機能
-        function toggleChat() {
-            const chat = document.getElementById('chat-window');
-            chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
-        }
-        function sendMessage() {
+        // 🤖 Gemini API チャット機能
+        function toggleChat() { document.getElementById('chat-window').style.display = document.getElementById('chat-window').style.display === 'flex' ? 'none' : 'flex'; }
+        
+        async function sendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
+
             const chatBody = document.getElementById('chat-body');
             chatBody.innerHTML += `<div class="msg-bubble msg-student">${text}</div>`;
             input.value = ''; chatBody.scrollTop = chatBody.scrollHeight;
-            let chatLog = JSON.parse(localStorage.getItem('criety_chat_log')) || [];
-            chatLog.push({ sender: 'student', text: text, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
-            localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
-            setTimeout(() => {
-                const aiReply = "なるほど！まずは x と y をどちらの式に代入するか、整理してみようか？";
+
+            // 先生側にログを残す
+            let log = JSON.parse(localStorage.getItem('criety_chat_log')) || [];
+            log.push({ sender: 'student', text: text, time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) });
+            localStorage.setItem('criety_chat_log', JSON.stringify(log));
+
+            const apiKey = localStorage.getItem('gemini_api_key'); // 先生側で設定したキーを流用
+            if(!apiKey) {
+                chatBody.innerHTML += `<div class="msg-bubble msg-ai" style="color:red;">先生のダッシュボードの設定画面で、Gemini APIキーを登録してください。</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "中学生の家庭教師として、次の質問に優しく端的に答えてください: " + text }] }] })
+                });
+                const data = await response.json();
+                const aiReply = data.candidates[0].content.parts[0].text;
+                
                 chatBody.innerHTML += `<div class="msg-bubble msg-ai">${aiReply}</div>`;
-                chatBody.scrollTop = chatBody.scrollHeight;
-                chatLog.push({ sender: 'ai', text: aiReply, time: new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'}) });
-                localStorage.setItem('criety_chat_log', JSON.stringify(chatLog));
-            }, 1000);
+                log.push({ sender: 'ai', text: aiReply, time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) });
+                localStorage.setItem('criety_chat_log', JSON.stringify(log));
+            } catch (e) {
+                chatBody.innerHTML += `<div class="msg-bubble msg-ai" style="color:red;">通信エラーが発生しました。</div>`;
+            }
+            chatBody.scrollTop = chatBody.scrollHeight;
         }
     </script>
 </body>

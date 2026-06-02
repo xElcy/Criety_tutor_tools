@@ -170,7 +170,8 @@
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
                             <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
-                            <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 テキスト</button> <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)">
+                            <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 テキスト</button>
+                            <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)">
                             <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -242,13 +243,19 @@
     <script>
         // 🔒 認証システム
         let isLoginMode = true; let tempEmail = "";
+        
         document.addEventListener("DOMContentLoaded", () => {
+            // ★ VIPアカウントの初期設定 (キャッシュクリア時にも自動設定)
+            if (!localStorage.getItem('criety_user_xelcys@gmail.com')) {
+                localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
+            }
+
             const loggedInUser = localStorage.getItem('criety_logged_in_user');
             if(loggedInUser) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 setupUserSession(loggedInUser); renderCalendar(); 
             }
-            // 保存されたAPIキーの読み込み
+            
             const apiKey = localStorage.getItem('gemini_api_key');
             if(apiKey) document.getElementById('setting-api-key').value = apiKey;
         });
@@ -282,7 +289,7 @@
 
         function setupUserSession(email) {
             document.getElementById('setting-email').value = email;
-            // 👑 xelcys@gmail.com の場合プレミアム解放
+            // 👑 VIP権限の付与
             if(email === 'xelcys@gmail.com') {
                 document.getElementById('plan-status').innerHTML = '👑 <span style="color:var(--accent-color); font-weight:bold;">永久プレミアムプラン (VIP)</span>';
                 document.getElementById('btn-upgrade-premium').style.display = 'none';
@@ -303,7 +310,7 @@
 
         // 📅 カレンダー
         let currentDate = new Date(); let selectedDateStr = "";
-        function renderCalendar() { /* 省略せず実装 */
+        function renderCalendar() {
             const y = currentDate.getFullYear(); const m = currentDate.getMonth();
             document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`;
             const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); 
@@ -369,7 +376,7 @@
             document.getElementById('preview-frame').src = "";
         }
 
-        // 🎨 ホワイトボード（テキスト機能追加）
+        // 🎨 ホワイトボード
         const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5;
 
@@ -380,7 +387,6 @@
         }
 
         canvas.onmousedown = (e) => { 
-            // ★ テキストツールの場合の処理
             if(currentTool === 'text') {
                 const text = prompt("キャンバスに挿入するテキストを入力してください:");
                 if(text) {

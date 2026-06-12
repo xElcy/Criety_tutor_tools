@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -77,6 +77,13 @@
     </style>
 </head>
 <body>
+    <div id="teacher-auth-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:9999; display:flex; justify-content:center; align-items:center;">
+    <div style="text-align:center;">
+        <h2>管理する生徒IDを入力</h2>
+        <input type="text" id="target-student-id" placeholder="例: kage" style="padding:10px; font-size:16px;">
+        <button onclick="startManage()" style="padding:10px 20px;">決定</button>
+    </div>
+    </div>
 
     <div id="auth-overlay">
         <div class="auth-box" id="auth-step-1">
@@ -274,6 +281,17 @@
     </div>
 
     <script>
+        // 生徒の状況をリアルタイムで追いかける機能
+    setInterval(() => {
+    if (!managedStudentId) return;
+
+    // 生徒が宿題を完了したかチェック
+    const status = localStorage.getItem('criety_task_status_' + managedStudentId);
+    if (status === 'completed') {
+        const btn = document.getElementById('status-display-area'); // 適宜書き換えてください
+        if(btn) btn.innerText = "💮 生徒が宿題を完了しました！";
+    }
+　　}, 1000); // 1秒ごとにチェック
         // 🔒 認証システム
         let isLoginMode = true; let tempEmail = "";
         let currentTargetStudent = ""; // ★ 通信先の生徒IDを保持する変数
@@ -372,8 +390,8 @@
             const days = document.getElementById('target-days').value.trim();
             if(title && days) {
                 // 生徒IDを末尾につけて保存（kageくん専用のデータになる）
-                localStorage.setItem(`criety_target_title_${currentTargetStudent}`, title);
-                localStorage.setItem(`criety_target_days_${currentTargetStudent}`, days);
+                localStorage.setItem('criety_target_title_' + managedStudentId, title);
+                localStorage.setItem('criety_target_days_' + managedStudentId, days);
                 alert(`✅ 生徒「${currentTargetStudent}」に目標とカウントダウンを送信しました！`);
             } else {
                 alert("目標名と日数を入力してください。");
@@ -432,7 +450,7 @@
             if(v && selectedDateStr) { 
                 addEvent('hw', v); 
                 // 生徒IDを末尾につけて送信
-                localStorage.setItem(`criety_new_task_${currentTargetStudent}`, JSON.stringify({date:selectedDateStr, content:v})); 
+                localStorage.setItem('criety_new_task_' + managedStudentId, JSON.stringify({date:selectedDateStr, content:v})); 
                 localStorage.setItem(`criety_task_status_${currentTargetStudent}`, 'pending'); 
                 alert(`✅ 生徒「${currentTargetStudent}」に宿題を送信しました！`); 
                 document.getElementById('hw-content').value = "";
@@ -532,7 +550,7 @@
         function syncWhiteboard() { 
             if(!checkConnection()) return;
             // 生徒IDを末尾につけて保存
-            localStorage.setItem(`criety_shared_whiteboard_${currentTargetStudent}`, canvas.toDataURL()); 
+            localStorage.setItem('criety_shared_whiteboard_' + managedStudentId, canvas.toDataURL()); 
             alert(`📡 生徒「${currentTargetStudent}」へホワイトボードを共有しました！`); 
         }
 
@@ -554,7 +572,7 @@
             if(!currentTargetStudent) return; // 接続されていない場合は監視しない
 
             // 宿題ステータスの監視
-            const s = localStorage.getItem(`criety_task_status_${currentTargetStudent}`);
+            const s = localStorage.getItem('criety_task_status_' + managedStudentId);
             if(s === 'completed') { 
                 document.getElementById('notification-text').innerText = `生徒「${currentTargetStudent}」が宿題を完了しました！`;
                 document.getElementById('student-notification').style.display = 'flex'; 

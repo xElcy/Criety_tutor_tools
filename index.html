@@ -5,15 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criety - 家庭教師ダッシュボード</title>
     <style>
-        :root {
-            --bg-color: #f4f6f8;
-            --sidebar-bg: #1a2530;
-            --text-main: #333333;
-            --text-light: #ffffff;
-            --accent-color: #d4af37;
-            --border-color: #dddddd;
-        }
-
+        :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
         * { box-sizing: border-box; }
         body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); }
         
@@ -22,8 +14,7 @@
         .auth-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
         .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        .auth-toggle { margin-top: 15px; font-size: 12px; color: #0056b3; cursor: pointer; text-decoration: underline; }
-
+        
         /* 📡 通信先コントロールバー */
         #top-bar { display: none; background: #0f171e; color: white; padding: 10px 20px; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         
@@ -46,12 +37,14 @@
         .panel { background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .panel h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; border-left: 4px solid var(--sidebar-bg); padding-left: 10px; }
         label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
-        input[type="text"], input[type="number"], input[type="date"], input[type="password"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input[type="text"], input[type="number"], input[type="password"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input[type="file"] { padding: 10px; border: 1px dashed #ccc; width: 100%; background: #f9f9f9; cursor: pointer; }
         .btn-submit { margin-top: 25px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
         .workspace { display: flex; gap: 20px; }
         .workspace .panel { flex: 1; margin-bottom: 0; }
         
+        /* 📅 カレンダー */
         .calendar-container { display: flex; gap: 20px; }
         .calendar-box { flex: 2; width: 100%; overflow-x: auto; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -59,31 +52,31 @@
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; min-width: 600px; padding-bottom: 10px;}
         .calendar-day-head { font-weight: bold; padding: 10px; background-color: #f4f6f8; border-radius: 4px; }
         .calendar-day { border: 1px solid var(--border-color); padding: 5px; min-height: 80px; border-radius: 4px; background: #fff; text-align: left; font-size: 12px; cursor: pointer; position: relative;}
-        .calendar-day.selected { border: 2px solid var(--accent-color); background: #fffcf5; }
+        .calendar-day.selected { border: 2px solid var(--accent-color); background: #fffcf5; box-shadow: 0 0 10px rgba(212,175,55,0.3); }
         .calendar-day.today { background: #e3f2fd; }
         .calendar-day .date-num { font-weight: bold; display: block; margin-bottom: 4px; }
         
-        /* バッジ（生徒の予定追加） */
-        .badge { background: #e0e4e8; padding: 3px 5px; border-radius: 3px; font-size: 10px; display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-        .badge.lesson { background: #e3f2fd; color: #1565c0; border-left: 2px solid #1565c0; }
-        .badge.test { background: #ffebee; color: #c62828; border-left: 2px solid #c62828; }
-        .badge.hw { background: #fff3e0; color: #e65100; border-left: 2px solid #e65100; }
-        .badge.hw-done { background: #e8f5e9; color: #2e7d32; border-left: 2px solid #2e7d32; }
-        .badge.student { background: #f3e5f5; color: #8e24aa; border-left: 2px solid #8e24aa; } /* ★生徒の予定は紫 */
+        /* バッジ */
+        .badge { background: #e0e4e8; padding: 4px 6px; border-radius: 3px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; margin-top: 3px; overflow: hidden; font-weight: bold; }
+        .badge.lesson { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
+        .badge.test { background: #ffebee; color: #c62828; border-left: 3px solid #c62828; }
+        .badge.other { background: #f5f5f5; color: #424242; border-left: 3px solid #9e9e9e; }
+        .badge.hw { background: #fff3e0; color: #e65100; border-left: 3px solid #e65100; }
+        .badge.hw-done { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
+        .badge.student { background: #f3e5f5; color: #8e24aa; border-left: 3px solid #8e24aa; }
+        .badge-del { color: #ff5252; cursor: pointer; font-size: 14px; padding-left: 5px; }
+        .badge-del:hover { color: #d32f2f; }
         
         .task-box { flex: 1; min-width: 250px; }
-        .quick-btn-group { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 15px; }
-        .quick-btn { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .quick-btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
+        .quick-btn { flex: 1; min-width: 30%; padding: 10px 5px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s;}
+        .quick-btn:hover { opacity: 0.8; transform: translateY(-2px); }
         
+        /* 🎨 ツールボタン */
         .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; font-size: 14px;}
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; font-weight: bold; }
         
-        .premium-overlay { position: relative; }
-        .premium-lock { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(2px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; border-radius: 8px; border: 2px dashed var(--accent-color); }
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; }
-        
-        #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
-        .preview-content { background: #fff; width: 85%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; }
 
         @media (max-width: 768px) { #app-layout { flex-direction: column; height: auto; overflow: auto; } .sidebar { width: 100%; padding: 15px; } .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } .main-content { padding: 15px; } .workspace, .calendar-container { flex-direction: column; } }
     </style>
@@ -95,16 +88,14 @@
             <h2 id="auth-title">先生 ログイン</h2>
             <input type="text" id="auth-email" placeholder="メールアドレス (例: xelcys@gmail.com)">
             <input type="password" id="auth-password" placeholder="パスワード">
-            <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">次へ (認証コード送信)</button>
+            <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">次へ</button>
         </div>
-
         <div class="auth-box" id="auth-step-2" style="display: none;">
             <h2>メール認証</h2>
             <p style="font-size: 12px; color: #666; margin-bottom: 20px;"><span style="color:red;">※「123456」と入力してください。</span></p>
             <input type="text" id="auth-code" placeholder="認証コード (123456)">
             <button class="btn-submit" style="margin-top: 10px;" onclick="verifyCode()">認証完了</button>
         </div>
-
         <div class="auth-box" id="auth-step-3" style="display: none;">
             <h2 style="color: #d4af37;">管理する生徒の選択</h2>
             <p style="font-size: 12px; color: #666; margin-bottom: 20px;">指導データを連携・編集する生徒のIDを入力してください。</p>
@@ -116,9 +107,9 @@
     <div id="top-bar">
         <div><span style="font-size: 12px; color: #aaa;">ログイン中: <span id="logged-in-display">未ログイン</span></span></div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 14px; font-weight: bold;">接続中の生徒ID:</span>
+            <span style="font-size: 14px; font-weight: bold;">接続中の生徒:</span>
             <span id="connection-status" style="font-size: 16px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 4px 12px; border-radius: 12px;">未接続</span>
-            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 10px;">生徒を切り替え</button>
+            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 10px;">生徒切替</button>
         </div>
     </div>
 
@@ -126,13 +117,11 @@
         <div class="sidebar">
             <h2>Criety</h2>
             <ul>
-                <li class="nav-item active" onclick="switchPage('home')">🏠 ホーム</li>
-                <li class="nav-item" onclick="switchPage('ai-report')" style="display:none;">✉️ AI連絡・報告作成</li>
-                
-                <li class="nav-item" onclick="switchPage('materials')">📚 教材・ファイル送信</li>
-                <li class="nav-item" onclick="switchPage('notes')">📝 指導ノート＆ボード</li>
-                <li class="nav-item" onclick="switchPage('data')">📊 学習進捗データ</li>
-                <li class="nav-item" onclick="switchPage('settings')">⚙️ 設定</li>
+                <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
+                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材・ファイル送信</li>
+                <li class="nav-item" onclick="switchPage('notes', this)">📝 指導ノート＆ボード</li>
+                <li class="nav-item" onclick="switchPage('data', this)">📊 学習進捗データ</li>
+                <li class="nav-item" onclick="switchPage('settings', this)">⚙️ 設定</li>
             </ul>
         </div>
 
@@ -141,8 +130,8 @@
                 <div class="header"><h1>ホーム・ダッシュボード</h1></div>
                 <div id="student-notification" class="notification-banner">🔔 <span id="notification-text">生徒が宿題を完了しました！</span><button onclick="clearNotification()" style="margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer;">×</button></div>
                 
-                <div class="panel" style="border: 2px solid #ff9800;">
-                    <h3 style="color: #e65100;">🌸 生徒への目標送信 (小学生UI連動)</h3>
+                <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5;">
+                    <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <input type="text" id="target-title" placeholder="目標名 (例: 中学受験本番)" style="flex: 2;">
                         <input type="number" id="target-days" placeholder="日数" style="flex: 1;"> <span style="font-weight: bold;">日</span>
@@ -161,29 +150,21 @@
                     </div>
                     <div class="panel task-box">
                         <h3>予定・課題の追加</h3>
-                        <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 10px;">選択中: <span id="selected-date-display">未選択</span></div>
+                        <div style="font-size:14px; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; background: #fffcf5; padding: 8px; border-radius: 4px;">
+                            選択中の日付: <span id="selected-date-display" style="color:#d32f2f;">未選択（カレンダーをタップ）</span>
+                        </div>
+                        
                         <div class="quick-btn-group">
                             <button class="quick-btn" style="background: #e3f2fd; color: #1565c0; border: 1px solid #1565c0;" onclick="addQuickEvent('lesson')">👨‍🏫 指導日</button>
                             <button class="quick-btn" style="background: #ffebee; color: #c62828; border: 1px solid #c62828;" onclick="addQuickEvent('test')">📝 テスト</button>
+                            <button class="quick-btn" style="background: #f5f5f5; color: #424242; border: 1px solid #9e9e9e;" onclick="addQuickEvent('other')">➕ その他</button>
                         </div>
-                        <input type="text" id="hw-content" placeholder="例: 数学ワークP.24〜25">
-                        <button class="btn-submit" onclick="addHomework()" style="padding:10px; margin-top:10px;">選択した日に宿題を追加</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="ai-report" class="page">
-                <div class="header"><h1>指導報告・メッセージ作成</h1></div>
-                <div class="workspace">
-                    <div class="panel" style="flex: 1;">
-                        <h3>メモからAI自動生成</h3>
-                        <textarea id="rep-note" rows="8" placeholder="箇条書きで本日の内容を入力してください..."></textarea>
-                        <select id="rep-tone"><option>標準的で丁寧</option><option>褒め重視</option><option>客観的・少し厳しめ</option></select>
-                        <button id="btn-generate-ai" class="btn-submit" onclick="generateAIReport()">✨ Geminiで生成</button>
-                    </div>
-                    <div class="panel" style="flex: 1.5;">
-                        <h3>プレビュー＆編集</h3>
-                        <textarea id="ai-output" rows="20" placeholder="※設定画面でAPIキーを登録すると機能します。"></textarea>
+                        
+                        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                            <h4 style="margin-top:0; margin-bottom:10px; font-size: 14px;">生徒へ宿題を送る</h4>
+                            <input type="text" id="hw-content" placeholder="例: 数学ワークP.24〜25">
+                            <button class="btn-submit" style="padding:10px; margin-top:10px; background: #4caf50;" onclick="addHomework()">📚 選択した日に宿題を追加</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -191,45 +172,37 @@
             <div id="materials" class="page">
                 <div class="header"><h1>教材・ファイル送信</h1></div>
                 <div class="panel">
-                    <h3>📥 生徒アプリに教材を送る</h3>
-                    <p style="font-size:12px; color:#666;">※ここに登録したファイルは、生徒アプリの「せんせいからの教材」に表示されます。</p>
+                    <h3>📥 生徒アプリに教材ファイルを送る</h3>
+                    <p style="font-size:12px; color:#666; margin-bottom: 20px;">パソコン内のPDFファイルや画像を選んで生徒に送ることができます。</p>
                     
-                    <label>教材のタイトル</label>
+                    <label>教材のタイトル (生徒に表示されます)</label>
                     <input type="text" id="mat-title" placeholder="例: 算数 小数のかけ算プリント">
                     
-                    <label>ファイルのURL (PDF または 画像のURL)</label>
-                    <input type="text" id="mat-url" placeholder="例: https://example.com/math_print.pdf">
+                    <label>ファイルを選択 (PDF または 画像)</label>
+                    <input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
                     
-                    <label>ファイルの種類</label>
-                    <select id="mat-type">
-                        <option value="pdf">PDFファイル</option>
-                        <option value="img">画像 (PNG, JPEGなど)</option>
-                    </select>
-
-                    <button class="btn-submit" onclick="sendMaterial()">🚀 この教材を生徒に送信する</button>
+                    <button class="btn-submit" onclick="sendMaterial()">🚀 このファイルを生徒に送信する</button>
                 </div>
             </div>
 
             <div id="notes" class="page">
                 <div class="header"><h1>指導ノート＆ホワイトボード</h1></div>
-                <div class="workspace">
-                    <div class="panel" id="whiteboard-panel" style="flex: 2; position: relative;">
-                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
-                                <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
-                                <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 テキスト</button>
-                                <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)">
-                                <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
-                            </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="tool-btn" style="background: #1a2530; color: white;" onclick="toggleFullscreen()">🔲 大画面</button>
-                                <button class="tool-btn" style="background: var(--accent-color); color: white;" onclick="syncWhiteboard()">📡 生徒へ共有</button>
-                                <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
-                            </div>
+                <div class="panel" id="whiteboard-panel" style="position: relative;">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
+                            <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
+                            <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 テキスト</button>
+                            <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)">
+                            <span style="font-size:12px; font-weight:bold;">太さ:</span>
+                            <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
                         </div>
-                        <canvas id="whiteboard" width="1600" height="800" style="width: 100%; border: 1px solid #ccc; cursor: crosshair; background: white; touch-action: none;"></canvas>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="tool-btn" style="background: var(--accent-color); color: white; font-weight:bold; border:none;" onclick="syncWhiteboard()">📡 描いた内容を生徒へ送信</button>
+                            <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
+                        </div>
                     </div>
+                    <canvas id="whiteboard" width="1000" height="600" style="width: 100%; border: 2px solid #ccc; border-radius: 8px; cursor: crosshair; background: white; touch-action: none;"></canvas>
                 </div>
             </div>
 
@@ -237,12 +210,11 @@
                 <div class="header"><h1>学習進捗データ分析</h1></div>
                 
                 <div class="panel" style="border: 2px solid var(--accent-color); background: #fffcf5;">
-                    <h3 style="color: var(--accent-color);">💮 獲得ごほうびスタンプ</h3>
+                    <h3 style="color: var(--accent-color);">💮 生徒の獲得ごほうびスタンプ</h3>
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div style="font-size: 64px;" id="stamp-display-count">0</div>
                         <div style="font-size: 24px; color: #666;">個 獲得済み</div>
                     </div>
-                    <p style="font-size: 12px; color: #999;">※生徒が宿題をクリアすると自動で増えていきます。</p>
                 </div>
 
                 <div class="panel">
@@ -262,39 +234,18 @@
                         <h3>アカウント情報</h3>
                         <label>ログイン中のメールアドレス</label>
                         <input type="text" id="setting-email" readonly style="background: #eee; cursor: not-allowed; color: #666;">
-                        
-                        <div style="display:none;">
-                            <label>Gemini API キー</label>
-                            <input type="password" id="setting-api-key" placeholder="APIキーを入力して保存">
-                            <button class="btn-submit" style="width: auto; padding: 8px 15px; margin-top: 10px;" onclick="saveApiKey()">APIキーを保存</button>
-                        </div>
                     </div>
                     <div class="panel">
-                        <h3>プラン管理</h3>
-                        <div style="border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; background: #fffcf5; margin-bottom: 20px;">
-                            <h4 style="margin: 0; font-size: 18px;">現在のプラン: <span id="plan-status">Free (無料)</span></h4>
-                            <button id="btn-upgrade-premium" style="width: 100%; margin-top: 15px; background-color: var(--accent-color); color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer;">👑 プレミアムにアップグレード</button>
-                        </div>
-                        <button style="width: 100%; padding: 12px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">完全ログアウト</button>
+                        <button style="width: 100%; padding: 15px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">システムからログアウト</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="preview-modal">
-        <div class="preview-content">
-            <div style="padding: 15px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
-                <h3 style="margin: 0; font-size: 16px;" id="preview-title">ファイルプレビュー</h3>
-                <button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">閉じる</button>
-            </div>
-            <iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src=""></iframe>
-        </div>
-    </div>
-
     <script>
         // ==========================================
-        // 🔒 認証＆生徒切り替えシステム
+        // 🔒 認証＆生徒切り替え
         // ==========================================
         let tempEmail = "";
         let managedStudentId = ""; 
@@ -316,8 +267,6 @@
                     document.getElementById('auth-step-3').style.display = 'block';
                 }
             }
-            const apiKey = localStorage.getItem('gemini_api_key');
-            if(apiKey) document.getElementById('setting-api-key').value = apiKey;
         });
 
         function handleAuth() {
@@ -326,8 +275,7 @@
             if(!email || !pass) return;
             if(email === 'xelcys@gmail.com' && pass === '123456') { 
                 localStorage.setItem('criety_user_xelcys@gmail.com', '123456'); 
-            }
-            else if(localStorage.getItem('criety_user_' + email) !== pass) { 
+            } else if(localStorage.getItem('criety_user_' + email) !== pass) { 
                 return alert("情報が間違っています。"); 
             }
             tempEmail = email;
@@ -356,11 +304,7 @@
             
             document.getElementById('logged-in-display').innerText = tempEmail;
             document.getElementById('connection-status').innerText = id;
-            
             document.getElementById('setting-email').value = tempEmail;
-            if(tempEmail === 'xelcys@gmail.com') {
-                document.getElementById('plan-status').innerHTML = '👑 <span style="color:var(--accent-color); font-weight:bold;">永久プレミアムプラン (VIP)</span>';
-            }
             
             document.getElementById('target-title').value = localStorage.getItem('criety_target_title_' + managedStudentId) || "";
             document.getElementById('target-days').value = localStorage.getItem('criety_target_days_' + managedStudentId) || "";
@@ -381,46 +325,18 @@
 
         function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
         
-        function switchPage(pageId) { 
+        function switchPage(pageId, el) { 
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            
             document.getElementById(pageId).classList.add('active'); 
-            event.currentTarget.classList.add('active');
-        }
-        
-        function saveApiKey() { 
-            localStorage.setItem('gemini_api_key', document.getElementById('setting-api-key').value.trim()); 
-            alert("保存しました！"); 
+            if(el) el.classList.add('active');
         }
 
         // ==========================================
-        // 📊 生徒データ読み込みと送信機能
+        // 📅 カレンダー＆予定機能
         // ==========================================
-        function loadStudentData() {
-            renderCalendar();
-            clearBoard();
-            
-            const savedBoard = localStorage.getItem('criety_shared_whiteboard_' + managedStudentId);
-            if(savedBoard) {
-                const img = new Image();
-                img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
-                img.src = savedBoard;
-            }
-        }
-
-        function sendTarget() {
-            const title = document.getElementById('target-title').value.trim();
-            const days = document.getElementById('target-days').value.trim();
-            if(title && days) {
-                localStorage.setItem('criety_target_title_' + managedStudentId, title);
-                localStorage.setItem('criety_target_days_' + managedStudentId, days);
-                alert(`✅ 生徒「${managedStudentId}」に目標を送信しました！`);
-            }
-        }
-
-        // カレンダー機能
         let currentDate = new Date(); let selectedDateStr = "";
+        
         function renderCalendar() {
             const y = currentDate.getFullYear(); const m = currentDate.getMonth();
             document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`;
@@ -448,19 +364,24 @@
 
                 if(events[dateStr]) {
                     events[dateStr].forEach((ev, idx) => {
+                        // バッジのスタイル判定
                         let c = ev.type === 'lesson' ? 'lesson' : 
                                 ev.type === 'test' ? 'test' : 
-                                ev.type === 'student' ? 'student' : 'hw'; // ★生徒の予定は 'student'
+                                ev.type === 'student' ? 'student' : 
+                                ev.type === 'hw' ? 'hw' : 'other';
                                 
+                        // バッジのテキスト判定
                         let txt = ev.type === 'lesson' ? '👨‍🏫 指導日' : 
                                   ev.type === 'test' ? `📝 ${ev.text}` : 
-                                  ev.type === 'student' ? `👦 ${ev.text}` : `宿: ${ev.text}`; // ★生徒の予定の表示
+                                  ev.type === 'student' ? `👦 ${ev.text}` : 
+                                  ev.type === 'hw' ? `宿: ${ev.text}` : `📌 ${ev.text}`;
                         
                         if (ev.type === 'hw' && isTaskDone) {
                             c = 'hw-done'; txt = `💮 済: ${ev.text}`;
                         }
                         
-                        badgesHtml += `<span class="badge ${c}">${txt} <span style="color:red; cursor:pointer; float:right; margin-left:5px;" onclick="event.stopPropagation(); deleteEvent('${dateStr}', ${idx})">×</span></span>`;
+                        // ★ Xボタンを押したときにイベントを消す処理を付与
+                        badgesHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dateStr}', ${idx})">×</span></span>`;
                     });
                 }
                 html += `<div class="${classes}" onclick="selectDate('${dateStr}')"><span class="date-num">${i}</span>${badgesHtml}</div>`;
@@ -468,73 +389,164 @@
             grid.innerHTML = html;
         }
 
-        function deleteEvent(dateStr, idx) { 
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)); 
-            evs[dateStr].splice(idx,1); 
-            localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
+        function selectDate(d) { 
+            selectedDateStr = d; 
+            document.getElementById('selected-date-display').innerText = d; 
+            document.getElementById('selected-date-display').style.color = '#1565c0';
             renderCalendar(); 
         }
-        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); renderCalendar(); }
-        function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; renderCalendar(); }
-        function addQuickEvent(t) { if(!selectedDateStr) return; let text = t==='lesson'?'指導日':prompt("テスト名:"); if(text) addEvent(t, text); }
-        
-        function addHomework() { 
-            const v = document.getElementById('hw-content').value; 
-            if(v && selectedDateStr) { 
-                addEvent('hw', v); 
-                localStorage.setItem('criety_new_task_' + managedStudentId, JSON.stringify({date:selectedDateStr, content:v})); 
-                localStorage.setItem('criety_task_status_' + managedStudentId, 'pending'); 
-                alert(`✅ 生徒「${managedStudentId}」に宿題を送信しました！`); 
-                document.getElementById('hw-content').value = "";
-            }
+
+        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（カレンダーをタップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
+
+        // ★ 予定追加（指導日・テスト・その他）
+        function addQuickEvent(type) { 
+            if(!selectedDateStr) return alert("まずカレンダーで日付をタップして選択してください！"); 
+            let text = "";
+            if(type === 'lesson') text = "指導日";
+            else if(type === 'test') text = prompt("テスト名を入力してください:");
+            else text = prompt("予定を入力してください:");
+
+            if(text) addEvent(type, text); 
         }
+        
+        // ★ 宿題追加
+        function addHomework() { 
+            if(!selectedDateStr) return alert("まずカレンダーで日付をタップして選択してください！"); 
+            const v = document.getElementById('hw-content').value.trim(); 
+            if(!v) return alert("宿題の内容を入力してください！");
+            
+            addEvent('hw', v); 
+            localStorage.setItem('criety_new_task_' + managedStudentId, JSON.stringify({date:selectedDateStr, content:v})); 
+            localStorage.setItem('criety_task_status_' + managedStudentId, 'pending'); 
+            alert(`✅ 生徒「${managedStudentId}」に宿題を送信しました！`); 
+            document.getElementById('hw-content').value = "";
+        }
+
         function addEvent(type, text) { 
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId))||{}; 
-            if(!evs[selectedDateStr]) evs[selectedDateStr]=[]; 
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {}; 
+            if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
             evs[selectedDateStr].push({type, text}); 
             localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
             renderCalendar(); 
         }
 
+        // ★ 予定削除機能
+        window.deleteEvent = function(dateStr, idx) { 
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)); 
+            if(evs && evs[dateStr]) {
+                evs[dateStr].splice(idx, 1); 
+                if(evs[dateStr].length === 0) delete evs[dateStr]; // 空になったら日付ごと消す
+                localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
+                renderCalendar(); 
+            }
+        };
+
+        function sendTarget() {
+            const title = document.getElementById('target-title').value.trim();
+            const days = document.getElementById('target-days').value.trim();
+            if(title && days) {
+                localStorage.setItem('criety_target_title_' + managedStudentId, title);
+                localStorage.setItem('criety_target_days_' + managedStudentId, days);
+                alert(`✅ 生徒「${managedStudentId}」に目標を送信しました！`);
+            } else {
+                alert("目標名と日数を両方入力してください。");
+            }
+        }
+
         // ==========================================
-        // 📚 新設：教材送信機能
+        // 📚 ファイル選択＆送信機能（完全リニューアル）
         // ==========================================
         function sendMaterial() {
             const title = document.getElementById('mat-title').value.trim();
-            const url = document.getElementById('mat-url').value.trim();
-            const type = document.getElementById('mat-type').value;
+            const fileInput = document.getElementById('mat-file-input');
 
-            if(!title || !url) return alert("タイトルとURLを入力してください！");
+            if(!title || !fileInput.files[0]) {
+                return alert("教材のタイトルを入力し、パソコンからファイルを選択してください！");
+            }
 
-            let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-            materials.push({ name: title, url: url, type: type });
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                let type = 'img';
+                if(file.type === 'application/pdf') type = 'pdf';
+                
+                let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+                materials.push({ name: title, url: dataUrl, type: type });
+                
+                try {
+                    localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
+                    alert(`✅ 教材「${title}」を生徒アプリに送信しました！`);
+                    
+                    document.getElementById('mat-title').value = "";
+                    fileInput.value = "";
+                } catch(err) {
+                    alert("❌ エラー: ファイルのサイズが大きすぎます。システム制限のため、容量の小さいファイルを選んでください。");
+                }
+            };
             
-            localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
-            alert(`✅ 教材「${title}」を生徒アプリに送信しました！`);
-            
-            document.getElementById('mat-title').value = "";
-            document.getElementById('mat-url').value = "";
+            // ファイルを読み込む
+            reader.readAsDataURL(file);
         }
 
-
         // ==========================================
-        // 🎨 ホワイトボード
+        // 🎨 ホワイトボード (機能復旧)
         // ==========================================
-        const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('whiteboard'); 
+        const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5;
+        
         function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) * (canvas.width / rect.width), y: ((e.clientY || (e.touches && e.touches[0].clientY)) - rect.top) * (canvas.height / rect.height) }; }
-        canvas.onmousedown = (e) => { if(currentTool === 'text') { const text = prompt("テキストを入力:"); if(text) { const p = getPos(e); ctx.font = `bold ${lineWidth * 8}px sans-serif`; ctx.fillStyle = currentColor; ctx.fillText(text, p.x, p.y); } return; } isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-        canvas.onmousemove = (e) => { if(isDrawing && currentTool !== 'text') { e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool==='eraser'?'#fff':currentColor; ctx.lineWidth = currentTool==='eraser'?40:lineWidth; ctx.lineCap='round'; ctx.stroke(); } };
+        
+        canvas.onmousedown = (e) => { 
+            if(currentTool === 'text') { 
+                const text = prompt("キャンバスに入力するテキスト:"); 
+                if(text) { 
+                    const p = getPos(e); 
+                    ctx.font = `bold ${lineWidth * 8}px sans-serif`; 
+                    ctx.fillStyle = currentColor; 
+                    ctx.fillText(text, p.x, p.y); 
+                } 
+                return; 
+            } 
+            isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); 
+        };
+        
+        canvas.onmousemove = (e) => { 
+            if(isDrawing && currentTool !== 'text') { 
+                e.preventDefault(); 
+                const p = getPos(e); 
+                ctx.lineTo(p.x, p.y); 
+                ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
+                ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; 
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.stroke(); 
+            } 
+        };
+        
         canvas.onmouseup = () => isDrawing = false;
+        canvas.onmouseout = () => isDrawing = false;
+        
         function setTool(t) { currentTool = t; document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
-        function clearBoard() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-        function toggleFullscreen() { const panel = document.getElementById('whiteboard-panel'); if (panel.style.position === 'fixed') { panel.style.position = 'relative'; panel.style.top = 'auto'; panel.style.left = 'auto'; panel.style.width = 'auto'; panel.style.height = 'auto'; panel.style.zIndex = '1'; } else { panel.style.position = 'fixed'; panel.style.top = '20px'; panel.style.left = '20px'; panel.style.width = 'calc(100vw - 40px)'; panel.style.height = 'calc(100vh - 40px)'; panel.style.zIndex = '9999'; } }
+        function clearBoard() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
         
         function syncWhiteboard() { 
             localStorage.setItem('criety_shared_whiteboard_' + managedStudentId, canvas.toDataURL()); 
-            alert(`📡 生徒「${managedStudentId}」へ共有しました！`); 
+            alert(`📡 描いたホワイトボードを生徒「${managedStudentId}」へ送信しました！`); 
+        }
+
+        function loadStudentData() {
+            renderCalendar();
+            clearBoard();
+            const savedBoard = localStorage.getItem('criety_shared_whiteboard_' + managedStudentId);
+            if(savedBoard) {
+                const img = new Image();
+                img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+                img.src = savedBoard;
+            }
         }
 
         // ==========================================
@@ -545,7 +557,6 @@
         setInterval(() => {
             if(!managedStudentId) return;
 
-            // 1. 宿題ステータスの監視
             const s = localStorage.getItem('criety_task_status_' + managedStudentId);
             if(s === 'completed') { 
                 document.getElementById('notification-text').innerText = `生徒「${managedStudentId}」が宿題を完了しました！`;
@@ -561,7 +572,6 @@
                 g.style.height='0%'; g.innerText='進行中'; 
             }
             
-            // 2. スタンプ数の監視 (AIログの代わりに追加)
             const stampCount = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
             document.getElementById('stamp-display-count').innerText = stampCount;
             

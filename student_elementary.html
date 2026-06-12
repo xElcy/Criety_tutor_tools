@@ -3,275 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criety - 生徒アプリ（中学受験用）</title>
+    <title>Criety - 生徒アプリ</title>
     <style>
+        :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; --student-event: #9c27b0; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Helvetica Neue', Arial, sans-serif; background-color: #fff9e6; display: flex; justify-content: center; color: #4a4a4a; }
+        body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; }
         
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffb74d; z-index: 99999; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220, 140, 0, 0.3); }
-        .auth-box h2 { margin-bottom: 5px; color: #e65100; font-size: 22px; }
-        .auth-box p { font-size: 12px; color: #666; margin-bottom: 20px; }
+        .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220,140,0,0.3); }
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
-        .auth-box input:focus { border-color: #ff9800; }
-        .btn-auth { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 0 #f57c00; }
-        .btn-auth:active { transform: translateY(4px); box-shadow: none; }
+        .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 20px; padding-bottom: 50px; }
         
-        .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #fff; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255, 154, 158, 0.4); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); display: none; }
-        .mid-countdown h2 { font-size: 18px; margin: 0 0 10px 0; }
+        .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
         
-        .mid-card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
-        .mid-card h3 { font-size: 16px; color: #ff9800; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+        .mid-card { background: #fff; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
+        .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         
-        .btn-complete { padding: 10px 20px; background: #66bb6a; color: #fff; border: none; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 0 #43a047; transition: 0.2s; }
-        .btn-complete:active { transform: translateY(4px); box-shadow: none; }
-        .btn-complete.done { background: #bdbdbd; box-shadow: none; cursor: default; transform: translateY(4px); }
+        /* 📅 ミニカレンダー */
+        .mini-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 10px; text-align: center; }
+        .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
+        .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 45px; padding: 2px; position: relative; }
+        .cal-day.today { background: #fff9c4; border-color: var(--main); }
+        .cal-badge { font-size: 8px; border-radius: 2px; color: white; display: block; margin-top: 1px; overflow: hidden; white-space: nowrap; }
+
+        /* 💮 スタンプ帳 */
+        .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .stamp-slot { width: 100%; aspect-ratio: 1; border: 2px dashed #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #fafafa; }
+        .stamp-slot.filled { border-style: solid; border-color: #ffcdd2; background: #fff; animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* 📚 教材閲覧 */
+        .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f9f9f9; cursor: pointer; transition: 0.2s; }
+        .file-item:hover { background: #f0f8ff; }
+        .file-icon { font-size: 20px; }
+
+        .btn-complete { padding: 12px; background: var(--success); color: #fff; border: none; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; box-shadow: 0 4px 0 #43a047; }
+        .btn-complete.done { background: #bdbdbd; box-shadow: none; transform: translateY(4px); }
         
-        .chat-fab { position: fixed; bottom: 30px; right: 20px; width: 70px; height: 70px; background: #29b6f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 6px 20px rgba(41, 182, 246, 0.5); cursor: pointer; z-index: 9999; animation: bounce 2s infinite; border: 4px solid #fff; }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
-        
-        .chat-window { position: fixed; bottom: 110px; right: 20px; width: calc(100% - 40px); max-width: 360px; height: 450px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 9998; border: 4px solid #29b6f6; }
-        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #e1f5fe; display: flex; flex-direction: column; gap: 12px; }
-        .chat-input-area { display: flex; padding: 15px; border-top: 2px solid #eee; background: #fff; }
-        .chat-input-area input { flex: 1; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 25px; outline: none; font-size: 14px; }
-        
-        .msg-bubble { max-width: 85%; padding: 12px 18px; border-radius: 20px; font-size: 14px; line-height: 1.5; }
-        .msg-ai { background: #fff; color: #333; align-self: flex-start; border-radius: 20px 20px 20px 4px; border: 2px solid #b3e5fc; }
-        .msg-student { background: #29b6f6; color: #fff; align-self: flex-end; border-radius: 20px 20px 4px 20px; font-weight: bold; }
-        
-        .settings-btn { text-align: center; margin-top: 30px; color: #ffb74d; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .settings-btn { text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; }
+
+        /* プレビュー表示 */
+        #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay">
         <div class="auth-box">
-            <h2>Criety ログイン</h2>
-            <p>きめられた ID と パスワードをいれてね！</p>
+            <h2 style="color:var(--main)">Criety ログイン</h2>
             <input type="text" id="student-email" placeholder="ユーザーID (kage)">
             <input type="password" id="student-password" placeholder="パスワード (123)">
             <button class="btn-auth" onclick="studentLogin()">はじめる！</button>
         </div>
     </div>
 
+    <div id="preview-overlay">
+        <div style="background:#fff; padding:10px; text-align:right;"><button onclick="closeFile()">閉じる ✖</button></div>
+        <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
+    </div>
+
     <div class="app-container">
         
         <div class="mid-countdown" id="countdown-area">
-            <h2 id="countdown-title">🌸 目標タイトル</h2>
-            <div id="countdown-days" style="font-size:42px; font-weight:bold; letter-spacing: 2px;">- 日</div>
+            <h2 id="countdown-title">🌸 目標</h2>
+            <div id="countdown-days" style="font-size:36px; font-weight:bold;">- 日</div>
         </div>
-        
-        <div class="mid-card" id="shared-board-card" style="display: none; border: 3px solid #ffb74d;">
-            <h3>👨‍🏫 せんせいの ホワイトボード <span id="board-update-badge" style="display:none; background:#ff4757; color:white; font-size:12px; padding:4px 8px; border-radius:10px; margin-left: auto;">あたらしい！</span></h3>
-            <img id="shared-whiteboard-img" src="" style="width: 100%; border-radius: 10px; background: #fff;">
+
+        <div class="mid-card">
+            <h3>💮 ごほうびスタンプ</h3>
+            <div class="stamp-grid" id="stamp-grid"></div>
+            <p style="font-size:10px; text-align:right; margin-top:10px; color:#999;">しゅくだいをクリアすると貯まるよ！</p>
         </div>
         
         <div class="mid-card">
-            <h3>📚 きょうの しゅくだい</h3>
-            <div id="dynamic-mid-task">
-                <div id="no-task-message" style="text-align: center; color: #999; font-size: 14px; padding: 10px 0;">いまは しゅくだいは ありません✨</div>
+            <h3>📅 よてい表</h3>
+            <div class="mini-calendar" id="mini-calendar"></div>
+            <button onclick="addStudentEvent()" style="width:100%; margin-top:10px; font-size:12px; padding:5px; border-radius:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">➕ じぶんの予定を入れる</button>
+        </div>
+
+        <div class="mid-card">
+            <h3>📚 せんせいからの教材</h3>
+            <div id="material-list">
+                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>
             </div>
         </div>
 
-        <div class="settings-btn" onclick="studentLogout()">🚪 ログアウトする</div>
-
-        <div class="chat-fab" onclick="toggleChat()">🦉</div>
-        <div class="chat-window" id="chat-window">
-            <div style="background:#29b6f6; color:#fff; padding:15px; font-weight:bold; display:flex; justify-content:space-between; align-items: center;">
-                <span style="font-size: 16px;">🦉 AI先生に しつもん</span>
-                <span onclick="toggleChat()" style="cursor:pointer; font-size: 24px; line-height: 1;">×</span>
-            </div>
-            <div class="chat-body" id="chat-body">
-                <div class="msg-bubble msg-ai">こんにちは！わからない問題があったら、いつでもきいてね。いっしょに受験べんきょう がんばろう！🌟</div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="ここにしつもんをかいてね...">
-                <button onclick="sendMessage()" style="background:#ff9800; border:none; width:45px; height:45px; border-radius:50%; color:white; font-size: 18px; margin-left: 10px; cursor: pointer; box-shadow: 0 3px 0 #f57c00;">➤</button>
-            </div>
+        <div class="mid-card">
+            <h3>📝 きょうの しゅくだい</h3>
+            <div id="dynamic-mid-task"><p style="font-size:12px; color:#999; text-align:center;">なし</p></div>
         </div>
+
+        <div class="mid-card" id="shared-board-card" style="display: none;">
+            <h3>👨‍🏫 せんせいのホワイトボード</h3>
+            <img id="shared-whiteboard-img" src="" style="width: 100%; border-radius: 10px;">
+        </div>
+
+        <div class="settings-btn" onclick="studentLogout()">🚪 ログアウト</div>
     </div>
 
     <script>
-        let myStudentId = ""; // ログイン中の生徒IDを保持
+        let myStudentId = "";
+        const STAMP_MAX = 10;
 
         document.addEventListener("DOMContentLoaded", () => {
             if(localStorage.getItem('student_elementary_logged_in') === 'true') {
                 myStudentId = localStorage.getItem('my_student_id') || "kage";
                 document.getElementById('auth-overlay').style.display = 'none';
+                renderStamps();
+                renderCalendar();
             }
         });
 
         function studentLogin() {
-            try {
-                // 【全角を半角に自動変換するお助け機能】
-                const toHalfWidth = (str) => {
-                    return str.replace(/[！-～]/g, function(s) {
-                        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-                    }).replace(/ /g, ' '); // 全角スペースも消す
-                };
+            const id = document.getElementById('student-email').value.trim();
+            const pass = document.getElementById('student-password').value.trim();
+            if(id === 'kage' && pass === '123') {
+                myStudentId = id;
+                localStorage.setItem('student_elementary_logged_in', 'true');
+                localStorage.setItem('my_student_id', id);
+                document.getElementById('auth-overlay').style.display = 'none';
+                renderStamps();
+                renderCalendar();
+            } else { alert("IDかパスワードがちがうよ！"); }
+        }
 
-                const rawId = document.getElementById('student-email').value;
-                const rawPass = document.getElementById('student-password').value;
+        function studentLogout() { localStorage.clear(); location.reload(); }
 
-                const id = toHalfWidth(rawId).trim().toLowerCase();
-                const pass = toHalfWidth(rawPass).trim();
+        // 💮 スタンプ表示
+        function renderStamps() {
+            const count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
+            const grid = document.getElementById('stamp-grid');
+            grid.innerHTML = "";
+            for(let i=1; i<=STAMP_MAX; i++) {
+                const slot = document.createElement('div');
+                slot.className = i <= count ? "stamp-slot filled" : "stamp-slot";
+                slot.innerHTML = i <= count ? "💮" : "";
+                grid.appendChild(slot);
+            }
+        }
 
-                if(id === 'kage' && pass === '123') {
-                    myStudentId = id; // IDをシステムに教える
-                    
-                    try {
-                        localStorage.setItem('student_elementary_logged_in', 'true');
-                        localStorage.setItem('my_student_id', id); // IDも保存
-                    } catch(e) {
-                        console.warn("iframe環境によるストレージ制限エラーを回避しました。");
-                    }
-                    
-                    document.getElementById('auth-overlay').style.display = 'none';
-                } else {
-                    alert(`❌ ID または パスワードが まちがっているよ！\n(あなたが入力した文字: ${id} / ${pass})`);
+        // 📅 カレンダー表示
+        function renderCalendar() {
+            const grid = document.getElementById('mini-calendar');
+            grid.innerHTML = "";
+            const today = new Date();
+            const year = today.getFullYear(), month = today.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+
+            ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
+
+            const startDay = new Date(year, month, 1).getDay();
+            for(let i=0; i<startDay; i++) grid.innerHTML += `<div></div>`;
+
+            for(let i=1; i<=daysInMonth; i++) {
+                const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let badgeHtml = "";
+                if(events[dStr]) {
+                    events[dStr].forEach(ev => {
+                        let color = ev.type==='hw' ? '#ff9800' : (ev.type==='lesson' ? '#2196f3' : '#9c27b0');
+                        badgeHtml += `<span class="cal-badge" style="background:${color}">${ev.text}</span>`;
+                    });
                 }
-            } catch(e) {
-                alert("ログイン処理中にエラーが発生しました: " + e.message);
+                grid.innerHTML += `<div class="cal-day ${i===today.getDate()?'today':''}"><b>${i}</b>${badgeHtml}</div>`;
             }
         }
 
-        function studentLogout() {
-            try {
-                localStorage.removeItem('student_elementary_logged_in');
-                localStorage.removeItem('my_student_id');
-            } catch(e) {}
-            location.reload();
+        function addStudentEvent() {
+            const text = prompt("なにをする？ (例: じしゅう、読書)");
+            if(!text) return;
+            const today = new Date();
+            const dStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+            if(!evs[dStr]) evs[dStr] = [];
+            evs[dStr].push({type: 'student', text: text});
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
+            renderCalendar();
+            alert("よていを保存したよ！先生にも見えてるよ。");
         }
 
-        // 🔄 先生側からの送信データ（kage宛て）を監視
+        // 🔄 先生側からの同期
         setInterval(() => {
-            if(!myStudentId) return; // ログイン前は何もしない
+            if(!myStudentId) return;
 
-            // 1. 目標の同期
-            const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
-            const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
-            const countdownArea = document.getElementById('countdown-area');
-            
-            if(targetTitle && targetDays) {
-                countdownArea.style.display = 'block';
-                document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
-                document.getElementById('countdown-days').innerText = `${targetDays} 日`;
-            } else {
-                countdownArea.style.display = 'none';
+            // 教材の同期
+            const files = JSON.parse(localStorage.getItem('criety_materials_' + myStudentId)) || [];
+            const list = document.getElementById('material-list');
+            if(files.length > 0) {
+                list.innerHTML = files.map(f => `
+                    <div class="file-item" onclick="openFile('${f.url}', '${f.type}')">
+                        <span class="file-icon">${f.type==='pdf'?'📄':'🖼️'}</span>
+                        <div style="font-size:12px;"><b>${f.name}</b><br><span style="color:#999;">タップでみる</span></div>
+                    </div>
+                `).join('');
             }
 
-            // 2. 宿題の同期
+            // 宿題の同期
             const t = localStorage.getItem('criety_new_task_' + myStudentId);
             const status = localStorage.getItem('criety_task_status_' + myStudentId);
-            const taskContainer = document.getElementById('dynamic-mid-task');
-            
             if(t) {
                 const task = JSON.parse(t);
-                if(!document.getElementById('dynamic-task') || document.getElementById('dynamic-task-content').innerText !== `🆕 ${task.content}`) {
-                    let btnHtml = `<button class="btn-complete" style="margin-top:15px; width: 100%;" onclick="markDone()">できた！💮</button>`;
-                    let bgStyle = "background:#fff3e0; border: 2px solid #ffe0b2;";
-                    
-                    if (status === 'completed' || status === 'notified') {
-                        btnHtml = `<button class="btn-complete done" style="margin-top:15px; width: 100%;">クリア！🌟</button>`;
-                        bgStyle = "background:#e8f5e9; border: 2px solid #c8e6c9;";
-                    }
-
-                    taskContainer.innerHTML = `
-                        <div id="dynamic-task" style="${bgStyle} padding:15px; border-radius:15px; transition: 0.3s;">
-                            <strong id="dynamic-task-content" style="font-size: 16px; display: block; color: #d84315;">🆕 ${task.content}</strong>
-                            ${btnHtml}
-                        </div>`;
-                }
-            } else {
-                taskContainer.innerHTML = `<div id="no-task-message" style="text-align: center; color: #999; font-size: 14px; padding: 10px 0;">いまは しゅくだいは ありません✨</div>`;
+                document.getElementById('dynamic-mid-task').innerHTML = `
+                    <div style="background:#e8f5e9; padding:10px; border-radius:10px;">
+                        <strong>🆕 ${task.content}</strong><br>
+                        <button class="btn-complete ${status==='completed'?'done':''}" 
+                                onclick="${status==='completed'?'':'markDone()'}">
+                            ${status==='completed'?'クリア！🌟':'おわったよ！💮'}
+                        </button>
+                    </div>`;
             }
-            
-            // 3. ホワイトボードの同期
+
+            // 目標とホワイトボード（省略せず実装）
+            const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
+            const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
+            if(targetTitle && targetDays) {
+                document.getElementById('countdown-area').style.display = 'block';
+                document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
+                document.getElementById('countdown-days').innerText = `${targetDays} 日`;
+            }
             const board = localStorage.getItem('criety_shared_whiteboard_' + myStudentId);
-            const img = document.getElementById('shared-whiteboard-img');
             if(board) {
                 document.getElementById('shared-board-card').style.display = 'block';
-                if(img.src !== board) {
-                    img.src = board;
-                    const badge = document.getElementById('board-update-badge');
-                    badge.style.display = 'inline-block';
-                    setTimeout(() => badge.style.display = 'none', 4000);
-                }
-            } else {
-                document.getElementById('shared-board-card').style.display = 'none';
+                document.getElementById('shared-whiteboard-img').src = board;
             }
-        }, 1000);
+        }, 2000);
 
         function markDone() {
-            if(!myStudentId) return;
-            try {
-                localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
-            } catch(e) {}
-            const taskDiv = document.getElementById('dynamic-task');
-            taskDiv.style.background = '#e8f5e9';
-            taskDiv.style.borderColor = '#c8e6c9';
-            const btn = taskDiv.querySelector('button');
-            btn.className = 'btn-complete done';
-            btn.innerText = 'クリア！🌟';
-            btn.onclick = null;
+            localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
+            // スタンプ追加
+            let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
+            localStorage.setItem('criety_stamps_' + myStudentId, count + 1);
+            renderStamps();
+            alert("すごーい！スタンプを 1こ おしたよ！💮");
         }
 
-        // 🤖 Gemini チャット
-        function toggleChat() { 
-            const window = document.getElementById('chat-window');
-            window.style.display = window.style.display === 'flex' ? 'none' : 'flex'; 
+        function openFile(url, type) {
+            const content = document.getElementById('file-content');
+            if(type === 'pdf') {
+                content.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;"></iframe>`;
+            } else {
+                content.innerHTML = `<img src="${url}" style="max-width:100%; height:auto;">`;
+            }
+            document.getElementById('preview-overlay').style.display = 'flex';
         }
-        
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(!text) return;
-
-            const chatBody = document.getElementById('chat-body');
-            chatBody.innerHTML += `<div class="msg-bubble msg-student">${text}</div>`;
-            input.value = ''; 
-            chatBody.scrollTop = chatBody.scrollHeight;
-
-            if(myStudentId) {
-                try {
-                    let log = JSON.parse(localStorage.getItem('criety_chat_log_' + myStudentId)) || [];
-                    log.push({ sender: 'student', text: text, time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) });
-                    localStorage.setItem('criety_chat_log_' + myStudentId, JSON.stringify(log));
-                } catch(e) {}
-            }
-
-            const apiKey = localStorage.getItem('gemini_api_key'); 
-            if(!apiKey) {
-                chatBody.innerHTML += `<div class="msg-bubble msg-ai" style="color:#d32f2f;">せんせいの パソコンで、AIの せっていをしてね！</div>`;
-                return;
-            }
-
-            const systemPrompt = `あなたは中学受験を目指す小学生をサポートする、優しくて頼りになるAIチューター（フクロウの先生）です。ひらがな多めでモチベーションが上がるようヒントを出して回答してください。生徒の質問：${text}`;
-
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
-                });
-                const data = await response.json();
-                const aiReply = data.candidates[0].content.parts[0].text;
-                
-                chatBody.innerHTML += `<div class="msg-bubble msg-ai">${aiReply}</div>`;
-                
-                if(myStudentId) {
-                    try {
-                        let log = JSON.parse(localStorage.getItem('criety_chat_log_' + myStudentId)) || [];
-                        log.push({ sender: 'ai', text: aiReply, time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}) });
-                        localStorage.setItem('criety_chat_log_' + myStudentId, JSON.stringify(log));
-                    } catch(e) {}
-                }
-            } catch (e) {
-                chatBody.innerHTML += `<div class="msg-bubble msg-ai" style="color:#d32f2f;">ちょっと エラーがおきちゃったみたい。もういちど きいてみてね！</div>`;
-            }
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
+        function closeFile() { document.getElementById('preview-overlay').style.display = 'none'; }
     </script>
 </body>
 </html>

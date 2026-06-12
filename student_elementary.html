@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criety - 生徒アプリ</title>
     <style>
-        :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; --student-event: #9c27b0; }
+        :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; }
         
@@ -19,28 +19,41 @@
         .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
         
         .mid-card { background: #fff; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
-        .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
         /* 📅 ミニカレンダー */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 10px; text-align: center; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
-        .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 45px; padding: 2px; position: relative; }
-        .cal-day.today { background: #fff9c4; border-color: var(--main); }
-        .cal-badge { font-size: 8px; border-radius: 2px; color: white; display: block; margin-top: 1px; overflow: hidden; white-space: nowrap; }
+        .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa;}
+        .cal-day.today { background: #fff9c4; }
+        .cal-day.selected { border: 2px solid #ff9800; background: #fff3e0; }
+        .cal-badge { font-size: 9px; border-radius: 3px; color: white; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding: 1px 3px; overflow: hidden; white-space: nowrap; font-weight: bold;}
+        .badge-del { color: #fff; background: rgba(0,0,0,0.2); border-radius: 50%; width: 12px; height: 12px; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; }
+
+        /* イベント追加パネル */
+        .event-add-panel { background: #fff9e6; border: 1px solid #ffe0b2; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; }
+        .event-btn-group { display: flex; gap: 5px; margin-top: 10px; }
+        .event-btn { flex: 1; padding: 8px 0; border: none; border-radius: 50px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+        .event-btn:active { transform: translateY(2px); box-shadow: none; }
 
         /* 💮 スタンプ帳 */
+        .stamp-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
         .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
         .stamp-slot { width: 100%; aspect-ratio: 1; border: 2px dashed #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #fafafa; }
         .stamp-slot.filled { border-style: solid; border-color: #ffcdd2; background: #fff; animation: pop 0.3s ease-out; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* 📚 教材閲覧 */
+        /* 📚 宿題リスト */
+        .hw-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        .hw-item { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .hw-item.done-bg { background: #e8f5e9; border-color: #c8e6c9; }
+        .btn-complete { padding: 10px; background: var(--success); color: #fff; border: none; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; box-shadow: 0 4px 0 #43a047; font-size: 14px;}
+        .btn-complete.done { background: #bdbdbd; box-shadow: none; transform: translateY(4px); cursor: default; }
+
+        /* 教材閲覧 */
         .file-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f9f9f9; cursor: pointer; transition: 0.2s; }
         .file-item:hover { background: #f0f8ff; }
         .file-icon { font-size: 20px; }
-
-        .btn-complete { padding: 12px; background: var(--success); color: #fff; border: none; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; box-shadow: 0 4px 0 #43a047; }
-        .btn-complete.done { background: #bdbdbd; box-shadow: none; transform: translateY(4px); }
         
         .settings-btn { text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; }
 
@@ -60,39 +73,53 @@
     </div>
 
     <div id="preview-overlay">
-        <div style="background:#fff; padding:10px; text-align:right;"><button onclick="closeFile()">閉じる ✖</button></div>
+        <div style="background:#fff; padding:10px; text-align:right;"><button onclick="closeFile()" style="background:#ff5252; color:white; border:none; padding:5px 15px; border-radius:5px; font-weight:bold;">閉じる ✖</button></div>
         <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
     <div class="app-container">
         
-        <div class="mid-countdown" id="countdown-area">
+        <div class="mid-countdown" id="countdown-area" style="display: none;">
             <h2 id="countdown-title">🌸 目標</h2>
             <div id="countdown-days" style="font-size:36px; font-weight:bold;">- 日</div>
         </div>
 
         <div class="mid-card">
-            <h3>💮 ごほうびスタンプ</h3>
+            <div class="stamp-header">
+                <h3 style="border:none; margin:0;">💮 ごほうびスタンプ</h3>
+                <span id="stamp-card-level" style="font-size: 12px; font-weight: bold; color: #e91e63; background: #fce4ec; padding: 2px 8px; border-radius: 10px;">1枚目</span>
+            </div>
             <div class="stamp-grid" id="stamp-grid"></div>
-            <p style="font-size:10px; text-align:right; margin-top:10px; color:#999;">しゅくだいをクリアすると貯まるよ！</p>
+            <p style="font-size:10px; text-align:right; margin-top:10px; color:#999;">10こたまると レベルアップ！🎉</p>
         </div>
         
         <div class="mid-card">
             <h3>📅 よてい表</h3>
             <div class="mini-calendar" id="mini-calendar"></div>
-            <button onclick="addStudentEvent()" style="width:100%; margin-top:10px; font-size:12px; padding:5px; border-radius:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">➕ じぶんの予定を入れる</button>
-        </div>
-
-        <div class="mid-card">
-            <h3>📚 せんせいからの教材</h3>
-            <div id="material-list">
-                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>
+            
+            <div class="event-add-panel" id="event-add-panel">
+                <div style="font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">選択中: <span id="selected-date-display"></span></div>
+                <div style="font-size:10px; color:#666;">この日に じぶんの予定をいれよう！</div>
+                <div class="event-btn-group">
+                    <button class="event-btn" style="background:#42a5f5;" onclick="addStudentEvent('🔵 勉強', '#42a5f5')">勉強</button>
+                    <button class="event-btn" style="background:#66bb6a;" onclick="addStudentEvent('🟢 あそび', '#66bb6a')">あそび</button>
+                    <button class="event-btn" style="background:#ab47bc;" onclick="addStudentEvent('🟣 その他', '#ab47bc')">その他</button>
+                </div>
             </div>
         </div>
 
         <div class="mid-card">
-            <h3>📝 きょうの しゅくだい</h3>
-            <div id="dynamic-mid-task"><p style="font-size:12px; color:#999; text-align:center;">なし</p></div>
+            <h3>📚 すべての しゅくだいリスト</h3>
+            <div class="hw-list" id="hw-list">
+                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>
+            </div>
+        </div>
+
+        <div class="mid-card">
+            <h3>📖 せんせいからの教材</h3>
+            <div id="material-list">
+                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>
+            </div>
         </div>
 
         <div class="mid-card" id="shared-board-card" style="display: none;">
@@ -100,40 +127,51 @@
             <img id="shared-whiteboard-img" src="" style="width: 100%; border-radius: 10px;">
         </div>
 
-        <div class="settings-btn" onclick="studentLogout()">🚪 ログアウト</div>
+        <div class="settings-btn" onclick="studentLogout()">🚪 アプリをおわる (ログアウト)</div>
     </div>
 
     <script>
         let myStudentId = "";
         const STAMP_MAX = 10;
+        let selectedDateStr = "";
 
         document.addEventListener("DOMContentLoaded", () => {
             if(localStorage.getItem('student_elementary_logged_in') === 'true') {
                 myStudentId = localStorage.getItem('my_student_id') || "kage";
                 document.getElementById('auth-overlay').style.display = 'none';
-                renderStamps();
-                renderCalendar();
+                initApp();
             }
         });
 
         function studentLogin() {
-            const id = document.getElementById('student-email').value.trim();
+            const id = document.getElementById('student-email').value.trim().toLowerCase();
             const pass = document.getElementById('student-password').value.trim();
             if(id === 'kage' && pass === '123') {
                 myStudentId = id;
                 localStorage.setItem('student_elementary_logged_in', 'true');
                 localStorage.setItem('my_student_id', id);
                 document.getElementById('auth-overlay').style.display = 'none';
-                renderStamps();
-                renderCalendar();
-            } else { alert("IDかパスワードがちがうよ！"); }
+                initApp();
+            } else { alert("IDかパスワードがちがうみたい！"); }
         }
 
         function studentLogout() { localStorage.clear(); location.reload(); }
 
-        // 💮 スタンプ表示
+        function initApp() {
+            renderStamps();
+            renderCalendar();
+            renderHomeworkList();
+        }
+
+        // ==========================================
+        // 💮 スタンプカード機能 (ループ対応)
+        // ==========================================
         function renderStamps() {
             const count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
+            const cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
+            
+            document.getElementById('stamp-card-level').innerText = `${cards}枚目`;
+            
             const grid = document.getElementById('stamp-grid');
             grid.innerHTML = "";
             for(let i=1; i<=STAMP_MAX; i++) {
@@ -144,7 +182,9 @@
             }
         }
 
-        // 📅 カレンダー表示
+        // ==========================================
+        // 📅 カレンダー機能 (選択・追加・削除)
+        // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar');
             grid.innerHTML = "";
@@ -152,39 +192,154 @@
             const year = today.getFullYear(), month = today.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
 
             ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
 
             const startDay = new Date(year, month, 1).getDay();
-            for(let i=0; i<startDay; i++) grid.innerHTML += `<div></div>`;
+            for(let i=0; i<startDay; i++) grid.innerHTML += `<div style="background:transparent; border:none;"></div>`;
 
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let isToday = (i === today.getDate()) ? 'today' : '';
+                let isSelected = (dStr === selectedDateStr) ? 'selected' : '';
                 let badgeHtml = "";
+
                 if(events[dStr]) {
-                    events[dStr].forEach(ev => {
-                        let color = ev.type==='hw' ? '#ff9800' : (ev.type==='lesson' ? '#2196f3' : '#9c27b0');
-                        badgeHtml += `<span class="cal-badge" style="background:${color}">${ev.text}</span>`;
+                    events[dStr].forEach((ev, idx) => {
+                        let color = ev.color || '#9e9e9e'; // 生徒が入れた予定の色
+                        let text = ev.text;
+                        let delBtn = "";
+                        
+                        // 先生が入れた予定の見た目
+                        if(ev.type === 'hw') {
+                            const hwKey = `${dStr}_${ev.text}`;
+                            if(doneDict[hwKey]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
+                            else { color = '#ff9800'; text = `宿:${ev.text}`; }
+                        } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
+                        else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
+
+                        // ★ 自分で入れた予定だけ消せるボタンをつける
+                        if(ev.type === 'student') {
+                            delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+                        }
+
+                        badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
                     });
                 }
-                grid.innerHTML += `<div class="cal-day ${i===today.getDate()?'today':''}"><b>${i}</b>${badgeHtml}</div>`;
+                
+                grid.innerHTML += `<div class="cal-day ${isToday} ${isSelected}" onclick="selectDate('${dStr}')"><b>${i}</b>${badgeHtml}</div>`;
             }
         }
 
-        function addStudentEvent() {
-            const text = prompt("なにをする？ (例: じしゅう、読書)");
-            if(!text) return;
-            const today = new Date();
-            const dStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
-            if(!evs[dStr]) evs[dStr] = [];
-            evs[dStr].push({type: 'student', text: text});
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
-            renderCalendar();
-            alert("よていを保存したよ！先生にも見えてるよ。");
+        function selectDate(dStr) {
+            selectedDateStr = dStr;
+            document.getElementById('event-add-panel').style.display = 'block';
+            document.getElementById('selected-date-display').innerText = dStr;
+            renderCalendar(); // 選択枠をつけるために再描画
         }
 
-        // 🔄 先生側からの同期
+        function addStudentEvent(prefix, colorCode) {
+            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`);
+            if(!text) return;
+            
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+            if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
+            
+            evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
+            
+            renderCalendar();
+        }
+
+        function deleteEvent(dateStr, idx) {
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId));
+            evs[dateStr].splice(idx, 1);
+            if(evs[dateStr].length === 0) delete evs[dateStr];
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
+            renderCalendar();
+        }
+
+        // ==========================================
+        // 📚 全日程対応・宿題リスト機能
+        // ==========================================
+        function renderHomeworkList() {
+            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            const hwListDiv = document.getElementById('hw-list');
+            
+            let hwHtml = "";
+            let hasHw = false;
+
+            // カレンダー内のすべての日付をチェック
+            Object.keys(events).sort().forEach(dateStr => {
+                events[dateStr].forEach(ev => {
+                    if(ev.type === 'hw') {
+                        hasHw = true;
+                        const hwKey = `${dateStr}_${ev.text}`; // 日付＋内容で一意のキーを作る
+                        const isDone = doneDict[hwKey];
+
+                        if(isDone) {
+                            hwHtml += `
+                            <div class="hw-item done-bg">
+                                <div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
+                                <div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div>
+                                <button class="btn-complete done">クリア済！🌟</button>
+                            </div>`;
+                        } else {
+                            hwHtml += `
+                            <div class="hw-item">
+                                <div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
+                                <div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div>
+                                <button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}')">おわった！💮</button>
+                            </div>`;
+                        }
+                    }
+                });
+            });
+
+            if(hasHw) hwListDiv.innerHTML = hwHtml;
+            else hwListDiv.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
+        }
+
+        function markDone(dateStr, hwText) {
+            const hwKey = `${dateStr}_${hwText}`;
+            let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            
+            // すでに終わっていたら何もしない（ボタン連打防止）
+            if(doneDict[hwKey]) return;
+
+            // ① 完了状態を保存
+            doneDict[hwKey] = true;
+            localStorage.setItem('criety_hw_done_' + myStudentId, JSON.stringify(doneDict));
+
+            // ② 先生アプリへの通知用ハック（先生アプリが検知できるように最新タスクを上書き）
+            localStorage.setItem('criety_new_task_' + myStudentId, JSON.stringify({date: dateStr, content: hwText}));
+            localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
+
+            // ③ スタンプの処理
+            let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
+            let cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
+            count++;
+
+            if(count >= STAMP_MAX) {
+                localStorage.setItem('criety_stamps_' + myStudentId, 0); // リセット
+                localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); // カードレベルアップ
+                alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！");
+            } else {
+                localStorage.setItem('criety_stamps_' + myStudentId, count);
+                alert("すごーい！スタンプを 1こ おしたよ！💮");
+            }
+
+            // 画面を再描画
+            renderStamps();
+            renderCalendar();
+            renderHomeworkList();
+        }
+
+        // ==========================================
+        // 🔄 教材・目標・ホワイトボードの同期
+        // ==========================================
         setInterval(() => {
             if(!myStudentId) return;
 
@@ -198,24 +353,11 @@
                         <div style="font-size:12px;"><b>${f.name}</b><br><span style="color:#999;">タップでみる</span></div>
                     </div>
                 `).join('');
+            } else {
+                list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`;
             }
 
-            // 宿題の同期
-            const t = localStorage.getItem('criety_new_task_' + myStudentId);
-            const status = localStorage.getItem('criety_task_status_' + myStudentId);
-            if(t) {
-                const task = JSON.parse(t);
-                document.getElementById('dynamic-mid-task').innerHTML = `
-                    <div style="background:#e8f5e9; padding:10px; border-radius:10px;">
-                        <strong>🆕 ${task.content}</strong><br>
-                        <button class="btn-complete ${status==='completed'?'done':''}" 
-                                onclick="${status==='completed'?'':'markDone()'}">
-                            ${status==='completed'?'クリア！🌟':'おわったよ！💮'}
-                        </button>
-                    </div>`;
-            }
-
-            // 目標とホワイトボード（省略せず実装）
+            // 目標の同期
             const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
             const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
             if(targetTitle && targetDays) {
@@ -223,21 +365,20 @@
                 document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
                 document.getElementById('countdown-days').innerText = `${targetDays} 日`;
             }
+
+            // ホワイトボードの同期
             const board = localStorage.getItem('criety_shared_whiteboard_' + myStudentId);
             if(board) {
                 document.getElementById('shared-board-card').style.display = 'block';
                 document.getElementById('shared-whiteboard-img').src = board;
             }
-        }, 2000);
 
-        function markDone() {
-            localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
-            // スタンプ追加
-            let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
-            localStorage.setItem('criety_stamps_' + myStudentId, count + 1);
-            renderStamps();
-            alert("すごーい！スタンプを 1こ おしたよ！💮");
-        }
+            // カレンダー（先生が予定を入れた時のため）と宿題リストも定期更新
+            renderCalendar();
+            // ※ ただし、宿題リストは入力中に更新されると鬱陶しいので、大幅な変更がない限りは割愛でも良いですが
+            // 現状は先生側からの追加を反映するために再描画しています。
+            
+        }, 3000);
 
         function openFile(url, type) {
             const content = document.getElementById('file-content');
@@ -249,6 +390,62 @@
             document.getElementById('preview-overlay').style.display = 'flex';
         }
         function closeFile() { document.getElementById('preview-overlay').style.display = 'none'; }
+        let myStudentId = "";
+
+        // ★重要：アプリ起動時にIDが残っていたら即座に読み込む
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedId = localStorage.getItem('my_student_id');
+            const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
+            
+            if(isLoggedIn === 'true' && savedId) {
+                myStudentId = savedId;
+                document.getElementById('auth-overlay').style.display = 'none';
+                initApp();
+            }
+        });
+
+        function initApp() {
+            renderStamps();
+            renderCalendar();
+            renderHomeworkList();
+            console.log("読み込み完了！生徒ID:", myStudentId);
+        }
+
+        function studentLogin() {
+            const id = document.getElementById('student-email').value.trim().toLowerCase();
+            const pass = document.getElementById('student-password').value.trim();
+            
+            if(id === 'kage' && pass === '123') {
+                myStudentId = id;
+                // ★データを確実に残すためにlocalStorageを明示的に使用
+                localStorage.setItem('student_elementary_logged_in', 'true');
+                localStorage.setItem('my_student_id', id);
+                
+                document.getElementById('auth-overlay').style.display = 'none';
+                initApp();
+            } else {
+                alert("IDかパスワードがちがうよ！");
+            }
+        }
+
+        // ★ ログアウトしても、localStorageを全部消すのではなく
+        // 「ログイン状態」だけを解除し、データはサーバー(ブラウザ)に残す
+        function studentLogout() {
+            localStorage.setItem('student_elementary_logged_in', 'false');
+            alert("ログアウトしたよ！次はIDをいれてログインしてね。");
+            location.reload();
+        }
+
+        // ... (renderStamps, renderCalendar, renderHomeworkList, markDone は前回の修正版をそのまま使用) ...
+
+        // ★先生側との同期機能
+        setInterval(() => {
+            if(!myStudentId) return;
+            // 先生が送った最新のタスクや教材を読み込む処理は、
+            // localStorage.getItem('criety_..._' + myStudentId) を使うことで
+            // 「誰のものか」を判定しているので、一度ログアウトしても
+            // 同じIDでログインすれば必ず自分のデータが表示されます。
+        }, 3000);
     </script>
 </body>
 </html>

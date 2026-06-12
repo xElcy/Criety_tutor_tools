@@ -76,8 +76,8 @@
         .btn-danger:hover { background: #e53935; }
 
         /* スライドサムネイル用 */
-        .slide-preview-box { min-width: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; }
-        .slide-preview-box img { width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .slide-preview-box { min-width: 150px; max-width: 200px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; flex-shrink: 0;}
+        .slide-preview-box img { width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; background: #fff;}
         .slide-preview-box img:hover { opacity: 0.8; }
 
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
@@ -198,7 +198,7 @@
             </div>
 
             <div id="notes" class="page">
-                <div class="header"><h1>指導ノート（ホワイトボード・スライド）</h1></div>
+                <div class="header"><h1>指導ノート（双方向スライド）</h1></div>
                 <div class="panel" id="whiteboard-panel" style="position: relative;">
                     <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -218,9 +218,16 @@
                 </div>
 
                 <div class="panel">
-                    <h3>📋 送信済みのホワイトボード（スライド履歴）</h3>
-                    <p style="font-size:12px; color:#666;">生徒側にスタック表示されているスライドです。画像タップでプレビュー、削除で生徒側からも消えます。</p>
+                    <h3 style="color: #d32f2f;">👨‍🏫 先生が送ったスライド（履歴）</h3>
+                    <p style="font-size:12px; color:#666;">生徒側に表示されているあなたのスライドです。画像タップでプレビュー、削除で生徒側からも消えます。</p>
                     <div id="slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
+                        </div>
+                </div>
+
+                <div class="panel" style="border: 2px solid #1565c0;">
+                    <h3 style="color: #1565c0;">👦 生徒から届いたスライド（提出物）</h3>
+                    <p style="font-size:12px; color:#666;">生徒が自分の画面で書き込んで送信してきたノートです。</p>
+                    <div id="student-slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
                         </div>
                 </div>
             </div>
@@ -372,6 +379,7 @@
             renderMaterialsList();
             renderHwLogList();
             renderWbSlides();
+            renderStudentSlides(); // 生徒の提出物も描画
         }
 
         // ==========================================
@@ -565,7 +573,7 @@
         }
 
         // ==========================================
-        // 🎨 ホワイトボード＆スライド機能 (★新規搭載)
+        // 🎨 ホワイトボード＆スライド管理
         // ==========================================
         const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5;
@@ -584,7 +592,7 @@
         function setLineWidth(w) { lineWidth = w; }
         function clearBoard() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
         
-        // ★ スライドとして保存＆送信
+        // ★ 先生がスライドを送信
         function sendWhiteboardSlide() { 
             let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
             slides.push({ id: Date.now(), data: canvas.toDataURL() });
@@ -593,7 +601,7 @@
             renderWbSlides();
         }
 
-        // ★ 送信済みスライドの描画
+        // ★ 先生の送ったスライドを描画
         function renderWbSlides() {
             const container = document.getElementById('slides-container');
             const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
@@ -603,30 +611,58 @@
                 return;
             }
 
-            container.innerHTML = slides.map((s, i) => `
+            container.innerHTML = [...slides].reverse().map((s, i) => `
                 <div class="slide-preview-box">
-                    <div style="font-size: 10px; color: #666; font-weight:bold; margin-bottom: 5px;">スライド ${i + 1}</div>
-                    <img src="${s.data}" onclick="openSlidePreview(${s.id})">
-                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px;" onclick="deleteSlide(${s.id})">削除</button>
+                    <div style="font-size: 10px; color: #666; font-weight:bold; margin-bottom: 5px;">スライド ${slides.length - i}</div>
+                    <img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')">
+                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button>
                 </div>
             `).join('');
         }
 
-        // ★ スライド削除
-        function deleteSlide(id) {
-            if(!confirm("このスライドを生徒の画面からも削除しますか？")) return;
-            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
-            slides = slides.filter(s => s.id !== id);
-            localStorage.setItem('criety_wb_slides_' + managedStudentId, JSON.stringify(slides));
-            renderWbSlides();
+        // ★ 生徒から届いたスライドを描画
+        function renderStudentSlides() {
+            const container = document.getElementById('student-slides-container');
+            const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + managedStudentId)) || [];
+            
+            if(slides.length === 0) {
+                container.innerHTML = `<span style="color:#999; font-size:12px;">まだ生徒から届いた提出物はありません。</span>`;
+                return;
+            }
+
+            container.innerHTML = [...slides].reverse().map((s, i) => `
+                <div class="slide-preview-box" style="border-color: #bbdefb; background: #e3f2fd;">
+                    <div style="font-size: 10px; color: #1565c0; font-weight:bold; margin-bottom: 5px;">提出物 ${slides.length - i}</div>
+                    <img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')">
+                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button>
+                </div>
+            `).join('');
         }
 
-        // ★ スライドプレビュー
-        function openSlidePreview(id) {
-            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+        // ★ スライドの削除（先生用・生徒用共通）
+        function deleteSlide(id, type) {
+            const isStudent = type === 'student';
+            const storageKey = isStudent ? 'criety_student_wb_slides_' : 'criety_wb_slides_';
+            
+            if(!confirm(isStudent ? "この生徒の提出物を削除しますか？" : "このスライドを生徒の画面からも削除しますか？")) return;
+            
+            let slides = JSON.parse(localStorage.getItem(storageKey + managedStudentId)) || [];
+            slides = slides.filter(s => s.id !== id);
+            localStorage.setItem(storageKey + managedStudentId, JSON.stringify(slides));
+            
+            if(isStudent) renderStudentSlides();
+            else renderWbSlides();
+        }
+
+        // ★ スライドのプレビュー（先生用・生徒用共通）
+        function openSlidePreview(id, type) {
+            const isStudent = type === 'student';
+            const storageKey = isStudent ? 'criety_student_wb_slides_' : 'criety_wb_slides_';
+            
+            let slides = JSON.parse(localStorage.getItem(storageKey + managedStudentId)) || [];
             let slide = slides.find(s => s.id === id);
             if(slide) {
-                document.getElementById('preview-title').innerText = "ホワイトボード プレビュー";
+                document.getElementById('preview-title').innerText = isStudent ? "生徒の提出物 プレビュー" : "ホワイトボード プレビュー";
                 const frame = document.getElementById('preview-frame');
                 frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`;
                 document.getElementById('preview-modal').style.display = 'flex';
@@ -655,6 +691,10 @@
             if(s === 'completed' || s === 'notified') { g.style.height='100%'; g.innerText='100%'; } else if(s === 'pending') { g.style.height='0%'; g.innerText='進行中'; }
             
             document.getElementById('stamp-display-count').innerText = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
+            
+            // ★ 定期的に生徒から提出物がないかチェックして更新
+            renderStudentSlides();
+            
         }, 1000);
     </script>
 </body>

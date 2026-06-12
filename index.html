@@ -5,28 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criety - 家庭教師ダッシュボード</title>
     <style>
-        :root {
-            --bg-color: #f4f6f8;
-            --sidebar-bg: #1a2530;
-            --text-main: #333333;
-            --text-light: #ffffff;
-            --accent-color: #d4af37;
-            --border-color: #dddddd;
-        }
-
+        :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
         * { box-sizing: border-box; }
         body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); }
         
-        /* 🔒 認証オーバーレイ */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--sidebar-bg); z-index: 99999; display: flex; justify-content: center; align-items: center; }
         .auth-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
         .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
-        /* 📡 通信先コントロールバー */
         #top-bar { display: none; background: #0f171e; color: white; padding: 10px 20px; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
-        /* 📦 メインレイアウト */
         #app-layout { display: none; flex: 1; overflow: hidden; }
 
         .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); padding: 20px; display: flex; flex-direction: column; z-index: 100;}
@@ -49,8 +37,6 @@
         input[type="file"] { padding: 10px; border: 1px dashed #ccc; width: 100%; background: #f9f9f9; cursor: pointer; }
         .btn-submit { margin-top: 25px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
-        .workspace { display: flex; gap: 20px; }
-        .workspace .panel { flex: 1; margin-bottom: 0; }
         
         /* 📅 カレンダー */
         .calendar-container { display: flex; gap: 20px; }
@@ -64,7 +50,6 @@
         .calendar-day.today { background: #e3f2fd; }
         .calendar-day .date-num { font-weight: bold; display: block; margin-bottom: 4px; }
         
-        /* バッジスタイル */
         .badge { background: #e0e4e8; padding: 4px 6px; border-radius: 3px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; margin-top: 3px; overflow: hidden; font-weight: bold; }
         .badge.lesson { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
         .badge.test { background: #ffebee; color: #c62828; border-left: 3px solid #c62828; }
@@ -84,19 +69,21 @@
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; font-weight: bold; }
         
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; }
-
-        /* リスト・ログ用スタイル */
         .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         .list-table th, .list-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
         .list-table th { background: #f8f9fa; font-weight: bold; }
         .btn-danger { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-danger:hover { background: #e53935; }
 
-        /* ★ 抜け落ちていたプレビュー用CSSを復活！ */
+        /* スライドサムネイル用 */
+        .slide-preview-box { min-width: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; }
+        .slide-preview-box img { width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .slide-preview-box img:hover { opacity: 0.8; }
+
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 85%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
-        @media (max-width: 768px) { #app-layout { flex-direction: column; height: auto; overflow: auto; } .sidebar { width: 100%; padding: 15px; } .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } .main-content { padding: 15px; } .workspace, .calendar-container { flex-direction: column; } }
+        @media (max-width: 768px) { #app-layout { flex-direction: column; height: auto; overflow: auto; } .sidebar { width: 100%; padding: 15px; } .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } .main-content { padding: 15px; } .calendar-container { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -104,19 +91,18 @@
     <div id="auth-overlay">
         <div class="auth-box" id="auth-step-1">
             <h2 id="auth-title">先生 ログイン</h2>
-            <input type="text" id="auth-email" placeholder="メールアドレス (例: xelcys@gmail.com)">
+            <input type="text" id="auth-email" placeholder="メール (例: xelcys@gmail.com)">
             <input type="password" id="auth-password" placeholder="パスワード">
             <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">次へ</button>
         </div>
         <div class="auth-box" id="auth-step-2" style="display: none;">
             <h2>メール認証</h2>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;"><span style="color:red;">※「123456」と入力してください。</span></p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 20px;"><span style="color:red;">※「123456」と入力</span></p>
             <input type="text" id="auth-code" placeholder="認証コード (123456)">
             <button class="btn-submit" style="margin-top: 10px;" onclick="verifyCode()">認証完了</button>
         </div>
         <div class="auth-box" id="auth-step-3" style="display: none;">
             <h2 style="color: #d4af37;">管理する生徒の選択</h2>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;">指導データを連携・編集する生徒のIDを入力してください。</p>
             <input type="text" id="target-student-id" placeholder="生徒ID (例: kage)" style="font-size: 18px; font-weight: bold; text-align: center;">
             <button class="btn-submit" style="margin-top: 10px; background-color: #d4af37; color: #1a2530;" onclick="startManage()">ダッシュボードを開く</button>
         </div>
@@ -137,7 +123,7 @@
             <ul>
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
                 <li class="nav-item" onclick="switchPage('materials', this)">📚 教材・ファイル送信</li>
-                <li class="nav-item" onclick="switchPage('notes', this)">📝 指導ノート＆ボード</li>
+                <li class="nav-item" onclick="switchPage('notes', this)">📝 指導ノート（スライド）</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 学習進捗データ</li>
                 <li class="nav-item" onclick="switchPage('settings', this)">⚙️ 設定</li>
             </ul>
@@ -181,7 +167,7 @@
                         <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                             <h4 style="margin-top:0; margin-bottom:10px; font-size: 14px;">生徒へ宿題を送る</h4>
                             <input type="text" id="hw-content" placeholder="例: 数学ワークP.24〜25">
-                            <button class="btn-submit" style="padding:10px; margin-top:10px; background: #4caf50;" onclick="addHomework()">📚 選択した日に宿題を追加</button>
+                            <button class="btn-submit" style="padding:10px; margin-top:10px; background: #4caf50;" onclick="addHomework()">📚 選択した日に追加</button>
                         </div>
                     </div>
                 </div>
@@ -192,13 +178,10 @@
                 <div class="panel">
                     <h3>📥 生徒アプリに教材ファイルを送る</h3>
                     <p style="font-size:12px; color:#666; margin-bottom: 20px;">パソコン内のPDFファイルや画像を選んで生徒に送ることができます。</p>
-                    
                     <label>教材のタイトル (生徒に表示されます)</label>
                     <input type="text" id="mat-title" placeholder="例: 算数 小数のかけ算プリント">
-                    
                     <label>ファイルを選択 (PDF または 画像)</label>
                     <input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
-                    
                     <button class="btn-submit" onclick="sendMaterial()">🚀 このファイルを生徒に送信する</button>
                 </div>
 
@@ -207,22 +190,15 @@
                     <p style="font-size:12px; color:#666; margin-bottom: 10px;">現在生徒の画面に表示されている教材です。「プレビュー」で中身の確認ができます。</p>
                     <div id="sent-materials-container">
                         <table class="list-table">
-                            <thead>
-                                <tr>
-                                    <th>教材タイトル</th>
-                                    <th>種類</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sent-materials-list">
-                                </tbody>
+                            <thead><tr><th>教材タイトル</th><th>種類</th><th>操作</th></tr></thead>
+                            <tbody id="sent-materials-list"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <div id="notes" class="page">
-                <div class="header"><h1>指導ノート＆ホワイトボード</h1></div>
+                <div class="header"><h1>指導ノート（ホワイトボード・スライド）</h1></div>
                 <div class="panel" id="whiteboard-panel" style="position: relative;">
                     <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -234,17 +210,23 @@
                             <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="tool-btn" style="background: var(--accent-color); color: white; font-weight:bold; border:none;" onclick="syncWhiteboard()">📡 描いた内容を生徒へ送信</button>
-                            <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
+                            <button class="tool-btn" style="background: var(--accent-color); color: white; font-weight:bold; border:none;" onclick="sendWhiteboardSlide()">📡 スライドとして新規送信</button>
+                            <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ キャンバス全消去</button>
                         </div>
                     </div>
                     <canvas id="whiteboard" width="1000" height="600" style="width: 100%; border: 2px solid #ccc; border-radius: 8px; cursor: crosshair; background: white; touch-action: none;"></canvas>
+                </div>
+
+                <div class="panel">
+                    <h3>📋 送信済みのホワイトボード（スライド履歴）</h3>
+                    <p style="font-size:12px; color:#666;">生徒側にスタック表示されているスライドです。画像タップでプレビュー、削除で生徒側からも消えます。</p>
+                    <div id="slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
+                        </div>
                 </div>
             </div>
 
             <div id="data" class="page">
                 <div class="header"><h1>学習進捗データ分析</h1></div>
-                
                 <div class="panel" style="border: 2px solid var(--accent-color); background: #fffcf5;">
                     <h3 style="color: var(--accent-color);">💮 生徒の獲得ごほうびスタンプ</h3>
                     <div style="display: flex; align-items: center; gap: 20px;">
@@ -252,27 +234,16 @@
                         <div style="font-size: 24px; color: #666;">個 獲得済み</div>
                     </div>
                 </div>
-
                 <div class="panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h3 style="margin: 0;">📋 指導履歴・宿題完了ログ（log）の管理</h3>
                         <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 全日程の完了ログを一括リセット</button>
                     </div>
-                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">生徒が「おわった！💮」を押した宿題の履歴です。「ログ削除」を押すと未完了状態に戻せます。</p>
                     <table class="list-table">
-                        <thead>
-                            <tr>
-                                <th>日付</th>
-                                <th>宿題・課題内容</th>
-                                <th>ステータス</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="hw-log-list">
-                            </tbody>
+                        <thead><tr><th>日付</th><th>宿題・課題内容</th><th>ステータス</th><th>操作</th></tr></thead>
+                        <tbody id="hw-log-list"></tbody>
                     </table>
                 </div>
-
                 <div class="panel">
                     <h3>宿題・課題の達成率</h3>
                     <div style="display: flex; gap: 20px; align-items: flex-end; height: 200px; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 20px;">
@@ -302,7 +273,7 @@
     <div id="preview-modal">
         <div class="preview-content">
             <div style="padding: 15px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
-                <h3 style="margin: 0; font-size: 16px;" id="preview-title">ファイルプレビュー</h3>
+                <h3 style="margin: 0; font-size: 16px;" id="preview-title">プレビュー</h3>
                 <button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">閉じる</button>
             </div>
             <iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src=""></iframe>
@@ -311,7 +282,7 @@
 
     <script>
         // ==========================================
-        // 🔒 認証＆生徒切り替え
+        // 🔒 認証＆初期化
         // ==========================================
         let tempEmail = "";
         let managedStudentId = ""; 
@@ -324,7 +295,6 @@
             if(loggedInUser) {
                 tempEmail = loggedInUser;
                 document.getElementById('auth-step-1').style.display = 'none';
-                
                 const lastStudent = sessionStorage.getItem('current_managed_student');
                 if(lastStudent) {
                     document.getElementById('target-student-id').value = lastStudent;
@@ -360,7 +330,6 @@
         function startManage() {
             const id = document.getElementById('target-student-id').value.trim().toLowerCase();
             if(!id) return alert("生徒IDを入力してください。");
-            
             managedStudentId = id;
             sessionStorage.setItem('current_managed_student', id);
             
@@ -402,18 +371,11 @@
             renderCalendar();
             renderMaterialsList();
             renderHwLogList();
-            clearBoard();
-            
-            const savedBoard = localStorage.getItem('criety_shared_whiteboard_' + managedStudentId);
-            if(savedBoard) {
-                const img = new Image();
-                img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
-                img.src = savedBoard;
-            }
+            renderWbSlides();
         }
 
         // ==========================================
-        // 📅 カレンダー＆予定機能
+        // 📅 カレンダー機能
         // ==========================================
         let currentDate = new Date(); let selectedDateStr = "";
         
@@ -435,22 +397,10 @@
 
                 if(events[dateStr]) {
                     events[dateStr].forEach((ev, idx) => {
-                        let c = ev.type === 'lesson' ? 'lesson' : 
-                                ev.type === 'test' ? 'test' : 
-                                ev.type === 'student' ? 'student' : 
-                                ev.type === 'hw' ? 'hw' : 'other';
-                                
-                        let txt = ev.type === 'lesson' ? '👨‍🏫 指導日' : 
-                                  ev.type === 'test' ? `📝 ${ev.text}` : 
-                                  ev.type === 'student' ? `👦 ${ev.text}` : `宿: ${ev.text}`;
+                        let c = ev.type === 'lesson' ? 'lesson' : ev.type === 'test' ? 'test' : ev.type === 'student' ? 'student' : ev.type === 'hw' ? 'hw' : 'other';
+                        let txt = ev.type === 'lesson' ? '👨‍🏫 指導日' : ev.type === 'test' ? `📝 ${ev.text}` : ev.type === 'student' ? `👦 ${ev.text}` : `宿: ${ev.text}`;
                         
-                        // 全日程の宿題完了ログを参照して色を決定
-                        if (ev.type === 'hw') {
-                            const hwKey = `${dateStr}_${ev.text}`;
-                            if(doneDict[hwKey]) {
-                                c = 'hw-done'; txt = `💮 済: ${ev.text}`;
-                            }
-                        }
+                        if (ev.type === 'hw' && doneDict[`${dateStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮 済: ${ev.text}`; }
                         
                         badgesHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dateStr}', ${idx})">×</span></span>`;
                     });
@@ -460,34 +410,23 @@
             grid.innerHTML = html;
         }
 
-        function selectDate(d) { 
-            selectedDateStr = d; 
-            document.getElementById('selected-date-display').innerText = d; 
-            document.getElementById('selected-date-display').style.color = '#1565c0';
-            renderCalendar(); 
-        }
-
+        function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; document.getElementById('selected-date-display').style.color = '#1565c0'; renderCalendar(); }
         function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（カレンダーをタップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
 
         function addQuickEvent(type) { 
-            if(!selectedDateStr) return alert("まずカレンダーで日付をタップして選択してください！"); 
-            let text = "";
-            if(type === 'lesson') text = "指導日";
-            else if(type === 'test') text = prompt("テスト名を入力してください:");
-            else text = prompt("予定を入力してください:");
-
+            if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
+            let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:");
             if(text) addEvent(type, text); 
         }
         
         function addHomework() { 
-            if(!selectedDateStr) return alert("まずカレンダーで日付をタップして選択してください！"); 
+            if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             const v = document.getElementById('hw-content').value.trim(); 
             if(!v) return alert("宿題の内容を入力してください！");
-            
             addEvent('hw', v); 
             localStorage.setItem('criety_new_task_' + managedStudentId, JSON.stringify({date:selectedDateStr, content:v})); 
             localStorage.setItem('criety_task_status_' + managedStudentId, 'pending'); 
-            alert(`✅ 生徒「${managedStudentId}」に宿題を送信しました！`); 
+            alert(`✅ 宿題を追加しました！`); 
             document.getElementById('hw-content').value = "";
         }
 
@@ -496,8 +435,7 @@
             if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
             evs[selectedDateStr].push({type, text}); 
             localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
-            renderCalendar(); 
-            renderHwLogList(); // ログ一覧も更新
+            renderCalendar(); renderHwLogList(); 
         }
 
         window.deleteEvent = function(dateStr, idx) { 
@@ -506,8 +444,7 @@
                 evs[dateStr].splice(idx, 1); 
                 if(evs[dateStr].length === 0) delete evs[dateStr]; 
                 localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
-                renderCalendar(); 
-                renderHwLogList();
+                renderCalendar(); renderHwLogList();
             }
         };
 
@@ -517,224 +454,186 @@
             if(title && days) {
                 localStorage.setItem('criety_target_title_' + managedStudentId, title);
                 localStorage.setItem('criety_target_days_' + managedStudentId, days);
-                alert(`✅ 生徒「${managedStudentId}」に目標を送信しました！`);
-            } else {
-                alert("目標名と日数を両方入力してください。");
-            }
+                alert(`✅ 目標を送信しました！`);
+            } else { alert("目標名と日数を両方入力してください。"); }
         }
 
         // ==========================================
-        // 📚 教材送信＆一覧管理・削除機能 
+        // 📚 教材機能
         // ==========================================
         function sendMaterial() {
             const title = document.getElementById('mat-title').value.trim();
             const fileInput = document.getElementById('mat-file-input');
-
-            if(!title || !fileInput.files[0]) {
-                return alert("教材のタイトルを入力し、パソコンからファイルを選択してください！");
-            }
+            if(!title || !fileInput.files[0]) return alert("タイトルとファイルを選択してください！");
 
             const file = fileInput.files[0];
             const reader = new FileReader();
 
             reader.onload = function(e) {
                 const dataUrl = e.target.result;
-                let type = 'img';
-                if(file.type === 'application/pdf') type = 'pdf';
-                
+                let type = file.type === 'application/pdf' ? 'pdf' : 'img';
                 let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
                 materials.push({ name: title, url: dataUrl, type: type });
-                
                 try {
                     localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
-                    alert(`✅ 教材「${title}」を生徒アプリに送信しました！`);
-                    
-                    document.getElementById('mat-title').value = "";
-                    fileInput.value = "";
-                    renderMaterialsList(); // リストの更新
-                } catch(err) {
-                    alert("❌ エラー: ファイルのサイズが大きすぎます。システム制限のため、容量の小さいファイルを選んでください。");
-                }
+                    alert(`✅ 教材「${title}」を送信しました！`);
+                    document.getElementById('mat-title').value = ""; fileInput.value = ""; renderMaterialsList();
+                } catch(err) { alert("❌ エラー: ファイルサイズが大きすぎます。"); }
             };
             reader.readAsDataURL(file);
         }
 
-        // 送信済み教材一覧を描画する
         function renderMaterialsList() {
             const listTbody = document.getElementById('sent-materials-list');
             const materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-            
-            if(materials.length === 0) {
-                listTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">まだ送信した教材はありません。</td></tr>`;
-                return;
-            }
-
+            if(materials.length === 0) { listTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">まだ送信した教材はありません。</td></tr>`; return; }
             listTbody.innerHTML = materials.map((m, idx) => `
                 <tr>
                     <td><strong>${m.name}</strong></td>
                     <td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:12px;">${m.type.toUpperCase()}</span></td>
                     <td>
-                        <button class="btn-submit" style="margin:0; padding:6px 12px; width:auto; font-size:12px; background:#2196f3;" onclick="openPreview(${idx})">確認</button>
+                        <button class="btn-submit" style="margin:0; padding:6px 12px; width:auto; font-size:12px; background:#2196f3;" onclick="openMaterialPreview(${idx})">確認</button>
                         <button class="btn-danger" style="margin-left:5px;" onclick="deleteMaterial(${idx})">削除</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // 送信済み教材を削除する
         function deleteMaterial(idx) {
-            if(!confirm("この教材を削除しますか？\n（生徒アプリの画面からもすぐに消去されます）")) return;
+            if(!confirm("この教材を削除しますか？")) return;
             let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
             materials.splice(idx, 1);
             localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
             renderMaterialsList();
         }
 
-        // ★ 新機能：先生側からのプレビュー機能
-        function openPreview(idx) {
+        function openMaterialPreview(idx) {
             let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
             let m = materials[idx];
             if(!m) return;
-            
             document.getElementById('preview-title').innerText = m.name;
             const frame = document.getElementById('preview-frame');
-            
-            // PDFと画像でタグを出し分ける
-            if(m.type === 'pdf') {
-                frame.outerHTML = `<iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src="${m.url}"></iframe>`;
-            } else {
-                frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${m.url}">`;
-            }
-            
+            if(m.type === 'pdf') frame.outerHTML = `<iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src="${m.url}"></iframe>`;
+            else frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${m.url}">`;
             document.getElementById('preview-modal').style.display = 'flex';
         }
 
-        function closePreview() { 
-            document.getElementById('preview-modal').style.display = 'none'; 
-            document.getElementById('preview-frame').src = ""; 
-        }
-
         // ==========================================
-        // 📊 宿題完了履歴（log）の管理・削除機能
+        // 📊 宿題ログ管理
         // ==========================================
         function renderHwLogList() {
             const logTbody = document.getElementById('hw-log-list');
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {};
             const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
-            
-            let html = "";
-            let hasHw = false;
-
+            let html = ""; let hasHw = false;
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
                         hasHw = true;
-                        const hwKey = `${dateStr}_${ev.text}`;
-                        const isDone = doneDict[hwKey];
-
-                        html += `
-                            <tr>
-                                <td><code>${dateStr}</code></td>
-                                <td>${ev.text}</td>
-                                <td>
-                                    ${isDone ? '<span style="color:#2e7d32; font-weight:bold;">💮 クリア済</span>' : '<span style="color:#e65100; font-weight:bold;">⏳ 進行中</span>'}
-                                </td>
-                                <td>
-                                    ${isDone ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${dateStr}', '${ev.text}')">ログを消去</button>` : '<span style="color:#aaa;">-</span>'}
-                                </td>
-                            </tr>
-                        `;
+                        const isDone = doneDict[`${dateStr}_${ev.text}`];
+                        html += `<tr>
+                            <td><code>${dateStr}</code></td><td>${ev.text}</td>
+                            <td>${isDone ? '<span style="color:#2e7d32; font-weight:bold;">💮 クリア済</span>' : '<span style="color:#e65100; font-weight:bold;">⏳ 進行中</span>'}</td>
+                            <td>${isDone ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${dateStr}', '${ev.text}')">ログを消去</button>` : '<span style="color:#aaa;">-</span>'}</td>
+                        </tr>`;
                     }
                 });
             });
-
-            if(hasHw) {
-                logTbody.innerHTML = html;
-            } else {
-                logTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">まだ宿題の予定が組まれていません。</td></tr>`;
-            }
+            logTbody.innerHTML = hasHw ? html : `<tr><td colspan="4" style="text-align:center; color:#999;">まだ宿題の予定が組まれていません。</td></tr>`;
         }
 
         function deleteHwLog(dateStr, hwText) {
-            if(!confirm(`「${dateStr}」の宿題完了ログを削除しますか？\n（生徒側アプリの表示も「未完了」に戻ります）`)) return;
-            
-            const hwKey = `${dateStr}_${hwText}`;
+            if(!confirm(`完了ログを削除しますか？`)) return;
             let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
-            
-            if(doneDict[hwKey]) {
-                delete doneDict[hwKey];
+            if(doneDict[`${dateStr}_${hwText}`]) {
+                delete doneDict[`${dateStr}_${hwText}`];
                 localStorage.setItem('criety_hw_done_' + managedStudentId, JSON.stringify(doneDict));
                 localStorage.setItem('criety_task_status_' + managedStudentId, 'pending');
-                
                 let stamps = parseInt(localStorage.getItem('criety_stamps_' + managedStudentId)) || 0;
                 if(stamps > 0) localStorage.setItem('criety_stamps_' + managedStudentId, stamps - 1);
-
-                renderCalendar();
-                renderHwLogList();
-                alert("完了ログを消去し、未完了状態に差し戻しました。");
+                renderCalendar(); renderHwLogList();
             }
         }
 
         function resetAllHwLog() {
-            if(!confirm("⚠️ 本当にすべての宿題完了ログを削除して初期化しますか？\n（生徒のスタンプ数や完了状態がすべてリセットされます）")) return;
-            
+            if(!confirm("⚠️ すべての宿題完了ログを削除して初期化しますか？")) return;
             localStorage.removeItem('criety_hw_done_' + managedStudentId);
             localStorage.setItem('criety_task_status_' + managedStudentId, 'pending');
             localStorage.setItem('criety_stamps_' + managedStudentId, '0');
             localStorage.setItem('criety_stamp_cards_' + managedStudentId, '1');
-
-            renderCalendar();
-            renderHwLogList();
-            alert("すべての完了履歴ログをリセットしました。");
+            renderCalendar(); renderHwLogList();
         }
 
         // ==========================================
-        // 🎨 ホワイトボード
+        // 🎨 ホワイトボード＆スライド機能 (★新規搭載)
         // ==========================================
-        const canvas = document.getElementById('whiteboard'); 
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5;
         
         function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) * (canvas.width / rect.width), y: ((e.clientY || (e.touches && e.touches[0].clientY)) - rect.top) * (canvas.height / rect.height) }; }
         
         canvas.onmousedown = (e) => { 
-            if(currentTool === 'text') { 
-                const text = prompt("キャンバスに入力するテキスト:"); 
-                if(text) { 
-                    const p = getPos(e); 
-                    ctx.font = `bold ${lineWidth * 8}px sans-serif`; 
-                    ctx.fillStyle = currentColor; 
-                    ctx.fillText(text, p.x, p.y); 
-                } 
-                return; 
-            } 
+            if(currentTool === 'text') { const text = prompt("テキスト:"); if(text) { const p = getPos(e); ctx.font = `bold ${lineWidth * 8}px sans-serif`; ctx.fillStyle = currentColor; ctx.fillText(text, p.x, p.y); } return; } 
             isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); 
         };
-        
-        canvas.onmousemove = (e) => { 
-            if(isDrawing && currentTool !== 'text') { 
-                e.preventDefault(); 
-                const p = getPos(e); 
-                ctx.lineTo(p.x, p.y); 
-                ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
-                ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; 
-                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                ctx.stroke(); 
-            } 
-        };
-        
-        canvas.onmouseup = () => isDrawing = false;
-        canvas.onmouseout = () => isDrawing = false;
+        canvas.onmousemove = (e) => { if(isDrawing && currentTool !== 'text') { e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); } };
+        canvas.onmouseup = () => isDrawing = false; canvas.onmouseout = () => isDrawing = false;
         
         function setTool(t) { currentTool = t; document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
         function clearBoard() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
         
-        function syncWhiteboard() { 
-            localStorage.setItem('criety_shared_whiteboard_' + managedStudentId, canvas.toDataURL()); 
-            alert(`📡 描いたホワイトボードを生徒「${managedStudentId}」へ送信しました！`); 
+        // ★ スライドとして保存＆送信
+        function sendWhiteboardSlide() { 
+            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            slides.push({ id: Date.now(), data: canvas.toDataURL() });
+            localStorage.setItem('criety_wb_slides_' + managedStudentId, JSON.stringify(slides));
+            alert(`📡 キャンバスを新しいスライドとして送信しました！`); 
+            renderWbSlides();
         }
+
+        // ★ 送信済みスライドの描画
+        function renderWbSlides() {
+            const container = document.getElementById('slides-container');
+            const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            
+            if(slides.length === 0) {
+                container.innerHTML = `<span style="color:#999; font-size:12px;">まだ送信されたスライドはありません。</span>`;
+                return;
+            }
+
+            container.innerHTML = slides.map((s, i) => `
+                <div class="slide-preview-box">
+                    <div style="font-size: 10px; color: #666; font-weight:bold; margin-bottom: 5px;">スライド ${i + 1}</div>
+                    <img src="${s.data}" onclick="openSlidePreview(${s.id})">
+                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px;" onclick="deleteSlide(${s.id})">削除</button>
+                </div>
+            `).join('');
+        }
+
+        // ★ スライド削除
+        function deleteSlide(id) {
+            if(!confirm("このスライドを生徒の画面からも削除しますか？")) return;
+            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            slides = slides.filter(s => s.id !== id);
+            localStorage.setItem('criety_wb_slides_' + managedStudentId, JSON.stringify(slides));
+            renderWbSlides();
+        }
+
+        // ★ スライドプレビュー
+        function openSlidePreview(id) {
+            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            let slide = slides.find(s => s.id === id);
+            if(slide) {
+                document.getElementById('preview-title').innerText = "ホワイトボード プレビュー";
+                const frame = document.getElementById('preview-frame');
+                frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`;
+                document.getElementById('preview-modal').style.display = 'flex';
+            }
+        }
+
+        function closePreview() { document.getElementById('preview-modal').style.display = 'none'; document.getElementById('preview-frame').src = ""; }
 
         // ==========================================
         // 🔄 リアルタイム監視機能
@@ -746,23 +645,16 @@
 
             const s = localStorage.getItem('criety_task_status_' + managedStudentId);
             if(s === 'completed') { 
-                document.getElementById('notification-text').innerText = `生徒「${managedStudentId}」が新しい宿題を完了しました！`;
+                document.getElementById('notification-text').innerText = `生徒が新しい宿題を完了しました！`;
                 document.getElementById('student-notification').style.display = 'flex'; 
                 localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); 
-                renderCalendar(); 
-                renderHwLogList(); 
+                renderCalendar(); renderHwLogList(); 
             }
             
             const g = document.getElementById('dynamic-graph');
-            if(s === 'completed' || s === 'notified') { 
-                g.style.height='100%'; g.innerText='100%'; 
-            } else if(s === 'pending') { 
-                g.style.height='0%'; g.innerText='進行中'; 
-            }
+            if(s === 'completed' || s === 'notified') { g.style.height='100%'; g.innerText='100%'; } else if(s === 'pending') { g.style.height='0%'; g.innerText='進行中'; }
             
-            const stampCount = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
-            document.getElementById('stamp-display-count').innerText = stampCount;
-            
+            document.getElementById('stamp-display-count').innerText = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
         }, 1000);
     </script>
 </body>

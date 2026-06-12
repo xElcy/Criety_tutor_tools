@@ -92,6 +92,10 @@
         .btn-danger { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-danger:hover { background: #e53935; }
 
+        /* ★ 抜け落ちていたプレビュー用CSSを復活！ */
+        #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
+        .preview-content { background: #fff; width: 85%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
+
         @media (max-width: 768px) { #app-layout { flex-direction: column; height: auto; overflow: auto; } .sidebar { width: 100%; padding: 15px; } .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } .main-content { padding: 15px; } .workspace, .calendar-container { flex-direction: column; } }
     </style>
 </head>
@@ -200,7 +204,7 @@
 
                 <div class="panel">
                     <h3>📋 送信済みの教材一覧・削除</h3>
-                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">現在生徒の画面に表示されている教材です。「削除」を押すと生徒側からも消えます。</p>
+                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">現在生徒の画面に表示されている教材です。「プレビュー」で中身の確認ができます。</p>
                     <div id="sent-materials-container">
                         <table class="list-table">
                             <thead>
@@ -520,7 +524,7 @@
         }
 
         // ==========================================
-        // 📚 教材送信＆一覧管理・削除機能 (アップデート)
+        // 📚 教材送信＆一覧管理・削除機能 
         // ==========================================
         function sendMaterial() {
             const title = document.getElementById('mat-title').value.trim();
@@ -569,7 +573,10 @@
                 <tr>
                     <td><strong>${m.name}</strong></td>
                     <td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:12px;">${m.type.toUpperCase()}</span></td>
-                    <td><button class="btn-danger" onclick="deleteMaterial(${idx})">削除する</button></td>
+                    <td>
+                        <button class="btn-submit" style="margin:0; padding:6px 12px; width:auto; font-size:12px; background:#2196f3;" onclick="openPreview(${idx})">確認</button>
+                        <button class="btn-danger" style="margin-left:5px;" onclick="deleteMaterial(${idx})">削除</button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -583,8 +590,32 @@
             renderMaterialsList();
         }
 
+        // ★ 新機能：先生側からのプレビュー機能
+        function openPreview(idx) {
+            let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+            let m = materials[idx];
+            if(!m) return;
+            
+            document.getElementById('preview-title').innerText = m.name;
+            const frame = document.getElementById('preview-frame');
+            
+            // PDFと画像でタグを出し分ける
+            if(m.type === 'pdf') {
+                frame.outerHTML = `<iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src="${m.url}"></iframe>`;
+            } else {
+                frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${m.url}">`;
+            }
+            
+            document.getElementById('preview-modal').style.display = 'flex';
+        }
+
+        function closePreview() { 
+            document.getElementById('preview-modal').style.display = 'none'; 
+            document.getElementById('preview-frame').src = ""; 
+        }
+
         // ==========================================
-        // 📊 宿題完了履歴（log）の管理・削除機能 (新設)
+        // 📊 宿題完了履歴（log）の管理・削除機能
         // ==========================================
         function renderHwLogList() {
             const logTbody = document.getElementById('hw-log-list');
@@ -609,7 +640,7 @@
                                     ${isDone ? '<span style="color:#2e7d32; font-weight:bold;">💮 クリア済</span>' : '<span style="color:#e65100; font-weight:bold;">⏳ 進行中</span>'}
                                 </td>
                                 <td>
-                                    ${isDone ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${dateStr}', '${ev.text}')">完了ログを消去 (未完了に戻す)</button>` : '<span style="color:#aaa;">-</span>'}
+                                    ${isDone ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${dateStr}', '${ev.text}')">ログを消去</button>` : '<span style="color:#aaa;">-</span>'}
                                 </td>
                             </tr>
                         `;
@@ -624,7 +655,6 @@
             }
         }
 
-        // 個別の宿題完了ログを削除して未完了に戻す
         function deleteHwLog(dateStr, hwText) {
             if(!confirm(`「${dateStr}」の宿題完了ログを削除しますか？\n（生徒側アプリの表示も「未完了」に戻ります）`)) return;
             
@@ -634,11 +664,8 @@
             if(doneDict[hwKey]) {
                 delete doneDict[hwKey];
                 localStorage.setItem('criety_hw_done_' + managedStudentId, JSON.stringify(doneDict));
-                
-                // 先生側の最新タスク表示状態もリセット
                 localStorage.setItem('criety_task_status_' + managedStudentId, 'pending');
                 
-                // 減算：必要ならスタンプを1個減らす調整
                 let stamps = parseInt(localStorage.getItem('criety_stamps_' + managedStudentId)) || 0;
                 if(stamps > 0) localStorage.setItem('criety_stamps_' + managedStudentId, stamps - 1);
 
@@ -648,7 +675,6 @@
             }
         }
 
-        // 全日程の完了ログを一括全削除（リセット）
         function resetAllHwLog() {
             if(!confirm("⚠️ 本当にすべての宿題完了ログを削除して初期化しますか？\n（生徒のスタンプ数や完了状態がすべてリセットされます）")) return;
             
@@ -711,24 +737,22 @@
         }
 
         // ==========================================
-        // 🔄 リアルタイム監視機能（1秒周期）
+        // 🔄 リアルタイム監視機能
         // ==========================================
         function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
 
         setInterval(() => {
             if(!managedStudentId) return;
 
-            // 1. 宿題ステータスのリアルタイム反映
             const s = localStorage.getItem('criety_task_status_' + managedStudentId);
             if(s === 'completed') { 
                 document.getElementById('notification-text').innerText = `生徒「${managedStudentId}」が新しい宿題を完了しました！`;
                 document.getElementById('student-notification').style.display = 'flex'; 
                 localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); 
                 renderCalendar(); 
-                renderHwLogList(); // リアルタイムで宿題完了ログを再描画
+                renderHwLogList(); 
             }
             
-            // 2. 達成率グラフの更新
             const g = document.getElementById('dynamic-graph');
             if(s === 'completed' || s === 'notified') { 
                 g.style.height='100%'; g.innerText='100%'; 
@@ -736,7 +760,6 @@
                 g.style.height='0%'; g.innerText='進行中'; 
             }
             
-            // 3. スタンプ数のリアルタイム同期
             const stampCount = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
             document.getElementById('stamp-display-count').innerText = stampCount;
             

@@ -135,36 +135,52 @@
         const STAMP_MAX = 10;
         let selectedDateStr = "";
 
+        // ★ 起動時にログイン状態をチェックして自動で画面を開く
         document.addEventListener("DOMContentLoaded", () => {
-            if(localStorage.getItem('student_elementary_logged_in') === 'true') {
-                myStudentId = localStorage.getItem('my_student_id') || "kage";
+            const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
+            const savedId = localStorage.getItem('my_student_id');
+            
+            if(isLoggedIn === 'true' && savedId) {
+                myStudentId = savedId;
                 document.getElementById('auth-overlay').style.display = 'none';
                 initApp();
             }
         });
 
-        function studentLogin() {
-            const id = document.getElementById('student-email').value.trim().toLowerCase();
-            const pass = document.getElementById('student-password').value.trim();
-            if(id === 'kage' && pass === '123') {
-                myStudentId = id;
-                localStorage.setItem('student_elementary_logged_in', 'true');
-                localStorage.setItem('my_student_id', id);
-                document.getElementById('auth-overlay').style.display = 'none';
-                initApp();
-            } else { alert("IDかパスワードがちがうみたい！"); }
-        }
-
-        function studentLogout() { localStorage.clear(); location.reload(); }
-
+        // アプリ起動時のデータ読み込み
         function initApp() {
             renderStamps();
             renderCalendar();
             renderHomeworkList();
         }
 
+        // ログイン処理
+        function studentLogin() {
+            const id = document.getElementById('student-email').value.trim().toLowerCase();
+            const pass = document.getElementById('student-password').value.trim();
+            
+            if(id === 'kage' && pass === '123') {
+                myStudentId = id;
+                // ★ データが消えないように明示的に保存
+                localStorage.setItem('student_elementary_logged_in', 'true');
+                localStorage.setItem('my_student_id', id);
+                
+                document.getElementById('auth-overlay').style.display = 'none';
+                initApp();
+            } else { 
+                alert("IDかパスワードがちがうみたい！"); 
+            }
+        }
+
+        // ★ ログアウト処理（データは消さず、ログイン状態だけオフにする）
+        function studentLogout() { 
+            localStorage.setItem('student_elementary_logged_in', 'false');
+            alert("ログアウトしたよ！データはちゃんと保存されています。");
+            location.reload(); 
+        }
+
         // ==========================================
-        // 💮 スタンプカード機能 (ループ対応)
+        // 💮 スタンプカード機能
         // ==========================================
         function renderStamps() {
             const count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
@@ -183,7 +199,7 @@
         }
 
         // ==========================================
-        // 📅 カレンダー機能 (選択・追加・削除)
+        // 📅 カレンダー機能
         // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar');
@@ -207,11 +223,10 @@
 
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
-                        let color = ev.color || '#9e9e9e'; // 生徒が入れた予定の色
+                        let color = ev.color || '#9e9e9e'; 
                         let text = ev.text;
                         let delBtn = "";
                         
-                        // 先生が入れた予定の見た目
                         if(ev.type === 'hw') {
                             const hwKey = `${dStr}_${ev.text}`;
                             if(doneDict[hwKey]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
@@ -219,7 +234,6 @@
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
 
-                        // ★ 自分で入れた予定だけ消せるボタンをつける
                         if(ev.type === 'student') {
                             delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
                         }
@@ -236,7 +250,7 @@
             selectedDateStr = dStr;
             document.getElementById('event-add-panel').style.display = 'block';
             document.getElementById('selected-date-display').innerText = dStr;
-            renderCalendar(); // 選択枠をつけるために再描画
+            renderCalendar(); 
         }
 
         function addStudentEvent(prefix, colorCode) {
@@ -261,7 +275,7 @@
         }
 
         // ==========================================
-        // 📚 全日程対応・宿題リスト機能
+        // 📚 宿題リスト機能
         // ==========================================
         function renderHomeworkList() {
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
@@ -271,12 +285,11 @@
             let hwHtml = "";
             let hasHw = false;
 
-            // カレンダー内のすべての日付をチェック
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
                         hasHw = true;
-                        const hwKey = `${dateStr}_${ev.text}`; // 日付＋内容で一意のキーを作る
+                        const hwKey = `${dateStr}_${ev.text}`;
                         const isDone = doneDict[hwKey];
 
                         if(isDone) {
@@ -306,44 +319,38 @@
             const hwKey = `${dateStr}_${hwText}`;
             let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
             
-            // すでに終わっていたら何もしない（ボタン連打防止）
             if(doneDict[hwKey]) return;
 
-            // ① 完了状態を保存
             doneDict[hwKey] = true;
             localStorage.setItem('criety_hw_done_' + myStudentId, JSON.stringify(doneDict));
 
-            // ② 先生アプリへの通知用ハック（先生アプリが検知できるように最新タスクを上書き）
             localStorage.setItem('criety_new_task_' + myStudentId, JSON.stringify({date: dateStr, content: hwText}));
             localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
 
-            // ③ スタンプの処理
             let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
             let cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
             count++;
 
             if(count >= STAMP_MAX) {
-                localStorage.setItem('criety_stamps_' + myStudentId, 0); // リセット
-                localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); // カードレベルアップ
+                localStorage.setItem('criety_stamps_' + myStudentId, 0); 
+                localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); 
                 alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！");
             } else {
                 localStorage.setItem('criety_stamps_' + myStudentId, count);
                 alert("すごーい！スタンプを 1こ おしたよ！💮");
             }
 
-            // 画面を再描画
             renderStamps();
             renderCalendar();
             renderHomeworkList();
         }
 
         // ==========================================
-        // 🔄 教材・目標・ホワイトボードの同期
+        // 🔄 先生側からの同期機能
         // ==========================================
         setInterval(() => {
             if(!myStudentId) return;
 
-            // 教材の同期
             const files = JSON.parse(localStorage.getItem('criety_materials_' + myStudentId)) || [];
             const list = document.getElementById('material-list');
             if(files.length > 0) {
@@ -357,7 +364,6 @@
                 list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`;
             }
 
-            // 目標の同期
             const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
             const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
             if(targetTitle && targetDays) {
@@ -366,17 +372,13 @@
                 document.getElementById('countdown-days').innerText = `${targetDays} 日`;
             }
 
-            // ホワイトボードの同期
             const board = localStorage.getItem('criety_shared_whiteboard_' + myStudentId);
             if(board) {
                 document.getElementById('shared-board-card').style.display = 'block';
                 document.getElementById('shared-whiteboard-img').src = board;
             }
 
-            // カレンダー（先生が予定を入れた時のため）と宿題リストも定期更新
             renderCalendar();
-            // ※ ただし、宿題リストは入力中に更新されると鬱陶しいので、大幅な変更がない限りは割愛でも良いですが
-            // 現状は先生側からの追加を反映するために再描画しています。
             
         }, 3000);
 
@@ -390,62 +392,6 @@
             document.getElementById('preview-overlay').style.display = 'flex';
         }
         function closeFile() { document.getElementById('preview-overlay').style.display = 'none'; }
-        let myStudentId = "";
-
-        // ★重要：アプリ起動時にIDが残っていたら即座に読み込む
-        document.addEventListener("DOMContentLoaded", () => {
-            const savedId = localStorage.getItem('my_student_id');
-            const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
-            
-            if(isLoggedIn === 'true' && savedId) {
-                myStudentId = savedId;
-                document.getElementById('auth-overlay').style.display = 'none';
-                initApp();
-            }
-        });
-
-        function initApp() {
-            renderStamps();
-            renderCalendar();
-            renderHomeworkList();
-            console.log("読み込み完了！生徒ID:", myStudentId);
-        }
-
-        function studentLogin() {
-            const id = document.getElementById('student-email').value.trim().toLowerCase();
-            const pass = document.getElementById('student-password').value.trim();
-            
-            if(id === 'kage' && pass === '123') {
-                myStudentId = id;
-                // ★データを確実に残すためにlocalStorageを明示的に使用
-                localStorage.setItem('student_elementary_logged_in', 'true');
-                localStorage.setItem('my_student_id', id);
-                
-                document.getElementById('auth-overlay').style.display = 'none';
-                initApp();
-            } else {
-                alert("IDかパスワードがちがうよ！");
-            }
-        }
-
-        // ★ ログアウトしても、localStorageを全部消すのではなく
-        // 「ログイン状態」だけを解除し、データはサーバー(ブラウザ)に残す
-        function studentLogout() {
-            localStorage.setItem('student_elementary_logged_in', 'false');
-            alert("ログアウトしたよ！次はIDをいれてログインしてね。");
-            location.reload();
-        }
-
-        // ... (renderStamps, renderCalendar, renderHomeworkList, markDone は前回の修正版をそのまま使用) ...
-
-        // ★先生側との同期機能
-        setInterval(() => {
-            if(!myStudentId) return;
-            // 先生が送った最新のタスクや教材を読み込む処理は、
-            // localStorage.getItem('criety_..._' + myStudentId) を使うことで
-            // 「誰のものか」を判定しているので、一度ログアウトしても
-            // 同じIDでログインすれば必ず自分のデータが表示されます。
-        }, 3000);
     </script>
 </body>
 </html>

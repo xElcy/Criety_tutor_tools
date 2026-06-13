@@ -2,23 +2,37 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Criety - 生徒アプリ</title>
     <style>
         :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; }
+        body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; padding-bottom: 30px;}
         
+        /* 認証・レイアウト */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffb74d; z-index: 99999; display: flex; justify-content: center; align-items: center; }
         .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220,140,0,0.3); }
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
         .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 20px; padding-bottom: 50px; }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; }
         .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
-        .mid-card { background: #fff; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
+        .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
+        /* ⏱️ タイマー機能 */
+        .timer-display { font-size: 42px; font-weight: bold; color: #333; text-align: center; font-family: monospace; letter-spacing: 2px; margin: 10px 0; }
+        .timer-btn-group { display: flex; gap: 10px; }
+        .timer-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; }
+        
+        /* 📝 報告フォーム */
+        .form-row { margin-bottom: 10px; }
+        .form-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #666; }
+        .form-row input, .form-row select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: #fafafa;}
+        .form-col-3 { display: flex; gap: 5px; }
+        .form-col-3 > div { flex: 1; }
+
+        /* ミニカレンダー */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 10px; text-align: center; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
         .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa;}
@@ -32,12 +46,14 @@
         .event-btn { flex: 1; padding: 8px 0; border: none; border-radius: 50px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
         .event-btn:active { transform: translateY(2px); box-shadow: none; }
 
+        /* スタンプ */
         .stamp-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
         .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
         .stamp-slot { width: 100%; aspect-ratio: 1; border: 2px dashed #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #fafafa; }
         .stamp-slot.filled { border-style: solid; border-color: #ffcdd2; background: #fff; animation: pop 0.3s ease-out; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
+        /* リスト系 */
         .hw-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
         .hw-item { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
         .hw-item.done-bg { background: #e8f5e9; border-color: #c8e6c9; }
@@ -48,18 +64,20 @@
         .file-item:hover { background: #f0f8ff; }
         .file-icon { font-size: 20px; }
 
-        .slide-item { background: #fffcf5; padding: 10px; border-radius: 10px; border: 2px solid #ffe0b2; margin-bottom: 10px; text-align: center; }
-        .slide-item img { width: 100%; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
+        /* スライド・ホワイトボード */
+        .slide-item { background: #fffcf5; padding: 10px; border-radius: 10px; border: 2px solid #ffe0b2; margin-bottom: 10px; text-align: center; position: relative;}
+        .slide-item img { width: 100%; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; background: #fff;}
+        .slide-delete-btn { position: absolute; top: 15px; right: 15px; background: #ff5252; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer;}
         
         .tool-btn { padding: 8px 10px; cursor: pointer; border: 1px solid #ccc; border-radius: 6px; background: #fff; transition: all 0.2s; font-size: 12px; font-weight: bold;}
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; color: #00838f; }
 
         /* テキスト操作パネル */
-        .text-controls { display: none; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
-        .text-btn { padding: 5px 10px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight:bold; color: #e65100;}
+        .text-controls { display: none; flex-wrap: wrap; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
+        .text-btn { padding: 6px 10px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
 
-        #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
-        .settings-btn { text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; }
+        #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
+        .settings-btn { text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; padding: 10px;}
     </style>
 </head>
 <body>
@@ -83,6 +101,48 @@
         <div class="mid-countdown" id="countdown-area" style="display: none;">
             <h2 id="countdown-title">🌸 目標</h2>
             <div id="countdown-days" style="font-size:36px; font-weight:bold;">- 日</div>
+        </div>
+
+        <div class="mid-card" style="border-color: #4caf50;">
+            <h3 style="color: #388e3c; border-bottom-color: #c8e6c9;">⏱️ べんきょうタイマー</h3>
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <div class="timer-btn-group">
+                <button class="timer-btn" style="background:#4caf50;" onclick="startTimer()">▶ スタート</button>
+                <button class="timer-btn" style="background:#ff9800;" onclick="stopTimer()">⏸ ストップ</button>
+                <button class="timer-btn" style="background:#9e9e9e;" onclick="resetTimer()">🔄 リセット</button>
+            </div>
+        </div>
+
+        <div class="mid-card" style="border-color: #e91e63;">
+            <h3 style="color: #c2185b; border-bottom-color: #f8bbd0;">🚨 間違えたもんだいを先生に送る</h3>
+            <div class="form-row">
+                <label>📚 教材の名前</label>
+                <input type="text" id="report-mat" placeholder="例: 算数のワーク">
+            </div>
+            <div class="form-row form-col-3">
+                <div><label>ページ</label><input type="text" id="report-p" placeholder="P. 24"></div>
+                <div><label>大問</label><input type="text" id="report-q1" placeholder="3"></div>
+                <div><label>小問</label><input type="text" id="report-q2" placeholder="(1)"></div>
+            </div>
+            <div class="form-row">
+                <label>🤔 どういうミスだった？</label>
+                <select id="report-reason">
+                    <option value="" disabled selected>えらんでね</option>
+                    <option value="ケアレスミス（うっかり）">ケアレスミス（うっかり）</option>
+                    <option value="なんもわからん（お手上げ）">なんもわからん（お手上げ）</option>
+                    <option value="自分でもなんで間違ったか分からない">自分でもなんで間違ったか分からない</option>
+                    <option value="おぼえていなかった">おぼえていなかった</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>💡 解答を見て、じぶんで解決した？</label>
+                <select id="report-solved">
+                    <option value="" disabled selected>えらんでね</option>
+                    <option value="はい（解決した！）">はい（解決した！）</option>
+                    <option value="いいえ（まだ分からない）">いいえ（まだ分からない）</option>
+                </select>
+            </div>
+            <button onclick="submitMistakeReport()" style="width:100%; padding:12px; background:#e91e63; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; margin-top:5px; cursor:pointer;">📨 先生に報告する！</button>
         </div>
 
         <div class="mid-card">
@@ -134,25 +194,37 @@
             <canvas id="student-whiteboard" width="400" height="300" style="width: 100%; border: 2px solid #b3e5fc; border-radius: 10px; background: white; cursor: crosshair; touch-action: none; display: block; margin-bottom: 10px;"></canvas>
             
             <div style="display: flex; gap: 10px;">
-                <button onclick="submitSlide()" style="flex: 2; padding: 12px; background: #0288d1; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #01579b;">🚀 先生に送る！</button>
-                <button onclick="clearBoard()" style="flex: 1; padding: 12px; background: #eee; color: #d32f2f; border: 1px solid #ccc; border-radius: 10px; font-weight: bold; cursor: pointer;">🗑️ ぜんぶ消す</button>
+                <button onclick="submitSlide()" style="flex: 2; padding: 12px; background: #0288d1; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 0 #01579b;">🚀 先生に送る！</button>
+                <button onclick="clearBoard()" style="flex: 1; padding: 12px; background: #eee; color: #d32f2f; border: 1px solid #ccc; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px;">🗑️ ぜんぶ消す</button>
+            </div>
+        </div>
+
+        <div class="mid-card">
+            <h3>📤 自分が送ったノート（履歴）</h3>
+            <p style="font-size:10px; color:#999; margin-bottom: 10px;">先生に送ったスライドの確認・取り消し（削除）ができます。</p>
+            <div id="my-sent-slides-container" style="display:flex; flex-direction: column; max-height: 300px; overflow-y: auto;">
+                <p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>
             </div>
         </div>
 
         <div class="mid-card" id="shared-board-card" style="display: none;">
             <h3>👨‍🏫 せんせいの指導ノート（スライド）</h3>
             <p style="font-size:10px; color:#999; margin-bottom: 10px;">新しいスライドが上に追加されていくよ！タップで大きく見れます。</p>
-            <div id="student-slides-container" style="display:flex; flex-direction: column; max-height: 400px; overflow-y: auto;"></div>
+            <div id="teacher-slides-container" style="display:flex; flex-direction: column; max-height: 400px; overflow-y: auto;"></div>
         </div>
 
         <div class="mid-card">
             <h3>📚 すべての しゅくだいリスト</h3>
-            <div class="hw-list" id="hw-list"><p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p></div>
+            <div class="hw-list" id="hw-list">
+                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>
+            </div>
         </div>
 
         <div class="mid-card">
             <h3>📖 せんせいからの教材</h3>
-            <div id="material-list"><p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p></div>
+            <div id="material-list">
+                <p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>
+            </div>
         </div>
 
         <div class="settings-btn" onclick="studentLogout()">🚪 アプリをおわる (ログアウト)</div>
@@ -162,6 +234,10 @@
         let myStudentId = "";
         const STAMP_MAX = 10;
         let selectedDateStr = "";
+
+        // タイマー用変数
+        let timerInterval = null;
+        let totalSeconds = 0;
 
         document.addEventListener("DOMContentLoaded", () => {
             const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
@@ -177,7 +253,8 @@
             renderStamps();
             renderCalendar();
             renderHomeworkList();
-            syncData(); // 起動時に即座にデータ（目標など）を読み込む
+            renderMySentSlides();
+            syncData();
         }
 
         function studentLogin() {
@@ -198,6 +275,78 @@
             location.reload(); 
         }
 
+        // ==========================================
+        // ⏱️ タイマー機能
+        // ==========================================
+        function updateTimerDisplay() {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if(timerInterval) return;
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            if(confirm("タイマーを 0 にもどす？")) {
+                stopTimer();
+                totalSeconds = 0;
+                updateTimerDisplay();
+            }
+        }
+
+        // ==========================================
+        // 📝 間違え直し報告機能
+        // ==========================================
+        function submitMistakeReport() {
+            const mat = document.getElementById('report-mat').value.trim();
+            const p = document.getElementById('report-p').value.trim();
+            const q1 = document.getElementById('report-q1').value.trim();
+            const q2 = document.getElementById('report-q2').value.trim();
+            const reason = document.getElementById('report-reason').value;
+            const solved = document.getElementById('report-solved').value;
+
+            if(!mat || !reason || !solved) {
+                return alert("「教材の名前」「ミスの種類」「解決したか」は必ずえらんでね！");
+            }
+
+            const report = {
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                mat: mat, p: p, q1: q1, q2: q2, reason: reason, solved: solved
+            };
+
+            let reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + myStudentId)) || [];
+            reports.push(report);
+            localStorage.setItem('criety_mistake_reports_' + myStudentId, JSON.stringify(reports));
+
+            // 入力リセット
+            document.getElementById('report-mat').value = "";
+            document.getElementById('report-p').value = "";
+            document.getElementById('report-q1').value = "";
+            document.getElementById('report-q2').value = "";
+            document.getElementById('report-reason').selectedIndex = 0;
+            document.getElementById('report-solved').selectedIndex = 0;
+
+            alert("📨 先生に 報告を送ったよ！よくがんばったね！");
+        }
+
+
+        // ==========================================
+        // 💮 スタンプ機能
+        // ==========================================
         function renderStamps() {
             const count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
             const cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
@@ -211,6 +360,9 @@
             }
         }
 
+        // ==========================================
+        // 📅 カレンダー機能
+        // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth();
@@ -225,14 +377,19 @@
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let badgeHtml = "";
+
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
                         let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
+                        
                         if(ev.type === 'hw') {
-                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; } else { color = '#ff9800'; text = `宿:${ev.text}`; }
+                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
+                            else { color = '#ff9800'; text = `宿:${ev.text}`; }
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
+
                         if(ev.type === 'student') delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+
                         badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
                     });
                 }
@@ -241,234 +398,194 @@
         }
 
         function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
+        
         function addStudentEvent(prefix, colorCode) {
-            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`); if(!text) return;
+            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`);
+            if(!text) return;
             let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
             if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
             evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
-        }
-        function deleteEvent(dateStr, idx) {
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId));
-            evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr];
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
+            renderCalendar();
         }
 
+        function deleteEvent(dateStr, idx) {
+            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId));
+            evs[dateStr].splice(idx, 1);
+            if(evs[dateStr].length === 0) delete evs[dateStr];
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
+            renderCalendar();
+        }
+
+        // ==========================================
+        // 📚 宿題リスト機能
+        // ==========================================
         function renderHomeworkList() {
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
             const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
             const hwListDiv = document.getElementById('hw-list');
             let hwHtml = ""; let hasHw = false;
+
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
-                        hasHw = true; const isDone = doneDict[`${dateStr}_${ev.text}`];
-                        if(isDone) hwHtml += `<div class="hw-item done-bg"><div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete done">クリア済！🌟</button></div>`;
-                        else hwHtml += `<div class="hw-item"><div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}')">おわった！💮</button></div>`;
+                        hasHw = true;
+                        const hwKey = `${dateStr}_${ev.text}`;
+                        const isDone = doneDict[hwKey];
+
+                        if(isDone) {
+                            hwHtml += `<div class="hw-item done-bg"><div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete done">クリア済！🌟</button></div>`;
+                        } else {
+                            hwHtml += `<div class="hw-item"><div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}')">おわった！💮</button></div>`;
+                        }
                     }
                 });
             });
-            hwListDiv.innerHTML = hasHw ? hwHtml : `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
+
+            if(hasHw) hwListDiv.innerHTML = hwHtml;
+            else hwListDiv.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
         }
 
         function markDone(dateStr, hwText) {
+            const hwKey = `${dateStr}_${hwText}`;
             let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
-            if(doneDict[`${dateStr}_${hwText}`]) return;
-            doneDict[`${dateStr}_${hwText}`] = true;
+            if(doneDict[hwKey]) return;
+
+            doneDict[hwKey] = true;
             localStorage.setItem('criety_hw_done_' + myStudentId, JSON.stringify(doneDict));
             localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
+
             let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
             let cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
             count++;
-            if(count >= STAMP_MAX) { localStorage.setItem('criety_stamps_' + myStudentId, 0); localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！"); }
-            else { localStorage.setItem('criety_stamps_' + myStudentId, count); alert("すごーい！スタンプを 1こ おしたよ！💮"); }
+
+            if(count >= STAMP_MAX) {
+                localStorage.setItem('criety_stamps_' + myStudentId, 0); 
+                localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); 
+                alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！");
+            } else {
+                localStorage.setItem('criety_stamps_' + myStudentId, count);
+                alert("すごーい！スタンプを 1こ おしたよ！💮");
+            }
+
             renderStamps(); renderCalendar(); renderHomeworkList();
         }
 
         // ==========================================
-        // 🎨 ホワイトボード機能（スマホ完全対応版）
+        // 🎨 ホワイトボード（スマホ＆文字スタンプ完全対応）
         // ==========================================
         const canvas = document.getElementById('student-whiteboard'); 
         const ctx = canvas.getContext('2d');
+        let isDrawing = false; let currentTool = 'pen'; let currentColor = '#ff9800'; let lineWidth = 5;
         
-        let isDrawing = false; 
-        let currentTool = 'pen'; 
-        let currentColor = '#ff9800'; 
-        let lineWidth = 5;
-
-        // 文字入力用の状態管理（アクティブオブジェクト）
-        let activeText = null; 
-        let isDraggingText = false;
-        let savedCanvasData = null; // テキストが浮いている間の背景保存用
+        let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         
         function getPos(e) { 
             const rect = canvas.getBoundingClientRect(); 
-            // スマホのタッチ座標か、PCのマウス座標かを判定
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { 
-                x: (clientX - rect.left) * (canvas.width / rect.width), 
-                y: (clientY - rect.top) * (canvas.height / rect.height) 
-            }; 
+            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; 
         }
 
-        // 文字を含めたキャンバスの再描画
         function redrawCanvas() {
-            if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0); // 背景を戻す
+            if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0);
             if(activeText) {
-                ctx.save();
-                ctx.translate(activeText.x, activeText.y);
-                ctx.rotate(activeText.angle * Math.PI / 180);
-                // 倍率に合わせてフォントサイズ変更
-                ctx.font = `bold ${24 * activeText.scale}px 'Hiragino Maru Gothic ProN', sans-serif`;
-                ctx.fillStyle = activeText.color;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(activeText.text, 0, 0);
-                ctx.restore();
+                ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180);
+                ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(activeText.text, 0, 0); ctx.restore();
             }
         }
 
-        // 文字をキャンバスに焼き付ける（ラスタライズ）
-        function fixText() {
-            if(!activeText) return;
-            redrawCanvas(); // 最終位置で描画
-            savedCanvasData = null; 
-            activeText = null;
-            document.getElementById('text-controls').style.display = 'none';
-        }
-
-        // テキスト操作ボタン群
+        function fixText() { if(!activeText) return; redrawCanvas(); savedCanvasData = null; activeText = null; document.getElementById('text-controls').style.display = 'none'; }
         function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
         function changeTextAngle(da) { if(activeText) { activeText.angle += da; redrawCanvas(); } }
         
-        // --- 描画イベントハンドラー ---
         function handleStart(e) { 
-            // タッチ操作の時は画面がスクロールしないようにブロック！
             if(e.type === 'touchstart') e.preventDefault(); 
-            
             const p = getPos(e); 
-            
-            // 文字ツールの処理
             if(currentTool === 'text') { 
                 if(!activeText) {
                     const txt = prompt("キャンバスにいれる文字をうってね！"); 
-                    if(txt) { 
-                        // 入力した文字を「アクティブ（動かせる）」状態にする
-                        activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor };
-                        savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        document.getElementById('text-controls').style.display = 'flex';
-                        redrawCanvas();
-                    } 
-                } else {
-                    // すでに文字がある場合はドラッグ移動の開始
-                    isDraggingText = true;
-                    activeText.x = p.x;
-                    activeText.y = p.y;
-                    redrawCanvas();
-                }
+                    if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); } 
+                } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); }
                 return; 
             } 
-
-            // ペン・消しゴムの場合、浮いている文字があれば固定する
             if(activeText) fixText();
-
-            isDrawing = true; 
-            ctx.beginPath(); 
-            ctx.moveTo(p.x, p.y); 
+            isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
         }
         
         function handleMove(e) { 
-            // スクロールブロック！
             if(e.type === 'touchmove') e.preventDefault(); 
-            
             const p = getPos(e); 
-
-            // 文字をドラッグして動かす処理
-            if(currentTool === 'text' && isDraggingText && activeText) {
-                activeText.x = p.x;
-                activeText.y = p.y;
-                redrawCanvas();
-                return;
-            }
-            
-            // 線を描く・消す処理
+            if(currentTool === 'text' && isDraggingText && activeText) { activeText.x = p.x; activeText.y = p.y; redrawCanvas(); return; }
             if(!isDrawing) return;
-            ctx.lineTo(p.x, p.y); 
-            ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
-            ctx.lineWidth = currentTool === 'eraser' ? 30 : lineWidth; 
-            ctx.lineCap = 'round'; 
-            ctx.lineJoin = 'round';
-            ctx.stroke(); 
+            ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 30 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); 
         }
+        function handleEnd(e) { isDrawing = false; isDraggingText = false; }
         
-        function handleEnd(e) { 
-            isDrawing = false; 
-            isDraggingText = false;
-        }
-        
-        function setTool(t) { 
-            if(activeText && t !== 'text') fixText(); // ツールを変えたら文字は固定
-            currentTool = t; 
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); 
-            document.getElementById('btn-' + t).classList.add('active'); 
-        }
+        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
-        
-        function clearBoard() { 
-            if(confirm("かいたものを ぜんぶ消してもいい？")) {
-                activeText = null;
-                savedCanvasData = null;
-                document.getElementById('text-controls').style.display = 'none';
-                ctx.clearRect(0, 0, canvas.width, canvas.height); 
-            }
-        }
+        function clearBoard() { if(confirm("かいたものを ぜんぶ消してもいい？")) { activeText = null; savedCanvasData = null; document.getElementById('text-controls').style.display = 'none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
 
-        // パソコン用のマウスイベント
-        canvas.addEventListener('mousedown', handleStart);
-        canvas.addEventListener('mousemove', handleMove);
-        canvas.addEventListener('mouseup', handleEnd);
-        canvas.addEventListener('mouseout', handleEnd);
-        
-        // スマホ用のタッチイベント（passive: false をつけないとスクロールブロックできない）
-        canvas.addEventListener('touchstart', handleStart, { passive: false });
-        canvas.addEventListener('touchmove', handleMove, { passive: false });
-        canvas.addEventListener('touchend', handleEnd);
+        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
+        canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
 
-        // ★ 先生に提出する機能
+        // ==========================================
+        // 📤 自分が送ったスライド履歴＆削除
+        // ==========================================
         function submitSlide() {
-            if(activeText) fixText(); // 浮いている文字があれば固定してから送る
-
+            if(activeText) fixText();
             try {
                 let slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
                 slides.push({ id: Date.now(), data: canvas.toDataURL() });
                 localStorage.setItem('criety_student_wb_slides_' + myStudentId, JSON.stringify(slides));
                 alert("🚀 先生に ノートを送ったよ！");
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // 送ったらキャンバスを空にする
-            } catch(e) {
-                alert("エラーがおきました！もういちどためしてね。");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                renderMySentSlides();
+            } catch(e) { alert("エラーがおきました！もういちどためしてね。"); }
+        }
+
+        function renderMySentSlides() {
+            const container = document.getElementById('my-sent-slides-container');
+            const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
+            
+            if(slides.length === 0) {
+                container.innerHTML = `<p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>`;
+                return;
             }
+
+            container.innerHTML = [...slides].reverse().map((s, idx) => `
+                <div class="slide-item">
+                    <button class="slide-delete-btn" onclick="deleteMySlide(${s.id})">✖ 取り消し</button>
+                    <div style="font-size:10px; font-weight:bold; color:var(--main); margin-bottom:8px; text-align:left;">送ったノート ${slides.length - idx}</div>
+                    <img src="${s.data}" onclick="openFile('${s.data}', 'img')">
+                </div>
+            `).join('');
+        }
+
+        function deleteMySlide(id) {
+            if(!confirm("先生に送ったこのノートを 取り消して消す？")) return;
+            let slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
+            slides = slides.filter(s => s.id !== id);
+            localStorage.setItem('criety_student_wb_slides_' + myStudentId, JSON.stringify(slides));
+            renderMySentSlides();
         }
 
         // ==========================================
-        // 🔄 データの定期同期 (先生のスライド、目標など)
+        // 🔄 データの同期・読み込み
         // ==========================================
         function syncData() {
             if(!myStudentId) return;
 
-            // 1. 目標の同期（アプリを開いた瞬間から表示させるため強化）
             const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
             const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
             if(targetTitle && targetDays) {
                 document.getElementById('countdown-area').style.display = 'block';
                 document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
                 document.getElementById('countdown-days').innerText = `${targetDays} 日`;
-            } else {
-                document.getElementById('countdown-area').style.display = 'none';
-            }
+            } else { document.getElementById('countdown-area').style.display = 'none'; }
 
-            // 2. 教材の同期
             const files = JSON.parse(localStorage.getItem('criety_materials_' + myStudentId)) || [];
             const list = document.getElementById('material-list');
             if(files.length > 0) {
@@ -478,52 +595,35 @@
                         <div style="font-size:12px;"><b>${f.name}</b><br><span style="color:#999;">タップでみる</span></div>
                     </div>
                 `).join('');
-            } else {
-                list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`;
-            }
+            } else { list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`; }
 
-            // 3. 先生のスライド同期
-            renderSlides();
-            
-            // 4. カレンダー同期
+            renderTeacherSlides();
             renderCalendar();
         }
 
-        // 先生のスライドをスタック描画
-        function renderSlides() {
+        function renderTeacherSlides() {
             const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + myStudentId)) || [];
             const boardCard = document.getElementById('shared-board-card');
-            const container = document.getElementById('student-slides-container');
+            const container = document.getElementById('teacher-slides-container');
 
             if(slides.length > 0) {
                 boardCard.style.display = 'block';
                 const html = [...slides].reverse().map((s, idx) => `
                     <div class="slide-item">
-                        <div style="font-size:12px; font-weight:bold; color:var(--main); margin-bottom:8px;">先生のスライド ${slides.length - idx}</div>
+                        <div style="font-size:12px; font-weight:bold; color:var(--main); margin-bottom:8px;">先生のノート ${slides.length - idx}</div>
                         <img src="${s.data}" onclick="openFile('${s.data}', 'img')">
                     </div>
                 `).join('');
-                
-                if (container.innerHTML !== html) {
-                    container.innerHTML = html;
-                }
-            } else {
-                boardCard.style.display = 'none';
-                container.innerHTML = '';
-            }
+                if (container.innerHTML !== html) container.innerHTML = html;
+            } else { boardCard.style.display = 'none'; container.innerHTML = ''; }
         }
 
-        // 2秒ごとに最新データをチェック
         setInterval(syncData, 2000);
 
-        // ファイル・画像プレビュー
         function openFile(url, type) {
             const content = document.getElementById('file-content');
-            if(type === 'pdf') {
-                content.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;"></iframe>`;
-            } else {
-                content.innerHTML = `<img src="${url}" style="max-width:100%; height:auto;">`;
-            }
+            if(type === 'pdf') { content.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;"></iframe>`; } 
+            else { content.innerHTML = `<img src="${url}" style="max-width:100%; height:auto;">`; }
             document.getElementById('preview-overlay').style.display = 'flex';
         }
         function closeFile() { document.getElementById('preview-overlay').style.display = 'none'; }

@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Criety - 家庭教師ダッシュボード</title>
+
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <style>
         :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; width: 100vw; overflow-x: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+        
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--sidebar-bg); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
@@ -138,6 +141,7 @@
                 <h3 style="color: #2e7d32;">🆕 1. 新規【生徒】アカウントの自動発行</h3>
                 <p style="font-size:13px; color:#555;">新しい生徒のID（連番）と初期パスワードを発行し、データベースに登録します。</p>
                 <button class="btn-submit" style="background:#4caf50; width:auto; padding:10px 20px;" onclick="generateStudentAccount()">生徒用アカウントを発行する</button>
+                
                 <div id="new-account-result" style="display:none; margin-top:15px; padding:15px; background:#e8f5e9; border:1px dashed #4caf50; border-radius:8px;">
                     <p style="margin:0 0 5px 0; font-size:12px; font-weight:bold; color:#2e7d32;">✅ 発行完了！以下の情報を生徒に伝えてください。</p>
                     <div style="font-size:16px;">生徒ID: <b id="new-student-id"></b></div>
@@ -186,12 +190,14 @@
                 
                 <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5;">
                     <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
+                    
                     <div id="current-target-display" style="margin-bottom: 15px; padding: 12px; background: #fff; border: 1px dashed #ffb74d; border-radius: 8px; display: none;">
                         <span style="color: #666; font-size: 12px;">現在生徒のアプリに表示中の目標：</span><br>
                         <b id="current-target-text" style="color: #e65100; font-size: 18px;"></b> 
                         <span id="current-target-days-text" style="font-weight: bold; margin-left: 5px; font-size: 16px;"></span>
                         <button onclick="clearTarget()" style="margin-top: 8px; display: block; padding: 6px 12px; font-size: 11px; background: #ffe0b2; color: #e65100; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ 生徒の画面から消す（目標解除）</button>
                     </div>
+
                     <div class="target-group">
                         <input type="text" id="target-title" placeholder="新しい目標名を入力" style="flex: 2;">
                         <div>
@@ -419,7 +425,7 @@
                 const students = snap.val() || {};
                 const ids = Object.keys(students);
                 const sel = document.getElementById(targetSelectId);
-                const selHub = document.getElementById('owner-student-dropdown-hub'); // ハブ用も同時に更新
+                const selHub = document.getElementById('owner-student-dropdown-hub'); 
                 
                 let options = ids.length === 0 ? `<option value="">生徒がいません</option>` : ids.map(id => `<option value="${id}">${id}</option>`).join('');
                 if(sel) sel.innerHTML = options;
@@ -463,9 +469,9 @@
             document.getElementById('top-bar').style.display = 'flex'; document.getElementById('app-layout').style.display = 'flex';
             document.getElementById('logged-in-display').innerText = tempEmail; document.getElementById('connection-status').innerText = id;
             
-            if(db) db.ref('students/').off(); // 前のリスナー解除
+            if(db) db.ref('students/').off(); 
             
-            loadStudentData(); // 強制初回描画
+            loadStudentData();
             if(db) db.ref('students/' + managedStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {}; loadStudentData();
                 if(studentDataCache['task_status'] === 'completed') { document.getElementById('student-notification').style.display = 'flex'; saveFB_Raw('task_status', 'notified'); }
@@ -497,7 +503,7 @@
                     db.ref('admin/counters/student_' + y).set(c); 
                     document.getElementById('new-account-result').style.display = 'block'; document.getElementById('new-student-id').innerText = nid; document.getElementById('new-student-pass').innerText = np; 
                     alert("生徒アカウントを発行しました。");
-                    if(isOwner) prepareOwnerDropdown('owner-student-dropdown-hub'); // プルダウンを即時更新
+                    if(isOwner) prepareOwnerDropdown('owner-student-dropdown-hub'); 
                 }); 
             }); 
         }
@@ -519,7 +525,9 @@
                 document.getElementById('current-target-text').innerText = t; 
                 
                 if (targetDate) {
-                    const diff = new Date(targetDate) - new Date();
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
+                    const diff = tDate - today;
                     const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     document.getElementById('current-target-days-text').innerText = `（あと ${d} 日）`; 
                 } else {
@@ -533,7 +541,8 @@
         // ★ 修正：送信時に「target_date」を保存する
         function sendTarget() { 
             const t = document.getElementById('target-title').value.trim(); 
-            const d = document.getElementById('target-date').value; 
+            const dateEl = document.getElementById('target-date');
+            const d = dateEl ? dateEl.value : ""; 
             
             if(t) { 
                 saveFB_Raw('target_title', t); 
@@ -544,16 +553,44 @@
                 }
                 alert(`目標を送信・更新しました！`); 
                 document.getElementById('target-title').value = ""; 
-                document.getElementById('target-date').value = ""; 
-                updateTargetDisplay(); 
+                if(dateEl) dateEl.value = ""; 
+                updateTargetDisplay(); renderCalendar();
             } else {
                 alert("目標名を入力してください。");
             }
         }
-        function clearTarget() { if(!confirm("解除する？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); }
+        function clearTarget() { if(!confirm("解除して生徒の画面から消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
         
         let currentDate = new Date(); let selectedDateStr = "";
-        function renderCalendar() { const y = currentDate.getFullYear(); const m = currentDate.getMonth(); document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`; const fDay = new Date(y, m, 1).getDay(); const dInM = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-grid'); let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join(''); for(let i = 0; i < fDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`; const evs = loadFB('cal_events', {}); const dDict = loadFB('hw_done', {}); for(let i = 1; i <= dInM; i++) { const dStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; let cls = 'calendar-day' + (dStr === selectedDateStr ? ' selected' : ''); let bHtml = ''; if(evs[dStr]) evs[dStr].forEach((ev, idx) => { let c = ev.type==='lesson'?'lesson':ev.type==='test'?'test':ev.type==='student'?'student':ev.type==='hw'?'hw':'other'; let txt = ev.type==='lesson'?'👨‍🏫 指導':ev.type==='test'?`📝 ${ev.text}`:ev.type==='student'?`👦 ${ev.text}`:`宿: ${ev.text}`; if (ev.type === 'hw' && dDict[`${dStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮済: ${ev.text}`; } bHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dStr}', ${idx})">×</span></span>`; }); html += `<div class="${cls}" onclick="selectDate('${dStr}')"><span class="date-num">${i}</span>${bHtml}</div>`; } grid.innerHTML = html; }
+        function renderCalendar() { 
+            const y = currentDate.getFullYear(); const m = currentDate.getMonth(); document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`; 
+            const fDay = new Date(y, m, 1).getDay(); const dInM = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-grid'); 
+            let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join(''); 
+            for(let i = 0; i < fDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`; 
+            
+            const evs = loadFB('cal_events', {}); const dDict = loadFB('hw_done', {}); 
+            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
+
+            for(let i = 1; i <= dInM; i++) { 
+                const dStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; 
+                let cls = 'calendar-day' + (dStr === selectedDateStr ? ' selected' : ''); 
+                let bHtml = ''; 
+                
+                // ★カレンダーに目標日を表示
+                if(targetTitle && targetDate === dStr) {
+                    bHtml += `<span class="badge" style="background:#fce4ec; color:#e91e63; border-left:2px solid #e91e63;"><span>🌸 目標: ${targetTitle}</span></span>`;
+                }
+
+                if(evs[dStr]) evs[dStr].forEach((ev, idx) => { 
+                    let c = ev.type==='lesson'?'lesson':ev.type==='test'?'test':ev.type==='student'?'student':ev.type==='hw'?'hw':'other'; 
+                    let txt = ev.type==='lesson'?'👨‍🏫 指導':ev.type==='test'?`📝 ${ev.text}`:ev.type==='student'?`👦 ${ev.text}`:`宿: ${ev.text}`; 
+                    if (ev.type === 'hw' && dDict[`${dStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮済: ${ev.text}`; } 
+                    bHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dStr}', ${idx})">×</span></span>`; 
+                }); 
+                html += `<div class="${cls}" onclick="selectDate('${dStr}')"><span class="date-num">${i}</span>${bHtml}</div>`; 
+            } 
+            grid.innerHTML = html; 
+        }
         function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; renderCalendar(); }
         function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; renderCalendar(); }
         function addQuickEvent(type) { if(!selectedDateStr) return alert("日付選択してね"); let text = type==='lesson'?"指導日":prompt("予定:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); saveFB('cal_events', evs); renderCalendar(); } }

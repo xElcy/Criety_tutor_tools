@@ -97,6 +97,7 @@
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
+        /* スマホ用レスポンシブ完全対応 */
         @media (max-width: 768px) { 
             #app-layout { flex-direction: column; } 
             .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #111;} 
@@ -381,9 +382,9 @@
     </div>
 
     <script>
-        // ==========================================
+        // ----------------------------------------------------
         // 1. Firebaseの合鍵（firebaseConfig）をセット
-        // ==========================================
+        // ----------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
             authDomain: "criety-app-f76d4.firebaseapp.com",
@@ -392,21 +393,44 @@
             messagingSenderId: "826655717900",
             appId: "1:826655717900:web:d724b66a1deec6505e4c29"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        } catch(e) {
+            alert("データベースの初期化に失敗しました。通信環境や広告ブロックの設定をご確認ください。");
+        }
 
         let tempEmail = ""; 
         let managedStudentId = ""; 
         let studentDataCache = {}; 
 
-        // 安全にFirebaseへデータを保存・読み込みする関数
-        function saveFB(key, data) { db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)); }
+        // ★ 画面のラグや消失を防ぐため、通信前に手元のデータを更新（オプティミスティックUI）
+        function saveFB(key, data) { 
+            studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data));
+            if(!db) return;
+            db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)).catch(e => {
+                alert("【⚠️通信ブロックエラー】\nFirebaseのセキュリティルールがロックされているため、変更を保存できません！\n\nFirebase画面の「Realtime Database」＞「ルール」タブを開き、\n\".write\": true\nに書き換えて「公開」を押してください。");
+            }); 
+        }
+        function saveFB_Raw(key, val) { 
+            studentDataCache[key] = val;
+            if(!db) return;
+            db.ref('students/' + managedStudentId + '/' + key).set(val).catch(e => {
+                alert("【⚠️通信ブロックエラー】\nFirebaseのルール設定を確認してください。");
+            }); 
+        }
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
             if(!data) return defaultVal; 
             try { return typeof data === 'string' ? JSON.parse(data) : data; } catch(e) { return defaultVal; } 
         }
-        function removeFB(key) { db.ref('students/' + managedStudentId + '/' + key).remove(); }
+        function removeFB(key) { 
+            delete studentDataCache[key];
+            if(!db) return;
+            db.ref('students/' + managedStudentId + '/' + key).remove(); 
+        }
 
         // ==========================================
         // 🔒 認証＆初期化
@@ -415,16 +439,18 @@
             if (!localStorage.getItem('criety_user_xelcys@gmail.com')) localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
             const loggedInUser = localStorage.getItem('criety_logged_in_user');
             if(loggedInUser) {
-                tempEmail = loggedInUser; document.getElementById('auth-step-1').style.display = 'none';
+                tempEmail = loggedInUser;
+                document.getElementById('auth-step-1').style.display = 'none';
                 const lastStudent = sessionStorage.getItem('current_managed_student');
                 if(lastStudent) { document.getElementById('target-student-id').value = lastStudent; startManage(); } 
                 else { document.getElementById('auth-step-3').style.display = 'block'; }
             }
-            document.getElementById('log-date').valueAsDate = new Date();
+            if(document.getElementById('log-date')) document.getElementById('log-date').valueAsDate = new Date();
         });
 
         function handleAuth() {
-            const email = document.getElementById('auth-email').value.trim(), pass = document.getElementById('auth-password').value.trim();
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
             if(!email || !pass) return;
             if(email === 'xelcys@gmail.com' && pass === '123456') { localStorage.setItem('criety_user_xelcys@gmail.com', '123456'); } 
             else if(localStorage.getItem('criety_user_' + email) !== pass) { return alert("情報が間違っています。"); }
@@ -450,13 +476,16 @@
             document.getElementById('connection-status').innerText = id;
             document.getElementById('setting-email').value = tempEmail;
 
-            // ★ リアルタイム通信の開始（データが変わるたびに画面を自動更新）
+            // ★ エラーで止まらないよう、通信前に必ず初回描画を行う
+            loadStudentData();
+
+            // ★ リアルタイム通信の開始
+            if(!db) return;
             db.ref('students/' + managedStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 
                 // 画面再描画
-                renderCalendar(); renderMaterialsList(); renderHwLogList();
-                renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports();
+                loadStudentData();
 
                 // 入力中でない時だけUIを更新
                 if(document.activeElement.id !== 'target-title') document.getElementById('target-title').value = loadFB('target_title', "");
@@ -467,9 +496,11 @@
                 const s = studentDataCache['task_status'];
                 if(s === 'completed') { 
                     document.getElementById('student-notification').style.display = 'flex'; 
-                    db.ref('students/' + managedStudentId + '/task_status').set('notified');
+                    saveFB_Raw('task_status', 'notified');
                 }
                 document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
+            }, (error) => {
+                alert("【⚠️データベース接続拒否】\nFirebaseのセキュリティで弾かれたため、カレンダーや履歴の同期ができません！\n\nFirebase画面の「Realtime Database」＞「ルール」タブを開き、\n\".read\": true,\n\".write\": true\nに変更して「公開」を押してください。");
             });
         }
 
@@ -479,6 +510,11 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
             document.getElementById(pageId).classList.add('active'); if(el) el.classList.add('active');
+        }
+
+        function loadStudentData() {
+            renderCalendar(); renderMaterialsList(); renderHwLogList();
+            renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports();
         }
 
         // ==========================================
@@ -492,7 +528,8 @@
             const grid = document.getElementById('calendar-grid');
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
-            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
+            const events = loadFB('cal_events', {});
+            const doneDict = loadFB('hw_done', {});
             
             for(let i = 1; i <= daysInMonth; i++) {
                 const dateStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -514,27 +551,26 @@
 
         function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; document.getElementById('selected-date-display').style.color = '#1565c0'; renderCalendar(); }
         function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（タップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
-        
         function addQuickEvent(type) { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:");
-            if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:type, text:text}); saveFB('cal_events', evs); }
+            if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:type, text:text}); saveFB('cal_events', evs); renderCalendar(); }
         }
         function addHomework() { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！");
-            let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs);
-            db.ref('students/' + managedStudentId + '/task_status').set('pending'); 
-            alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = "";
+            let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); 
+            saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); 
+            alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = ""; renderCalendar();
         }
         window.deleteEvent = function(dateStr, idx) { 
             let evs = loadFB('cal_events', {}); 
-            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); }
+            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); renderCalendar(); }
         };
 
         function sendTarget() {
             const title = document.getElementById('target-title').value.trim(), days = document.getElementById('target-days').value.trim();
-            if(title && days) { saveFB('target_title', title); saveFB('target_days', days); alert(`✅ 送信しました！`); }
+            if(title && days) { saveFB_Raw('target_title', title); saveFB_Raw('target_days', days); alert(`✅ 送信しました！`); }
         }
 
         // ==========================================
@@ -543,12 +579,15 @@
         let salaryMonthDate = new Date();
 
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
-        function saveWageAndCalc() { const wage = document.getElementById('hourly-wage').value; saveFB('salary_wage', wage); }
+        function saveWageAndCalc() { const wage = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', wage); renderSalaryLogs(); }
 
         function addSalaryLog() {
             const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim();
             if(!d || h === 0) return alert("日付と指導時間は必ず入力してください。");
-            let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs);
+            let logs = loadFB('logs', []);
+            logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s });
+            saveFB('logs', logs);
+            
             document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = "";
             alert("✅ 記録を保存しました！"); salaryMonthDate = new Date(d); renderSalaryLogs();
         }
@@ -556,20 +595,23 @@
         function renderSalaryLogs() {
             const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, targetMonthStr = `${y}-${String(m).padStart(2, '0')}`;
             document.getElementById('salary-month-display').innerText = `${y}年 ${m}月`;
-            let logs = loadFB('logs', []); let monthLogs = logs.filter(log => log.date.startsWith(targetMonthStr)); monthLogs.sort((a,b) => a.date.localeCompare(b.date));
-            const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0;
+            let logs = loadFB('logs', []);
+            let monthLogs = logs.filter(log => log.date.startsWith(targetMonthStr)); monthLogs.sort((a,b) => a.date.localeCompare(b.date));
+            const tbody = document.getElementById('salary-log-list');
+            let html = ""; let totalH = 0; let totalT = 0;
             monthLogs.forEach(log => {
                 totalH += log.hours; totalT += log.transport;
-                html += `<tr><td>${log.date}</td><td>${log.hours}h</td><td>${log.transport}円</td><td style="font-size:11px; color:#555;">${log.summary.replace(/\n/g, '<br>')}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${log.id})">削除</button></td></tr>`;
+                html += `<tr><td>${log.date}</td><td>${log.hours} h</td><td>${log.transport} 円</td><td style="font-size:11px; color:#555;">${log.summary.replace(/\n/g, '<br>')}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${log.id})">削除</button></td></tr>`;
             });
-            tbody.innerHTML = monthLogs.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:#999;">記録なし</td></tr>` : html;
+            if(monthLogs.length === 0) { html = `<tr><td colspan="5" style="text-align:center; color:#999;">この月の記録はありません。</td></tr>`; }
+            tbody.innerHTML = html;
             const wage = parseInt(document.getElementById('hourly-wage').value) || 0;
             document.getElementById('total-hours').innerText = `${totalH} 時間`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`;
         }
 
         function deleteSalaryLog(id) {
             if(!confirm("削除しますか？")) return;
-            let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs);
+            let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs); renderSalaryLogs();
         }
 
         // ==========================================
@@ -592,8 +634,8 @@
                 </tr>`;
             }).join('');
         }
-        function deleteMistakeReport(id) { if(!confirm("削除しますか？")) return; let reports = loadFB('mistake_reports', []); reports = reports.filter(r => r.id !== id); saveFB('mistake_reports', reports); }
-        function clearAllMistakeReports() { if(confirm("⚠️ すべての報告を削除しますか？")) removeFB('mistake_reports'); }
+        function deleteMistakeReport(id) { if(!confirm("この報告ログを削除しますか？")) return; let reports = loadFB('mistake_reports', []); reports = reports.filter(r => r.id !== id); saveFB('mistake_reports', reports); renderMistakeReports(); }
+        function clearAllMistakeReports() { if(confirm("⚠️ すべての報告を削除しますか？")) { removeFB('mistake_reports'); renderMistakeReports(); } }
 
         // ==========================================
         // 📚 教材 & 📊 宿題ログ
@@ -603,14 +645,14 @@
             if(!title || !file) return; const r = new FileReader();
             r.onload = function(e) {
                 let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type === 'application/pdf' ? 'pdf' : 'img' });
-                try { saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; } catch(err) { alert("サイズが大きすぎます。"); }
+                try { saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; renderMaterialsList(); } catch(err) { alert("サイズが大きすぎます。"); }
             }; r.readAsDataURL(file);
         }
         function renderMaterialsList() {
             const m = loadFB('materials', []);
             document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:#999;">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" style="background:#2196f3; margin-bottom:5px;" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join('');
         }
-        function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); }
+        function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); renderMaterialsList(); }
         function openMaterialPreview(idx) {
             const m = loadFB('materials', [])[idx]; if(!m) return;
             document.getElementById('preview-title').innerText = m.name;
@@ -621,11 +663,11 @@
 
         function renderHwLogList() {
             const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = "";
-            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">消去</button>` : '-'}</td></tr>`; } }));
+            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${d}', '${ev.text}')">消去</button>` : '-'}</td></tr>`; } }));
             document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
         }
-        function deleteHwLog(btn) { const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); db.ref('students/' + managedStudentId + '/task_status').set('pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) db.ref('students/' + managedStudentId + '/stamps').set(stamps - 1); }
-        function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); db.ref('students/' + managedStudentId + '/stamps').set(0); } }
+        function deleteHwLog(d, t) { let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); renderHwLogList(); renderCalendar(); }
+        function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); saveFB_Raw('stamps', 0); renderHwLogList(); renderCalendar(); } }
 
         // ==========================================
         // 🎨 ホワイトボード（スマホ完全対応 ＆ 文字スタンプ）
@@ -635,7 +677,9 @@
         let activeText = null; let isDraggingText = false; let savedCanvasData = null;
 
         function getPos(e) { 
-            const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = canvas.getBoundingClientRect(); 
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; 
         }
 
@@ -655,11 +699,14 @@
             if(e.type === 'touchstart') e.preventDefault();
             const p = getPos(e);
             if(currentTool === 'text') { 
-                if(!activeText) { const txt = prompt("テキストを入力:"); if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); }
+                if(!activeText) {
+                    const txt = prompt("テキストを入力:"); 
+                    if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); }
                 } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); }
                 return;
             }
-            if(activeText) fixText(); isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
+            if(activeText) fixText();
+            isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
         }
         function handleMove(e) {
             if(e.type === 'touchmove') e.preventDefault();
@@ -681,7 +728,7 @@
         function sendWhiteboardSlide() { 
             if(activeText) fixText();
             let slides = loadFB('wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('wb_slides', slides);
-            alert(`📡 新しいスライドとして送信しました！`);
+            alert(`📡 新しいスライドとして送信しました！`); renderWbSlides();
         }
 
         function renderWbSlides() {
@@ -700,6 +747,7 @@
             const key = type === 'student' ? 'student_wb_slides' : 'wb_slides';
             if(!confirm("削除しますか？")) return;
             let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s);
+            type === 'student' ? renderStudentSlides() : renderWbSlides();
         }
         function openSlidePreview(id, type) {
             const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []);

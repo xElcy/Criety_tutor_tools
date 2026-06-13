@@ -18,7 +18,7 @@
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
         .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; overflow-x: hidden;}
         .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
         .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
@@ -42,14 +42,15 @@
         .form-col-2 { display: flex; gap: 10px; }
         .form-col-2 > div { flex: 1; }
 
-        /* ミニカレンダー */
-        .mini-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 10px; text-align: center; }
+        /* ミニカレンダー（横ぶち抜き対策版） */
+        .mini-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; font-size: 10px; text-align: center; width: 100%; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
-        .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa;}
+        .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa; overflow: hidden; }
         .cal-day.today { background: #fff9c4; }
         .cal-day.selected { border: 2px solid #ff9800; background: #fff3e0; }
-        .cal-badge { font-size: 9px; border-radius: 3px; color: white; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding: 1px 3px; overflow: hidden; white-space: nowrap; font-weight: bold;}
-        .badge-del { color: #fff; background: rgba(0,0,0,0.2); border-radius: 50%; width: 12px; height: 12px; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; }
+        .cal-badge { font-size: 9px; border-radius: 3px; color: white; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding: 2px; overflow: hidden; width: 100%; box-sizing: border-box; }
+        .cal-badge span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; text-align: left; }
+        .badge-del { color: #fff; background: rgba(0,0,0,0.2); border-radius: 50%; width: 12px; height: 12px; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; margin-left: 2px; }
 
         .event-add-panel { background: #fff9e6; border: 1px solid #ffe0b2; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; }
         .event-btn-group { display: flex; gap: 5px; margin-top: 10px; }
@@ -253,12 +254,12 @@
 
     <script>
         // ==========================================
-        // 1. Firebaseの合鍵をセット (databaseURLを完全組み込み)
+        // 1. Firebaseの合鍵をセット
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
             authDomain: "criety-app-f76d4.firebaseapp.com",
-            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app", // ★重要：通信を確実に開通
+            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "criety-app-f76d4",
             storageBucket: "criety-app-f76d4.firebasestorage.app",
             messagingSenderId: "826655717900",
@@ -271,7 +272,6 @@
             db = firebase.database();
         } catch(e) {
             console.error("Firebase Init Error:", e);
-            alert("つうしん環境の初期化に失敗しました。");
         }
 
         let myStudentId = "";
@@ -281,7 +281,6 @@
         let timerInterval = null;
         let totalSeconds = 0;
 
-        // 安全にFirebaseへデータを保存・読み込みする関数
         function saveFB(key, data) { 
             studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data));
             if(db) db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)).catch(e => console.error(e)); 
@@ -325,21 +324,18 @@
         }
 
         function startApp() {
-            // ★ 通信エラーで止まらないように、あらかじめ初期描画を行っておく
+            // 初回描画
             renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
 
-            // ★ Firebaseからリアルタイムでデータを受信
+            // Firebaseからリアルタイム受信
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
-                
                 renderStamps();
                 renderCalendar();
                 renderHomeworkList();
                 renderMySentSlides();
                 syncData(); 
-            }, (error) => {
-                console.error("Firebase Read Error:", error);
             });
         }
 
@@ -379,7 +375,8 @@
                 time: time, memo: memo
             };
 
-            let reports = loadFB('mistake_reports', []); reports.push(report);
+            let reports = loadFB('mistake_reports', []);
+            reports.push(report);
             saveFB('mistake_reports', reports); 
 
             document.getElementById('report-mat').value = ""; document.getElementById('report-p').value = "";
@@ -412,7 +409,8 @@
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
+            const events = loadFB('cal_events', {});
+            const doneDict = loadFB('hw_done', {});
 
             ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
             const startDay = new Date(year, month, 1).getDay();
@@ -421,47 +419,71 @@
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let badgeHtml = "";
+
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
                         let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
+                        
                         if(ev.type === 'hw') {
-                            if(doneDict[dStr + '_' + ev.text]) { color = '#4caf50'; text = `💮済:${ev.text}`; } else { color = '#ff9800'; text = `宿:${ev.text}`; }
+                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
+                            else { color = '#ff9800'; text = `宿:${ev.text}`; }
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
-                        if(ev.type === 'student') delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+
+                        if(ev.type === 'student') {
+                            delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+                        }
+
                         badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
                     });
                 }
+                
                 grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b>${i}</b>${badgeHtml}</div>`;
             }
         }
 
-        function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
-        function addStudentEvent(prefix, colorCode) {
-            const text = prompt(`${prefix} の予定をいれてね！`); if(!text) return;
-            let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
-            evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
-            saveFB('cal_events', evs); renderCalendar();
+        function selectDate(dStr) {
+            selectedDateStr = dStr;
+            document.getElementById('event-add-panel').style.display = 'block';
+            document.getElementById('selected-date-display').innerText = dStr;
+            renderCalendar(); 
         }
+
+        function addStudentEvent(prefix, colorCode) {
+            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`);
+            if(!text) return;
+            let evs = loadFB('cal_events', {});
+            if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
+            evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
+            saveFB('cal_events', evs);
+        }
+
         function deleteEvent(dateStr, idx) {
-            let evs = loadFB('cal_events', {}); evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr];
-            saveFB('cal_events', evs); renderCalendar();
+            let evs = loadFB('cal_events', {});
+            evs[dateStr].splice(idx, 1);
+            if(evs[dateStr].length === 0) delete evs[dateStr];
+            saveFB('cal_events', evs);
         }
 
         // ==========================================
         // 📚 宿題リスト機能
         // ==========================================
         function renderHomeworkList() {
-            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
+            const events = loadFB('cal_events', {});
+            const doneDict = loadFB('hw_done', {});
             const hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {};
             const hwListDiv = document.getElementById('hw-list');
-            let hwHtml = ""; let hasHw = false; let inputIdCounter = 0;
+            let hwHtml = ""; let hasHw = false;
+            let inputIdCounter = 0;
 
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
-                        const hwKey = `${dateStr}_${ev.text}`; if(hiddenDict[hwKey]) return;
-                        hasHw = true; const isDone = doneDict[hwKey];
+                        const hwKey = `${dateStr}_${ev.text}`;
+                        if(hiddenDict[hwKey]) return; 
+                        
+                        hasHw = true;
+                        const isDone = doneDict[hwKey];
 
                         if(isDone) {
                             let timeStr = (typeof isDone === 'object' && isDone.time) ? `<span style="color:#2e7d32; font-size:11px;">⏱️ ${isDone.time} かかった</span>` : '';
@@ -481,10 +503,12 @@
                             <div class="hw-item">
                                 <div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
                                 <div style="font-size:14px; font-weight:bold; color:#4a4a4a; margin-bottom: 5px;">${ev.text}</div>
+                                
                                 <div style="display:flex; align-items:center; gap:5px; margin-bottom:8px; font-size:12px; font-weight:bold; color:#666;">
                                     ⏱️ <input type="number" id="min_${currentInputId}" placeholder="0" style="width:60px; padding:5px; border:1px solid #ccc; border-radius:4px;"> 分
                                     <input type="number" id="sec_${currentInputId}" placeholder="0" style="width:60px; padding:5px; border:1px solid #ccc; border-radius:4px;"> 秒
                                 </div>
+
                                 <button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}', '${currentInputId}')">おわった！💮</button>
                             </div>`;
                             inputIdCounter++;
@@ -492,40 +516,60 @@
                     }
                 });
             });
-            hwListDiv.innerHTML = hasHw ? hwHtml : `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
+
+            if(hasHw) hwListDiv.innerHTML = hwHtml;
+            else hwListDiv.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
         }
 
         function markDone(dateStr, hwText, inputId) {
             const min = document.getElementById(`min_${inputId}`).value || "0";
             const sec = document.getElementById(`sec_${inputId}`).value || "0";
-            const timeStr = `${min}分 ${sec}秒`; const hwKey = `${dateStr}_${hwText}`;
-            let doneDict = loadFB('hw_done', {}); if(doneDict[hwKey]) return;
+            const timeStr = `${min}分 ${sec}秒`;
+
+            const hwKey = `${dateStr}_${hwText}`;
+            let doneDict = loadFB('hw_done', {});
+            
+            if(doneDict[hwKey]) return;
 
             doneDict[hwKey] = { done: true, time: timeStr };
-            saveFB('hw_done', doneDict); saveFB_Raw('task_status', 'completed');
+            saveFB('hw_done', doneDict);
+            saveFB_Raw('task_status', 'completed');
 
-            let count = parseInt(studentDataCache['stamps']) || 0; let cards = parseInt(studentDataCache['stamp_cards']) || 1; count++;
-            if(count >= STAMP_MAX) { saveFB_Raw('stamps', 0); saveFB_Raw('stamp_cards', cards + 1); alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！"); } 
-            else { saveFB_Raw('stamps', count); alert("すごーい！スタンプを 1こ おしたよ！💮"); }
-            renderStamps(); renderCalendar(); renderHomeworkList();
+            let count = parseInt(studentDataCache['stamps']) || 0;
+            let cards = parseInt(studentDataCache['stamp_cards']) || 1;
+            count++;
+
+            if(count >= STAMP_MAX) {
+                saveFB_Raw('stamps', 0); 
+                saveFB_Raw('stamp_cards', cards + 1); 
+                alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！");
+            } else {
+                saveFB_Raw('stamps', count);
+                alert("すごーい！スタンプを 1こ おしたよ！💮");
+            }
         }
 
         function hideHw(dateStr, hwText) {
-            if(!confirm("リストから消してもいい？")) return;
+            if(!confirm("リストから消してもいい？（先生の画面には ちゃーんと残っているから だいじょうぶだよ！）")) return;
             const hwKey = `${dateStr}_${hwText}`;
-            let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true;
-            localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList();
+            let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {};
+            hiddenDict[hwKey] = true;
+            localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict));
+            renderHomeworkList();
         }
 
         // ==========================================
         // 🎨 ホワイトボード機能
         // ==========================================
-        const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('student-whiteboard'); 
+        const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#ff9800'; let lineWidth = 5;
         let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         
         function getPos(e) { 
-            const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = canvas.getBoundingClientRect(); 
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; 
         }
 
@@ -533,7 +577,8 @@
             if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0);
             if(activeText) {
                 ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180);
-                ctx.font = `bold ${24 * activeText.scale}px 'Hiragino Maru Gothic ProN', sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.font = `bold ${24 * activeText.scale}px 'Hiragino Maru Gothic ProN', sans-serif`; 
+                ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(activeText.text, 0, 0); ctx.restore();
             }
         }
@@ -552,7 +597,8 @@
                 } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); }
                 return; 
             } 
-            if(activeText) fixText(); isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
+            if(activeText) fixText();
+            isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
         }
         
         function handleMove(e) { 
@@ -564,7 +610,6 @@
         }
         function handleEnd(e) { isDrawing = false; isDraggingText = false; }
         
-        // ★ 修正：ボタン切り替えプログラムの連動不具合を解消
         function setTool(t) { 
             if(activeText && t !== 'text') fixText(); 
             currentTool = t; 
@@ -584,14 +629,23 @@
         function submitSlide() {
             if(activeText) fixText();
             try {
-                let slides = loadFB('student_wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() });
-                saveFB('student_wb_slides', slides); alert("🚀 先生に ノートを送ったよ！"); ctx.clearRect(0, 0, canvas.width, canvas.height); renderMySentSlides();
+                let slides = loadFB('student_wb_slides', []);
+                slides.push({ id: Date.now(), data: canvas.toDataURL() });
+                saveFB('student_wb_slides', slides);
+                alert("🚀 先生に ノートを送ったよ！");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             } catch(e) { alert("エラーがおきました！もういちどためしてね。"); }
         }
 
         function renderMySentSlides() {
-            const container = document.getElementById('my-sent-slides-container'); const slides = loadFB('student_wb_slides', []);
-            if(slides.length === 0) { container.innerHTML = `<p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>`; return; }
+            const container = document.getElementById('my-sent-slides-container');
+            const slides = loadFB('student_wb_slides', []);
+            
+            if(slides.length === 0) {
+                container.innerHTML = `<p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>`;
+                return;
+            }
+
             container.innerHTML = [...slides].reverse().map((s, idx) => `
                 <div class="slide-item">
                     <button class="slide-delete-btn" onclick="deleteMySlide(${s.id})">✖ 取り消し</button>
@@ -603,30 +657,50 @@
 
         function deleteMySlide(id) {
             if(!confirm("先生に送ったこのノートを 取り消して消す？")) return;
-            let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); renderMySentSlides();
+            let slides = loadFB('student_wb_slides', []);
+            slides = slides.filter(s => s.id !== id);
+            saveFB('student_wb_slides', slides);
         }
 
         // ==========================================
-        // 🔄 データの表示
+        // 🔄 データの表示（受信側）
         // ==========================================
         function syncData() {
-            const targetTitle = studentDataCache['target_title']; const targetDays = studentDataCache['target_days'];
+            const targetTitle = studentDataCache['target_title'];
+            const targetDays = studentDataCache['target_days'];
             if(targetTitle && targetDays) {
-                document.getElementById('countdown-area').style.display = 'block'; document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`; document.getElementById('countdown-days').innerText = `${targetDays} 日`;
+                document.getElementById('countdown-area').style.display = 'block';
+                document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
+                document.getElementById('countdown-days').innerText = `${targetDays} 日`;
             } else { document.getElementById('countdown-area').style.display = 'none'; }
 
-            const files = loadFB('materials', []); const list = document.getElementById('material-list');
+            const files = loadFB('materials', []);
+            const list = document.getElementById('material-list');
             if(files.length > 0) {
-                list.innerHTML = files.map(f => `<div class="file-item" onclick="openFile('${f.url}', '${f.type}')"><span class="file-icon">${f.type==='pdf'?'📄':'🖼️'}</span><div style="font-size:12px;"><b>${f.name}</b><br><span style="color:#999;">タップでみる</span></div></div>`).join('');
+                list.innerHTML = files.map(f => `
+                    <div class="file-item" onclick="openFile('${f.url}', '${f.type}')">
+                        <span class="file-icon">${f.type==='pdf'?'📄':'🖼️'}</span>
+                        <div style="font-size:12px;"><b>${f.name}</b><br><span style="color:#999;">タップでみる</span></div>
+                    </div>
+                `).join('');
             } else { list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`; }
+
             renderTeacherSlides();
         }
 
         function renderTeacherSlides() {
-            const slides = loadFB('wb_slides', []); const boardCard = document.getElementById('shared-board-card'); const container = document.getElementById('teacher-slides-container');
+            const slides = loadFB('wb_slides', []);
+            const boardCard = document.getElementById('shared-board-card');
+            const container = document.getElementById('teacher-slides-container');
+
             if(slides.length > 0) {
                 boardCard.style.display = 'block';
-                const html = [...slides].reverse().map((s, idx) => `<div class="slide-item"><div style="font-size:12px; font-weight:bold; color:var(--main); margin-bottom:8px;">先生のノート ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join('');
+                const html = [...slides].reverse().map((s, idx) => `
+                    <div class="slide-item">
+                        <div style="font-size:12px; font-weight:bold; color:var(--main); margin-bottom:8px;">先生のノート ${slides.length - idx}</div>
+                        <img src="${s.data}" onclick="openFile('${s.data}', 'img')">
+                    </div>
+                `).join('');
                 if (container.innerHTML !== html) container.innerHTML = html;
             } else { boardCard.style.display = 'none'; container.innerHTML = ''; }
         }

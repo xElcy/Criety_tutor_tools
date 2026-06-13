@@ -50,7 +50,6 @@
         @media(min-width: 769px) { .calendar-container { flex-direction: row; } }
         
         .calendar-box { width: 100%; }
-        /* 画面のはみ出し・横揺れを防止する枠 */
         .scrollable-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; border: 1px solid #eee; border-radius: 4px; background: #fff;}
         
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -85,7 +84,6 @@
 
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; font-size: 14px;}
         
-        /* テーブルの横揺れ防止 */
         .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; min-width: 500px;}
         .list-table th, .list-table td { border: 1px solid #eee; padding: 8px; text-align: left; vertical-align: middle; }
         .list-table th { background: #f8f9fa; font-weight: bold; white-space: nowrap; }
@@ -97,7 +95,6 @@
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
-        /* スマホ用レスポンシブ完全対応 */
         @media (max-width: 768px) { 
             #app-layout { flex-direction: column; } 
             .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #111;} 
@@ -227,7 +224,7 @@
                 <div class="header"><h1>指導ノート（双方向スライド）</h1></div>
                 <div class="panel" style="padding:15px;">
                     <div class="toolbar-container">
-                        <div class="tool-group">
+                        <div class="tool-group" id="drawing-tools">
                             <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
                             <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
                             <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 文字</button>
@@ -382,12 +379,13 @@
     </div>
 
     <script>
-        // ----------------------------------------------------
-        // 1. Firebaseの合鍵（firebaseConfig）をセット
-        // ----------------------------------------------------
+        // ==========================================
+        // 1. Firebaseの合鍵をセット
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
             authDomain: "criety-app-f76d4.firebaseapp.com",
+            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app", // ★重要：スクショから追加！
             projectId: "criety-app-f76d4",
             storageBucket: "criety-app-f76d4.firebasestorage.app",
             messagingSenderId: "826655717900",
@@ -399,27 +397,24 @@
             firebase.initializeApp(firebaseConfig);
             db = firebase.database();
         } catch(e) {
-            alert("データベースの初期化に失敗しました。通信環境や広告ブロックの設定をご確認ください。");
+            console.error("Firebase Init Error:", e);
+            alert("通信環境の初期化に失敗しました。");
         }
 
         let tempEmail = ""; 
         let managedStudentId = ""; 
         let studentDataCache = {}; 
 
-        // ★ 画面のラグや消失を防ぐため、通信前に手元のデータを更新（オプティミスティックUI）
+        // ==========================================
+        // ★ 安全なデータ保存・読み込み関数
+        // ==========================================
         function saveFB(key, data) { 
             studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data));
-            if(!db) return;
-            db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)).catch(e => {
-                alert("【⚠️通信ブロックエラー】\nFirebaseのセキュリティルールがロックされているため、変更を保存できません！\n\nFirebase画面の「Realtime Database」＞「ルール」タブを開き、\n\".write\": true\nに書き換えて「公開」を押してください。");
-            }); 
+            if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)).catch(e => console.error("Save Error:", e)); 
         }
         function saveFB_Raw(key, val) { 
             studentDataCache[key] = val;
-            if(!db) return;
-            db.ref('students/' + managedStudentId + '/' + key).set(val).catch(e => {
-                alert("【⚠️通信ブロックエラー】\nFirebaseのルール設定を確認してください。");
-            }); 
+            if(db) db.ref('students/' + managedStudentId + '/' + key).set(val).catch(e => console.error("Save Error:", e)); 
         }
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
@@ -428,8 +423,7 @@
         }
         function removeFB(key) { 
             delete studentDataCache[key];
-            if(!db) return;
-            db.ref('students/' + managedStudentId + '/' + key).remove(); 
+            if(db) db.ref('students/' + managedStudentId + '/' + key).remove(); 
         }
 
         // ==========================================
@@ -476,15 +470,15 @@
             document.getElementById('connection-status').innerText = id;
             document.getElementById('setting-email').value = tempEmail;
 
-            // ★ エラーで止まらないよう、通信前に必ず初回描画を行う
+            // ★ まず強制的に画面を描画する（データが空でもカレンダーの枠組みを作る）
             loadStudentData();
 
-            // ★ リアルタイム通信の開始
+            // ★ Firebaseからデータを受信
             if(!db) return;
             db.ref('students/' + managedStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 
-                // 画面再描画
+                // 受信したデータで画面を再描画
                 loadStudentData();
 
                 // 入力中でない時だけUIを更新
@@ -500,7 +494,7 @@
                 }
                 document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
             }, (error) => {
-                alert("【⚠️データベース接続拒否】\nFirebaseのセキュリティで弾かれたため、カレンダーや履歴の同期ができません！\n\nFirebase画面の「Realtime Database」＞「ルール」タブを開き、\n\".read\": true,\n\".write\": true\nに変更して「公開」を押してください。");
+                console.error("Firebase Read Error:", error);
             });
         }
 
@@ -528,6 +522,7 @@
             const grid = document.getElementById('calendar-grid');
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
+            
             const events = loadFB('cal_events', {});
             const doneDict = loadFB('hw_done', {});
             
@@ -554,18 +549,31 @@
         function addQuickEvent(type) { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:");
-            if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:type, text:text}); saveFB('cal_events', evs); renderCalendar(); }
+            if(text) { 
+                let evs = loadFB('cal_events', {}); 
+                if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
+                evs[selectedDateStr].push({type:type, text:text}); 
+                saveFB('cal_events', evs); 
+                renderCalendar(); 
+            }
         }
         function addHomework() { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！");
-            let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); 
+            let evs = loadFB('cal_events', {}); 
+            if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
+            evs[selectedDateStr].push({type:'hw', text:v}); 
             saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); 
             alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = ""; renderCalendar();
         }
         window.deleteEvent = function(dateStr, idx) { 
             let evs = loadFB('cal_events', {}); 
-            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); renderCalendar(); }
+            if(evs && evs[dateStr]) { 
+                evs[dateStr].splice(idx, 1); 
+                if(evs[dateStr].length === 0) delete evs[dateStr]; 
+                saveFB('cal_events', evs); 
+                renderCalendar(); 
+            }
         };
 
         function sendTarget() {
@@ -663,10 +671,15 @@
 
         function renderHwLogList() {
             const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = "";
-            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${d}', '${ev.text}')">消去</button>` : '-'}</td></tr>`; } }));
+            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">消去</button>` : '-'}</td></tr>`; } }));
             document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
         }
-        function deleteHwLog(d, t) { let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); renderHwLogList(); renderCalendar(); }
+        function deleteHwLog(btn) { 
+            const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); 
+            let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); 
+            let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); 
+            renderHwLogList(); renderCalendar(); 
+        }
         function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); saveFB_Raw('stamps', 0); renderHwLogList(); renderCalendar(); } }
 
         // ==========================================
@@ -720,7 +733,13 @@
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
         
-        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#whiteboard-panel .tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
+        // ★ 修正：ボタンの切り替え処理を正常化（id="drawing-tools" の中だけを探す）
+        function setTool(t) { 
+            if(activeText && t !== 'text') fixText(); 
+            currentTool = t; 
+            document.querySelectorAll('#drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); 
+            document.getElementById('btn-' + t).classList.add('active'); 
+        }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
         function clearBoard() { if(confirm("消去しますか？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }

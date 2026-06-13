@@ -103,6 +103,7 @@
                     <div style="display: flex; gap: 5px;">
                         <button class="event-btn" style="background:#42a5f5;" onclick="addStudentEvent('🔵 勉強', '#42a5f5')">勉強</button>
                         <button class="event-btn" style="background:#66bb6a;" onclick="addStudentEvent('🟢 あそび', '#66bb6a')">あそび</button>
+                        <button class="event-btn" style="background:#ab47bc;" onclick="addStudentEvent('🟣 その他', '#ab47bc')">その他</button>
                     </div>
                 </div>
             </div>
@@ -381,8 +382,8 @@
         // 🔄 データの表示（★目標・自動カウントダウン）
         // ==========================================
         function syncData() {
-            const targetTitle = loadFB('target_title', "");
-            const targetDate = loadFB('target_date', "");
+            const targetTitle = studentDataCache['target_title']; 
+            const targetDate = studentDataCache['target_date'];
             const area = document.getElementById('countdown-area');
             const daysEl = document.getElementById('countdown-days');
             
@@ -396,7 +397,7 @@
                     daysEl.style.display = 'block';
                     daysEl.innerText = `あと ${d} 日`;
                 } else {
-                    daysEl.style.display = 'none'; // 日付がない時は非表示
+                    daysEl.style.display = 'none'; // 日付なしなら非表示
                 }
             } else { 
                 area.style.display = 'none'; 

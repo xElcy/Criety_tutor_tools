@@ -18,7 +18,7 @@
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
         .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; overflow-x: hidden;}
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; overflow-x: hidden; }
         .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
         .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
@@ -42,7 +42,7 @@
         .form-col-2 { display: flex; gap: 10px; }
         .form-col-2 > div { flex: 1; }
 
-        /* ミニカレンダー（横ぶち抜き対策版） */
+        /* ミニカレンダー */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; font-size: 10px; text-align: center; width: 100%; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
         .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa; overflow: hidden; }
@@ -115,7 +115,16 @@
 
         <div class="mid-card" style="border-color: #ff9800;">
             <h3 style="color: #e65100; border-bottom-color: #ffe0b2;">⏱️ べんきょうタイマー</h3>
-            <div class="timer-display" id="timer-display">00:00:00</div>
+            <p style="font-size:10px; color:#666; margin-bottom: 5px;">時間をえらんでスタートするとアラームが鳴るよ！<br>えらばずにスタートするとストップウォッチになるよ。</p>
+            
+            <div class="timer-display" id="timer-display">00:00</div>
+            
+            <div style="display:flex; gap:5px; margin-bottom:15px;" id="timer-setup">
+                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(10)">+10分</button>
+                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(5)">+5分</button>
+                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(1)">+1分</button>
+            </div>
+
             <div class="timer-btn-group">
                 <button class="timer-btn" style="background:#4caf50;" onclick="startTimer()">▶ スタート</button>
                 <button class="timer-btn" style="background:#f44336;" onclick="stopTimer()">⏸ ストップ</button>
@@ -278,8 +287,12 @@
         let studentDataCache = {};
         const STAMP_MAX = 10;
         let selectedDateStr = "";
+
+        // ★ 音声・タイマー用変数
+        let audioCtx = null;
         let timerInterval = null;
         let totalSeconds = 0;
+        let isCountdown = false;
 
         function saveFB(key, data) { 
             studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data));
@@ -324,10 +337,7 @@
         }
 
         function startApp() {
-            // 初回描画
             renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
-
-            // Firebaseからリアルタイム受信
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
@@ -340,19 +350,92 @@
         }
 
         // ==========================================
-        // ⏱️ タイマー機能
+        // ⏱️ アラーム機能つきタイマー
         // ==========================================
+        function initAudio() {
+            if(!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if(audioCtx.state === 'suspended') { audioCtx.resume(); }
+        }
+
+        function playAlarm() {
+            if(!audioCtx) return;
+            try {
+                function beep(freq, time, startOffset) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + startOffset);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + startOffset);
+                    osc.stop(audioCtx.currentTime + startOffset + time);
+                }
+                // ピピピピッ
+                beep(880, 0.1, 0); beep(880, 0.1, 0.2); beep(880, 0.1, 0.4); beep(880, 0.4, 0.6);
+            } catch(e) { console.error("Audio Play Error:", e); }
+        }
+
         function updateTimerDisplay() {
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
             const s = totalSeconds % 60;
-            document.getElementById('timer-display').innerText = 
-                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            if(h > 0) {
+                document.getElementById('timer-display').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else {
+                document.getElementById('timer-display').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
         }
 
-        function startTimer() { if(timerInterval) return; timerInterval = setInterval(() => { totalSeconds++; updateTimerDisplay(); }, 1000); }
-        function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
-        function resetTimer() { if(confirm("タイマーを 0 にもどす？")) { stopTimer(); totalSeconds = 0; updateTimerDisplay(); } }
+        function addTime(min) {
+            if(timerInterval) return; // 動いている時は追加不可
+            totalSeconds += min * 60;
+            isCountdown = true;
+            updateTimerDisplay();
+        }
+
+        function startTimer() { 
+            initAudio(); // スマホの音声再生のブロックを解除
+            if(timerInterval) return; 
+            
+            // 時間セットなしでスタートしたらストップウォッチにする
+            if(totalSeconds === 0) isCountdown = false;
+
+            document.getElementById('timer-setup').style.display = 'none';
+
+            timerInterval = setInterval(() => { 
+                if(isCountdown) {
+                    totalSeconds--; 
+                    if(totalSeconds <= 0) {
+                        totalSeconds = 0;
+                        stopTimer();
+                        playAlarm();
+                        setTimeout(() => alert("⏰ じかんになりました！よくがんばったね！"), 500); // 音が鳴るのを待つ
+                    }
+                } else {
+                    totalSeconds++; 
+                }
+                updateTimerDisplay(); 
+            }, 1000); 
+        }
+
+        function stopTimer() { 
+            clearInterval(timerInterval); 
+            timerInterval = null; 
+            document.getElementById('timer-setup').style.display = 'flex';
+        }
+
+        function resetTimer() { 
+            if(confirm("タイマーを 0 にもどす？")) { 
+                stopTimer(); 
+                totalSeconds = 0; 
+                isCountdown = false;
+                updateTimerDisplay(); 
+            } 
+        }
 
         // ==========================================
         // 📝 間違え直し報告機能
@@ -455,14 +538,14 @@
             let evs = loadFB('cal_events', {});
             if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
             evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
-            saveFB('cal_events', evs);
+            saveFB('cal_events', evs); 
         }
 
         function deleteEvent(dateStr, idx) {
             let evs = loadFB('cal_events', {});
             evs[dateStr].splice(idx, 1);
             if(evs[dateStr].length === 0) delete evs[dateStr];
-            saveFB('cal_events', evs);
+            saveFB('cal_events', evs); 
         }
 
         // ==========================================

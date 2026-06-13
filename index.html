@@ -13,12 +13,22 @@
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; width: 100vw; overflow-x: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
         
+        /* 認証オーバーレイ */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--sidebar-bg); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
-        .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
-        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-        
+        .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 20px; }
+        .auth-box input, .auth-box select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline:none; }
+        .btn-submit { background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
+
         #top-bar { display: none; background: #0f171e; color: white; padding: 10px 15px; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 100%; }
+        
+        /* オーナー専用システム管理レイアウト */
+        #admin-hub-layout { display: none; flex: 1; width: 100%; padding: 20px; overflow-y: auto; background: #eef2f5; }
+        .admin-panel { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 800px; margin-left: auto; margin-right: auto;}
+        .admin-panel h3 { margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;}
+
+        /* 生徒ダッシュボードレイアウト */
         #app-layout { display: none; flex: 1; width: 100%; overflow: hidden; }
 
         .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); padding: 20px; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; flex-shrink: 0;}
@@ -39,19 +49,13 @@
         label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 13px; color: #555;}
         input[type="text"], input[type="number"], input[type="password"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
         input[type="file"] { padding: 10px; border: 1px dashed #ccc; width: 100%; background: #f9f9f9; cursor: pointer; font-size: 14px;}
-        .btn-submit { margin-top: 15px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
-        .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
         
         .target-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; }
         .target-group > div { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 100px; }
-        .target-group input { margin: 0; }
-        
         .calendar-container { display: flex; gap: 20px; flex-direction: column; width: 100%; }
         @media(min-width: 769px) { .calendar-container { flex-direction: row; } }
-        
         .calendar-box { width: 100%; }
         .scrollable-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; border: 1px solid #eee; border-radius: 4px; background: #fff;}
-        
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-btn { background: #eee; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; min-width: 450px; text-align: center; }
@@ -60,7 +64,6 @@
         .calendar-day.selected { border: 2px solid var(--accent-color); background: #fffcf5; }
         .calendar-day.today { background: #e3f2fd; }
         .calendar-day .date-num { font-weight: bold; display: block; margin-bottom: 4px; }
-        
         .badge { background: #e0e4e8; padding: 2px 4px; border-radius: 3px; font-size: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; overflow: hidden; font-weight: bold; }
         .badge.lesson { background: #e3f2fd; color: #1565c0; border-left: 2px solid #1565c0; }
         .badge.test { background: #ffebee; color: #c62828; border-left: 2px solid #c62828; }
@@ -69,11 +72,9 @@
         .badge.hw-done { background: #e8f5e9; color: #2e7d32; border-left: 2px solid #2e7d32; }
         .badge.student { background: #f3e5f5; color: #8e24aa; border-left: 2px solid #8e24aa; }
         .badge-del { color: #ff5252; cursor: pointer; padding-left: 3px; }
-        
         .task-box { width: 100%; }
         .quick-btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
         .quick-btn { flex: 1; min-width: 30%; padding: 8px 5px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;}
-        
         .toolbar-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd;}
         .tool-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 12px; font-weight: bold;}
@@ -81,61 +82,78 @@
         .text-controls { display: none; flex-wrap: wrap; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
         .text-btn { padding: 6px 12px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; font-size: 14px;}
-        
         .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; min-width: 500px;}
         .list-table th, .list-table td { border: 1px solid #eee; padding: 8px; text-align: left; vertical-align: middle; }
         .list-table th { background: #f8f9fa; font-weight: bold; white-space: nowrap; }
         .btn-danger { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; }
         .slide-preview-box { min-width: 140px; max-width: 160px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; flex-shrink: 0;}
         .slide-preview-box img { width: 100%; height: 80px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; background: #fff;}
-        
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
-
-        /* カルテ用のフォームレイアウト */
         .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 768px) { 
-            #app-layout { flex-direction: column; } 
-            .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #111;} 
-            .sidebar h2 { display: none; }
-            .sidebar ul { display: flex; gap: 5px; }
-            .sidebar li { padding: 10px; margin: 0; font-size: 12px;}
-            .main-content { padding: 10px; } 
-            .panel { padding: 15px; }
-            .target-group { flex-direction: column; align-items: stretch; }
-            .target-group input[type="text"] { width: 100%; }
-            .profile-grid { grid-template-columns: 1fr; }
-        }
+
+        @media (max-width: 768px) { #app-layout { flex-direction: column; } .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #111;} .sidebar h2 { display: none; } .sidebar ul { display: flex; gap: 5px; } .sidebar li { padding: 10px; margin: 0; font-size: 12px;} .main-content { padding: 10px; } .panel, .admin-panel { padding: 15px; } .target-group { flex-direction: column; align-items: stretch; } .target-group input[type="text"] { width: 100%; } .profile-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay">
         <div class="auth-box" id="auth-step-1">
-            <h2 id="auth-title">先生 ログイン</h2>
+            <h2>Criety 講師ログイン</h2>
             <input type="text" id="auth-email" placeholder="メールアドレス">
             <input type="password" id="auth-password" placeholder="パスワード">
-            <button class="btn-submit" onclick="handleAuth()">次へ</button>
+            <button class="btn-submit" onclick="handleAuth()">ログイン</button>
         </div>
-        <div class="auth-box" id="auth-step-2" style="display: none;">
-            <h2>メール認証</h2>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;"><span style="color:red;">※テスト用:「123456」と入力</span></p>
-            <input type="text" id="auth-code" placeholder="認証コード (123456)">
-            <button class="btn-submit" onclick="verifyCode()">認証完了</button>
+        
+        <div class="auth-box" id="auth-step-owner" style="display: none;">
+            <h2 style="color: #d4af37;">👑 オーナーメニュー</h2>
+            <button class="btn-submit" style="background:#1976d2; margin-bottom:20px;" onclick="openAdminHub()">⚙️ システム管理（アカウント発行・割当）</button>
+            <div style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                <label style="text-align:left; font-size:12px; color:#666;">生徒ダッシュボードへ入室</label>
+                <input type="text" id="target-student-id-owner" placeholder="生徒IDを入力">
+                <button class="btn-submit" style="background-color: #d4af37; color: #1a2530; margin-top:5px;" onclick="startManage('owner')">ダッシュボードを開く</button>
+            </div>
         </div>
-        <div class="auth-box" id="auth-step-3" style="display: none;">
-            <h2 style="color: #d4af37;">管理する生徒の選択</h2>
-            <input type="text" id="target-student-id" placeholder="生徒ID (例: 26001)" style="font-size: 18px; font-weight: bold; text-align: center;">
-            <button class="btn-submit" style="background-color: #d4af37; color: #1a2530;" onclick="startManage()">ダッシュボードを開く</button>
+
+        <div class="auth-box" id="auth-step-teacher" style="display: none;">
+            <h2>担当生徒の選択</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">指導する生徒を選択してください。</p>
+            <select id="teacher-student-dropdown" style="margin-bottom: 20px; font-weight:bold;"></select>
+            <button class="btn-submit" onclick="startManage('teacher')">ダッシュボードを開く</button>
         </div>
     </div>
 
     <div id="top-bar">
         <div><span style="font-size: 12px; color: #aaa;">ログイン: <span id="logged-in-display" style="color:#fff;">未ログイン</span></span></div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 12px; font-weight: bold;">生徒:</span>
-            <span id="connection-status" style="font-size: 14px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 12px;">未接続</span>
-            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
+            <span style="font-size: 12px; font-weight: bold;">接続先生徒:</span>
+            <span id="connection-status" style="font-size: 14px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 12px;">-</span>
+            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替/戻る</button>
+        </div>
+    </div>
+
+    <div id="admin-hub-layout">
+        <div class="admin-panel" style="border-top: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32;">🆕 1. 新規【生徒】アカウントの自動発行</h3>
+            <p style="font-size:13px; color:#555;">新しい生徒のID（連番）と初期パスワードを発行し、データベースに登録します。</p>
+            <button class="btn-submit" style="background:#4caf50; width:auto; padding:10px 20px;" onclick="generateStudentAccount()">生徒用アカウントを発行する</button>
+            
+            <div id="new-account-result" style="display:none; margin-top:15px; padding:15px; background:#e8f5e9; border:1px dashed #4caf50; border-radius:8px;">
+                <p style="margin:0 0 5px 0; font-size:12px; font-weight:bold; color:#2e7d32;">✅ 発行完了！以下の情報を生徒に伝えてください。</p>
+                <div style="font-size:16px;">生徒ID: <b id="new-student-id"></b></div>
+                <div style="font-size:16px;">初期パスワード: <b id="new-student-pass"></b></div>
+            </div>
+        </div>
+
+        <div class="admin-panel" style="border-top: 4px solid #1976d2;">
+            <h3 style="color: #1976d2;">👨‍🏫 2. 【講師】アカウント作成 ＆ 担当生徒の紐付け</h3>
+            <p style="font-size:13px; color:#555;">講師のログイン情報を作成し、担当する生徒IDを割り当てます。ここで許可された生徒以外は、講師の画面に一切表示されません。</p>
+            <div class="profile-grid">
+                <div><label>講師用メールアドレス</label><input type="text" id="new-teacher-email" placeholder="teacher@example.com"></div>
+                <div><label>講師用パスワード</label><input type="text" id="new-teacher-pass" placeholder="任意のパスワード"></div>
+                <div style="grid-column: 1 / -1;"><label>担当させる生徒ID (カンマ区切りで複数可)</label><input type="text" id="new-teacher-assigned" placeholder="例: 26001, 26002"></div>
+            </div>
+            <button class="btn-submit" style="background:#1976d2;" onclick="registerTeacherAccount()">講師を登録・担当を更新する</button>
         </div>
     </div>
 
@@ -144,7 +162,8 @@
             <h2>Criety</h2>
             <ul>
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
-                <li class="nav-item" onclick="switchPage('profile', this)">📂 生徒カルテ</li> <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
+                <li class="nav-item" onclick="switchPage('profile', this)">📂 生徒カルテ</li>
+                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
                 <li class="nav-item" onclick="switchPage('notes', this)">📝 ノート</li>
                 <li class="nav-item" onclick="switchPage('salary', this)">💰 給与・ログ</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 データ</li>
@@ -161,37 +180,24 @@
                     <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
                     <div id="current-target-display" style="margin-bottom: 15px; padding: 12px; background: #fff; border: 1px dashed #ffb74d; border-radius: 8px; font-size: 14px; display: none;">
                         <span style="color: #666; font-size: 12px;">現在生徒のアプリに表示中の目標：</span><br>
-                        <b id="current-target-text" style="color: #e65100; font-size: 18px;"></b> 
-                        <span style="font-weight: bold; margin-left: 5px;">（あと <b id="current-target-days-text" style="font-size: 18px;"></b> 日）</span>
+                        <b id="current-target-text" style="color: #e65100; font-size: 18px;"></b> <span style="font-weight: bold; margin-left: 5px;">（あと <b id="current-target-days-text" style="font-size: 18px;"></b> 日）</span>
                         <button onclick="clearTarget()" style="margin-top: 8px; display: block; padding: 6px 12px; font-size: 11px; background: #ffe0b2; color: #e65100; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ 生徒の画面から消す（目標解除）</button>
                     </div>
-
                     <div class="target-group">
                         <input type="text" id="target-title" placeholder="新しい目標名を入力" style="flex: 2;">
-                        <div>
-                            <input type="number" id="target-days" placeholder="日数" style="width: 80px;"> <span style="font-weight: bold; font-size:12px;">日</span>
-                        </div>
+                        <div><input type="number" id="target-days" placeholder="日数" style="width: 80px;"> <span style="font-weight: bold; font-size:12px;">日</span></div>
                         <button class="btn-submit" style="margin-top: 0; width: auto; padding: 10px 20px; background: #ff9800;" onclick="sendTarget()">生徒へ送信・更新</button>
                     </div>
                 </div>
 
                 <div class="calendar-container">
                     <div class="panel calendar-box">
-                        <div class="cal-header">
-                            <button class="cal-btn" onclick="changeMonth(-1)">◀ 前月</button>
-                            <h3 id="cal-month-year">2026年 6月</h3>
-                            <button class="cal-btn" onclick="changeMonth(1)">次月 ▶</button>
-                        </div>
-                        <div class="scrollable-wrap">
-                            <div class="calendar" id="calendar-grid"></div>
-                        </div>
+                        <div class="cal-header"><button class="cal-btn" onclick="changeMonth(-1)">◀ 前月</button><h3 id="cal-month-year"></h3><button class="cal-btn" onclick="changeMonth(1)">次月 ▶</button></div>
+                        <div class="scrollable-wrap"><div class="calendar" id="calendar-grid"></div></div>
                     </div>
                     <div class="panel task-box">
                         <h3>予定・課題の追加</h3>
-                        <div style="font-size:12px; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; background: #fffcf5; padding: 8px; border-radius: 4px;">
-                            選択中: <span id="selected-date-display" style="color:#d32f2f;">未選択（タップ）</span>
-                        </div>
-                        
+                        <div style="font-size:12px; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; background: #fffcf5; padding: 8px; border-radius: 4px;">選択中: <span id="selected-date-display" style="color:#d32f2f;">未選択（タップ）</span></div>
                         <div class="quick-btn-group">
                             <button class="quick-btn" style="background: #e3f2fd; color: #1565c0; border: 1px solid #1565c0;" onclick="addQuickEvent('lesson')">👨‍🏫 指導日</button>
                             <button class="quick-btn" style="background: #ffebee; color: #c62828; border: 1px solid #c62828;" onclick="addQuickEvent('test')">📝 テスト</button>
@@ -210,25 +216,20 @@
                 <div class="header"><h1>生徒情報・指導カルテ</h1></div>
                 <div class="panel" style="border-top: 4px solid var(--accent-color);">
                     <h3 style="color: var(--accent-color);">👤 基本情報（保護者・連絡先）</h3>
-                    <p style="font-size:12px; color:#666;">この情報は現在接続中の生徒IDにのみ紐づき、他の生徒データとは完全に分離・保護されます。</p>
+                    <p style="font-size:12px; color:#666;">この情報は現在接続中の生徒IDにのみ紐づき、担当外の講師からは完全に秘匿されます。</p>
                     <div class="profile-grid">
-                        <div><label>生徒氏名</label><input type="text" id="prof-name" placeholder="例: 山田 太郎"></div>
-                        <div><label>学年</label><input type="text" id="prof-grade" placeholder="例: 小学5年生"></div>
-                        <div><label>学校名</label><input type="text" id="prof-school" placeholder="例: ○○小学校"></div>
-                        <div><label>保護者氏名</label><input type="text" id="prof-parent" placeholder="例: 山田 花子"></div>
-                        <div><label>連絡先（電話番号）</label><input type="text" id="prof-phone" placeholder="例: 090-0000-0000"></div>
-                        <div><label>連絡先（メール）</label><input type="text" id="prof-email" placeholder="例: parent@example.com"></div>
+                        <div><label>生徒氏名</label><input type="text" id="prof-name"></div>
+                        <div><label>学年</label><input type="text" id="prof-grade"></div>
+                        <div><label>学校名</label><input type="text" id="prof-school"></div>
+                        <div><label>保護者氏名</label><input type="text" id="prof-parent"></div>
+                        <div><label>連絡先（電話番号）</label><input type="text" id="prof-phone"></div>
+                        <div><label>連絡先（メール）</label><input type="text" id="prof-email"></div>
                     </div>
                 </div>
-                
                 <div class="panel" style="border-top: 4px solid #4caf50;">
                     <h3 style="color: #2e7d32;">🎯 指導方針・特記事項</h3>
-                    <label>現在の目標・指導方針</label>
-                    <textarea id="prof-policy" rows="3" placeholder="例: まずは基礎計算の定着。その後、応用問題へ移行。"></textarea>
-                    
-                    <label>生徒の性格・苦手・メモ</label>
-                    <textarea id="prof-memo" rows="4" placeholder="例: 褒めると伸びるタイプ。図形問題への苦手意識が強いので図を書いて解説する。"></textarea>
-                    
+                    <label>現在の目標・指導方針</label><textarea id="prof-policy" rows="3"></textarea>
+                    <label>生徒の性格・苦手・メモ</label><textarea id="prof-memo" rows="4"></textarea>
                     <button class="btn-submit" style="background:#4caf50;" onclick="saveProfile()">✅ カルテの情報を保存する</button>
                 </div>
             </div>
@@ -237,20 +238,13 @@
                 <div class="header"><h1>教材・ファイル送信</h1></div>
                 <div class="panel">
                     <h3>📥 生徒アプリに教材ファイルを送る</h3>
-                    <label>教材のタイトル</label>
-                    <input type="text" id="mat-title" placeholder="例: 算数 小数のかけ算プリント">
-                    <label>ファイルを選択 (PDF / 画像)</label>
-                    <input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
+                    <label>教材のタイトル</label><input type="text" id="mat-title">
+                    <label>ファイルを選択 (PDF / 画像)</label><input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
                     <button class="btn-submit" onclick="sendMaterial()">🚀 送信する</button>
                 </div>
                 <div class="panel">
                     <h3>📋 送信済みの教材一覧</h3>
-                    <div class="scrollable-wrap">
-                        <table class="list-table">
-                            <thead><tr><th>教材タイトル</th><th>種類</th><th>操作</th></tr></thead>
-                            <tbody id="sent-materials-list"></tbody>
-                        </table>
-                    </div>
+                    <div class="scrollable-wrap"><table class="list-table"><thead><tr><th>教材タイトル</th><th>種類</th><th>操作</th></tr></thead><tbody id="sent-materials-list"></tbody></table></div>
                 </div>
             </div>
 
@@ -263,31 +257,20 @@
                             <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
                             <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 文字</button>
                             <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)" style="width:30px; height:30px; padding:0; border:none; cursor:pointer;">
-                            <div style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:bold;">
-                                <span>太さ:</span><input type="range" id="line-width" min="1" max="20" value="5" style="width:60px;" onchange="setLineWidth(this.value)">
-                            </div>
+                            <div style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:bold;"><span>太さ:</span><input type="range" id="line-width" min="1" max="20" value="5" style="width:60px;" onchange="setLineWidth(this.value)"></div>
                         </div>
                         <div class="tool-group" style="justify-content: space-between;">
                             <button class="tool-btn" style="flex:1; background: var(--accent-color); color: white; border:none;" onclick="sendWhiteboardSlide()">📡 スライド新規送信</button>
                             <button class="tool-btn" style="flex:0.5; border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
                         </div>
                     </div>
-
-                    <div class="text-controls" id="text-controls">
-                        <button class="text-btn" onclick="changeTextScale(0.2)">大きく ➕</button>
-                        <button class="text-btn" onclick="changeTextScale(-0.2)">小さく ➖</button>
-                        <button class="text-btn" onclick="changeTextAngle(15)">回転 ↻</button>
-                        <button class="text-btn" style="background:#4caf50; color:white; border-color:#388e3c;" onclick="fixText()">✅ キャンバスに固定</button>
-                    </div>
-
+                    <div class="text-controls" id="text-controls"><button class="text-btn" onclick="changeTextScale(0.2)">大きく ➕</button><button class="text-btn" onclick="changeTextScale(-0.2)">小さく ➖</button><button class="text-btn" onclick="changeTextAngle(15)">回転 ↻</button><button class="text-btn" style="background:#4caf50; color:white; border-color:#388e3c;" onclick="fixText()">✅ 固定</button></div>
                     <canvas id="whiteboard" width="1000" height="600" style="width: 100%; border: 2px solid #ccc; border-radius: 8px; cursor: crosshair; background: white; touch-action: none;"></canvas>
                 </div>
-
                 <div class="panel">
                     <h3 style="color: #d32f2f;">👨‍🏫 先生が送ったスライド（履歴）</h3>
                     <div class="scrollable-wrap" style="display: flex; gap: 10px; padding: 10px; border:none;" id="slides-container"></div>
                 </div>
-
                 <div class="panel" style="border: 2px solid #1565c0;">
                     <h3 style="color: #1565c0;">👦 生徒から届いたスライド（提出物）</h3>
                     <div class="scrollable-wrap" style="display: flex; gap: 10px; padding: 10px; border:none;" id="student-slides-container"></div>
@@ -296,128 +279,61 @@
 
             <div id="salary" class="page">
                 <div class="header"><h1>給与・指導録管理</h1></div>
-                
                 <div class="panel" style="background:#fffcf5; border: 2px solid #d4af37;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <button class="cal-btn" onclick="changeSalaryMonth(-1)">◀</button>
-                        <h3 style="margin:0; border:none; padding:0; color:#d4af37;">💰 <span id="salary-month-display"></span></h3>
-                        <button class="cal-btn" onclick="changeSalaryMonth(1)">▶</button>
-                    </div>
-                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><button class="cal-btn" onclick="changeSalaryMonth(-1)">◀</button><h3 style="margin:0; border:none; padding:0; color:#d4af37;">💰 <span id="salary-month-display"></span></h3><button class="cal-btn" onclick="changeSalaryMonth(1)">▶</button></div>
                     <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; background:#fff; padding:15px; border-radius:8px; border: 1px solid #eee;">
-                        <div style="flex:1; min-width:120px;">
-                            <label style="color:#666;">生徒の時給 (円)</label>
-                            <input type="number" id="hourly-wage" value="1500" onchange="saveWageAndCalc()">
-                        </div>
-                        <div style="flex:1; min-width:100px;">
-                            <label style="color:#666;">指導時間</label>
-                            <div id="total-hours" style="font-size:20px; font-weight:bold;">0 時間</div>
-                        </div>
-                        <div style="flex:1; min-width:100px;">
-                            <label style="color:#666;">交通費</label>
-                            <div id="total-transport" style="font-size:20px; font-weight:bold;">0 円</div>
-                        </div>
-                        <div style="flex:1; min-width:150px; border-left: 2px solid #eee; padding-left:15px;">
-                            <label style="color:#c62828;">当月 給与予測額</label>
-                            <div id="total-salary" style="font-size:24px; font-weight:bold; color:#c62828;">0 円</div>
-                        </div>
+                        <div style="flex:1; min-width:120px;"><label>生徒の時給 (円)</label><input type="number" id="hourly-wage" value="1500" onchange="saveWageAndCalc()"></div>
+                        <div style="flex:1; min-width:100px;"><label>指導時間</label><div id="total-hours" style="font-size:20px; font-weight:bold;">0 時間</div></div>
+                        <div style="flex:1; min-width:100px;"><label>交通費</label><div id="total-transport" style="font-size:20px; font-weight:bold;">0 円</div></div>
+                        <div style="flex:1; min-width:150px; border-left: 2px solid #eee; padding-left:15px;"><label style="color:#c62828;">当月 給与予測額</label><div id="total-salary" style="font-size:24px; font-weight:bold; color:#c62828;">0 円</div></div>
                     </div>
                 </div>
-
                 <div class="panel">
                     <h3>📝 本日の指導記録を追加</h3>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <div style="flex:1; min-width:130px;"><label>日付</label><input type="date" id="log-date"></div>
-                        <div style="flex:1; min-width:130px;"><label>時間 (h)</label><input type="number" id="log-hours" step="0.5" placeholder="例: 2"></div>
-                        <div style="flex:1; min-width:130px;"><label>交通費 (円)</label><input type="number" id="log-transport" placeholder="往復金額"></div>
+                        <div style="flex:1; min-width:130px;"><label>日付</label><input type="date" id="log-date"></div><div style="flex:1; min-width:130px;"><label>時間 (h)</label><input type="number" id="log-hours" step="0.5"></div><div style="flex:1; min-width:130px;"><label>交通費 (円)</label><input type="number" id="log-transport"></div>
                     </div>
-                    <label>指導内容・メモ</label>
-                    <textarea id="log-summary" rows="3" placeholder="例: 算数の割合を指導。次回は小テスト。"></textarea>
+                    <label>指導内容・メモ</label><textarea id="log-summary" rows="3"></textarea>
                     <button class="btn-submit" onclick="addSalaryLog()">✅ 記録を保存する</button>
                 </div>
-
                 <div class="panel">
                     <h3>📋 過去の指導履歴</h3>
-                    <div class="scrollable-wrap">
-                        <table class="list-table">
-                            <thead><tr><th style="width:90px;">日付</th><th style="width:60px;">時間</th><th style="width:80px;">交通費</th><th>内容メモ</th><th style="width:70px;">操作</th></tr></thead>
-                            <tbody id="salary-log-list"></tbody>
-                        </table>
-                    </div>
+                    <div class="scrollable-wrap"><table class="list-table"><thead><tr><th style="width:90px;">日付</th><th style="width:60px;">時間</th><th style="width:80px;">交通費</th><th>内容メモ</th><th style="width:70px;">操作</th></tr></thead><tbody id="salary-log-list"></tbody></table></div>
                 </div>
             </div>
 
             <div id="data" class="page">
                 <div class="header"><h1>学習進捗データ分析</h1></div>
                 <div class="panel" style="border: 2px solid var(--accent-color); background: #fffcf5;">
-                    <h3 style="color: var(--accent-color);">💮 生徒の獲得ごほうびスタンプ</h3>
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="font-size: 48px;" id="stamp-display-count">0</div>
-                        <div style="font-size: 18px; color: #666;">個 獲得済み</div>
-                    </div>
+                    <h3>💮 生徒の獲得ごほうびスタンプ</h3>
+                    <div style="display: flex; align-items: center; gap: 20px;"><div style="font-size: 48px;" id="stamp-display-count">0</div><div style="font-size: 18px; color: #666;">個 獲得済み</div></div>
                 </div>
-
                 <div class="panel" style="border: 2px solid #e91e63;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="margin: 0; color: #c2185b;">🚨 生徒からの間違え直し・質問報告ログ</h3>
-                        <button class="btn-danger" style="background:#e91e63;" onclick="clearAllMistakeReports()">⚠️ 報告を一括リセット</button>
+                        <button class="btn-danger" style="background:#e91e63;" onclick="clearAllMistakeReports()">⚠️ 一括リセット</button>
                     </div>
-                    <div class="scrollable-wrap">
-                        <table class="list-table">
-                            <thead>
-                                <tr><th>送信日時</th><th>教材・箇所</th><th>ミスの種類</th><th>自己解決</th><th>メモ・時間</th><th>操作</th></tr>
-                            </thead>
-                            <tbody id="mistake-report-list"></tbody>
-                        </table>
-                    </div>
+                    <div class="scrollable-wrap"><table class="list-table"><thead><tr><th>送信日時</th><th>教材・箇所</th><th>ミスの種類</th><th>自己解決</th><th>メモ・時間</th><th>操作</th></tr></thead><tbody id="mistake-report-list"></tbody></table></div>
                 </div>
-
                 <div class="panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="margin: 0;">📋 宿題完了ログの管理</h3>
                         <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 完了ログを一括リセット</button>
                     </div>
-                    <div class="scrollable-wrap">
-                        <table class="list-table">
-                            <thead><tr><th>日付</th><th>宿題内容</th><th>ステータス</th><th>操作</th></tr></thead>
-                            <tbody id="hw-log-list"></tbody>
-                        </table>
-                    </div>
+                    <div class="scrollable-wrap"><table class="list-table"><thead><tr><th>日付</th><th>宿題内容</th><th>ステータス</th><th>操作</th></tr></thead><tbody id="hw-log-list"></tbody></table></div>
                 </div>
             </div>
 
             <div id="settings" class="page">
-                <div class="header"><h1>設定・アカウント管理</h1></div>
-                
-                <div class="panel" style="border: 2px solid #4caf50;">
-                    <h3 style="color: #2e7d32;">🆕 新規生徒アカウントの発行</h3>
-                    <p style="font-size:12px; color:#666;">新しい生徒がアプリにログインするための「生徒ID」と「パスワード」を自動発行します。</p>
-                    <button class="btn-submit" style="background:#4caf50;" onclick="generateStudentAccount()">アカウントを発行する</button>
-                    <div id="new-account-result" style="display:none; margin-top:15px; padding:15px; background:#e8f5e9; border:1px dashed #4caf50; border-radius:8px;">
-                        <p style="margin:0 0 5px 0; font-size:12px; font-weight:bold; color:#2e7d32;">発行完了！生徒に以下の情報を伝えてください。</p>
-                        <div style="font-size:16px;">生徒ID: <b id="new-student-id" style="color:#000;"></b></div>
-                        <div style="font-size:16px;">パスワード: <b id="new-student-pass" style="color:#000;"></b></div>
-                    </div>
-                </div>
-
+                <div class="header"><h1>設定</h1></div>
                 <div class="panel">
-                    <label>ログイン中のメールアドレス</label>
-                    <input type="text" id="setting-email" readonly style="background: #eee; color: #666;">
-                    <button style="width: 100%; padding: 15px; margin-top:20px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;" onclick="logout()">ログアウト</button>
+                    <label>ログイン中のアドレス</label><input type="text" id="setting-email" readonly style="background: #eee;">
+                    <button style="width: 100%; padding: 15px; margin-top:20px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">ログアウト</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <div id="preview-modal">
-        <div class="preview-content">
-            <div style="padding: 10px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
-                <h3 style="margin: 0; font-size: 14px;" id="preview-title">プレビュー</h3>
-                <button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold;">閉じる</button>
-            </div>
-            <iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src=""></iframe>
-        </div>
-    </div>
+    <div id="preview-modal"><div class="preview-content"><div style="padding: 10px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 14px;" id="preview-title"></h3><button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 4px;">閉じる</button></div><iframe id="preview-frame" style="flex: 1; border: none;"></iframe></div></div>
 
     <script>
         const firebaseConfig = {
@@ -429,251 +345,161 @@
             messagingSenderId: "826655717900",
             appId: "1:826655717900:web:d724b66a1deec6505e4c29"
         };
-        
-        let db;
-        try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } 
-        catch(e) { console.error("Firebase Init Error:", e); }
+        firebase.initializeApp(firebaseConfig); const db = firebase.database();
+        let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; let isOwner = false;
 
-        let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; 
-
-        function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)).catch(e => console.error(e)); }
-        function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + managedStudentId + '/' + key).set(val).catch(e => console.error(e)); }
+        function saveFB(key, data) { if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)); }
+        function saveFB_Raw(key, val) { if(db) db.ref('students/' + managedStudentId + '/' + key).set(val); }
         function loadFB(key, defaultVal) { const data = studentDataCache[key]; if(!data) return defaultVal; try { return typeof data === 'string' ? JSON.parse(data) : data; } catch(e) { return defaultVal; } }
         function removeFB(key) { delete studentDataCache[key]; if(db) db.ref('students/' + managedStudentId + '/' + key).remove(); }
 
         document.addEventListener("DOMContentLoaded", () => {
-            if (!localStorage.getItem('criety_user_xelcys@gmail.com')) localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
-            const loggedInUser = localStorage.getItem('criety_logged_in_user');
-            if(loggedInUser) {
-                tempEmail = loggedInUser; document.getElementById('auth-step-1').style.display = 'none';
-                const lastStudent = sessionStorage.getItem('current_managed_student');
-                if(lastStudent) { document.getElementById('target-student-id').value = lastStudent; startManage(); } 
-                else { document.getElementById('auth-step-3').style.display = 'block'; }
+            const u = localStorage.getItem('criety_logged_in_user');
+            if(u) {
+                tempEmail = u; isOwner = (u === 'xelcys@gmail.com');
+                document.getElementById('auth-step-1').style.display = 'none';
+                if(isOwner) { 
+                    cleanupDummyAccounts(); // ★ オーナーログイン時にダミー削除
+                    document.getElementById('auth-step-owner').style.display = 'block'; 
+                } else {
+                    prepareTeacherDropdown(u);
+                }
             }
-            if(document.getElementById('log-date')) document.getElementById('log-date').valueAsDate = new Date();
+            document.getElementById('log-date').valueAsDate = new Date();
         });
 
         function handleAuth() {
-            const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-password').value.trim();
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-password').value.trim();
             if(!email || !pass) return;
-            if(email === 'xelcys@gmail.com' && pass === '123456') { localStorage.setItem('criety_user_xelcys@gmail.com', '123456'); } 
-            else if(localStorage.getItem('criety_user_' + email) !== pass) { return alert("情報が間違っています。"); }
-            tempEmail = email; document.getElementById('auth-step-1').style.display = 'none'; document.getElementById('auth-step-2').style.display = 'block';
-        }
-        function verifyCode() {
-            if(document.getElementById('auth-code').value.trim() === '123456') {
+
+            if(email === 'xelcys@gmail.com' && pass === '123456') { // ※本番運用時は変更してください
+                tempEmail = email; isOwner = true;
                 localStorage.setItem('criety_logged_in_user', tempEmail);
-                document.getElementById('auth-step-2').style.display = 'none'; document.getElementById('auth-step-3').style.display = 'block';
+                cleanupDummyAccounts(); // ★ オーナー初回ログイン時にダミー削除
+                document.getElementById('auth-step-1').style.display = 'none'; 
+                document.getElementById('auth-step-owner').style.display = 'block';
+            } else {
+                // 一般講師の認証
+                const escapeEmail = email.replace(/\./g, '_');
+                db.ref('admin/teachers/' + escapeEmail).once('value').then(snap => {
+                    const tData = snap.val();
+                    if(tData && tData.password === pass) {
+                        tempEmail = email; isOwner = false;
+                        localStorage.setItem('criety_logged_in_user', tempEmail);
+                        prepareTeacherDropdown(email);
+                    } else { alert("認証に失敗しました。メールアドレスとパスワードを確認してください。"); }
+                });
             }
         }
-        
-        function startManage() {
-            const id = document.getElementById('target-student-id').value.trim().toLowerCase();
-            if(!id) return alert("生徒IDを入力してください。");
-            managedStudentId = id; sessionStorage.setItem('current_managed_student', id);
-            
-            document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('top-bar').style.display = 'flex'; document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('logged-in-display').innerText = tempEmail; document.getElementById('connection-status').innerText = id; document.getElementById('setting-email').value = tempEmail;
 
-            loadStudentData();
-
+        // ★ 古いダミーデータを削除
+        function cleanupDummyAccounts() {
             if(!db) return;
-            db.ref('students/' + managedStudentId).on('value', (snapshot) => {
-                studentDataCache = snapshot.val() || {};
-                loadStudentData();
-                const s = studentDataCache['task_status'];
-                if(s === 'completed') { document.getElementById('student-notification').style.display = 'flex'; saveFB_Raw('task_status', 'notified'); }
+            db.ref('students/kage').remove(); db.ref('admin/students/kage').remove();
+            db.ref('students/26001').remove(); db.ref('admin/students/26001').remove();
+        }
+
+        // ★ 一般講師のプルダウン準備
+        function prepareTeacherDropdown(email) {
+            const escapeEmail = email.replace(/\./g, '_');
+            db.ref('admin/teachers/' + escapeEmail).once('value').then(snap => {
+                const tData = snap.val();
+                if(tData) {
+                    const assigned = tData.assigned_students || {};
+                    const ids = Object.keys(assigned);
+                    if(ids.length === 0) { alert("現在、あなたに割り当てられている生徒がいません。オーナーに確認してください。"); return; }
+                    
+                    const sel = document.getElementById('teacher-student-dropdown');
+                    sel.innerHTML = ids.map(id => `<option value="${id}">${id}</option>`).join('');
+                    document.getElementById('auth-step-1').style.display = 'none';
+                    document.getElementById('auth-step-teacher').style.display = 'block';
+                }
             });
         }
 
+        function openAdminHub() { document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('admin-hub-layout').style.display = 'block'; document.getElementById('top-bar').style.display = 'flex'; document.getElementById('logged-in-display').innerText = tempEmail; document.getElementById('connection-status').innerText = "システム管理"; }
+
+        function startManage(role) {
+            let id = "";
+            if(role === 'owner') id = document.getElementById('target-student-id-owner').value.trim().toLowerCase();
+            else if(role === 'teacher') id = document.getElementById('teacher-student-dropdown').value;
+            
+            if(!id) return alert("生徒が選択されていません。");
+            
+            managedStudentId = id; sessionStorage.setItem('current_managed_student', id);
+            document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('admin-hub-layout').style.display = 'none'; document.getElementById('top-bar').style.display = 'flex'; document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('logged-in-display').innerText = tempEmail; document.getElementById('connection-status').innerText = id; document.getElementById('setting-email').value = tempEmail;
+            
+            loadStudentData();
+            db.ref('students/' + managedStudentId).on('value', (snapshot) => {
+                studentDataCache = snapshot.val() || {}; loadStudentData();
+                if(studentDataCache['task_status'] === 'completed') { document.getElementById('student-notification').style.display = 'flex'; saveFB_Raw('task_status', 'notified'); }
+            });
+        }
+
+        // ==========================================
+        // ★新機能：オーナー限定 アカウント管理処理
+        // ==========================================
+        function registerTeacherAccount() {
+            const tEmail = document.getElementById('new-teacher-email').value.trim().toLowerCase(); const tPass = document.getElementById('new-teacher-pass').value.trim(); const assignedStr = document.getElementById('new-teacher-assigned').value.trim();
+            if(!tEmail || !tPass) return alert("講師のアドレスとパスワードを入力してください。");
+            const escapeEmail = tEmail.replace(/\./g, '_'); let assignedObj = {};
+            if(assignedStr) { assignedStr.split(',').forEach(s => { const sid = s.trim().toLowerCase(); if(sid) assignedObj[sid] = true; }); }
+            db.ref('admin/teachers/' + escapeEmail).set({ password: tPass, assigned_students: assignedObj }).then(() => { alert("講師アカウントを正常に作成・担当紐付けしました！"); document.getElementById('new-teacher-email').value = ""; document.getElementById('new-teacher-pass').value = ""; document.getElementById('new-teacher-assigned').value = ""; });
+        }
+        function generateStudentAccount() {
+            if(!confirm("生徒アカウントを発行しますか？")) return;
+            const y = String(new Date().getFullYear()).slice(-2); 
+            db.ref('admin/counters/student_' + y).once('value').then(sn => { 
+                let c = sn.val() || 0; c++; const nid = y + String(c).padStart(3, '0'); const chars = "abcdefghijkmnpqrstuvwxyz23456789"; let np = ""; 
+                for(let i=0; i<6; i++) np += chars.charAt(Math.floor(Math.random() * chars.length)); 
+                db.ref('admin/students/' + nid).set({ password: np, created_at: new Date().toISOString() }).then(() => { 
+                    db.ref('admin/counters/student_' + y).set(c); 
+                    document.getElementById('new-account-result').style.display = 'block'; document.getElementById('new-student-id').innerText = nid; document.getElementById('new-student-pass').innerText = np; alert("生徒アカウントを発行しました。"); 
+                }); 
+            }); 
+        }
+
+        // ==========================================
+        // 📅 その他のコントロールロジック（圧縮版）
+        // ==========================================
+        function saveProfile() { const profile = { name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim() }; saveFB('profile', profile); alert("生徒カルテをクラウドに保存しました。"); }
+        function loadProfile() { const p = loadFB('profile', {}); document.getElementById('prof-name').value = p.name || ""; document.getElementById('prof-grade').value = p.grade || ""; document.getElementById('prof-school').value = p.school || ""; document.getElementById('prof-parent').value = p.parent || ""; document.getElementById('prof-phone').value = p.phone || ""; document.getElementById('prof-email').value = p.email || ""; document.getElementById('prof-policy').value = p.policy || ""; document.getElementById('prof-memo').value = p.memo || ""; }
         function changeStudent() { sessionStorage.removeItem('current_managed_student'); location.reload(); }
         function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
         function switchPage(pageId, el) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active')); document.getElementById(pageId).classList.add('active'); if(el) el.classList.add('active'); }
-
-        function loadStudentData() {
-            renderCalendar(); renderMaterialsList(); renderHwLogList();
-            renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports(); updateTargetDisplay(); loadProfile();
-            if(document.activeElement.id !== 'hourly-wage') document.getElementById('hourly-wage').value = loadFB('salary_wage', "1500");
-            document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
-        }
-
-        // ==========================================
-        // ★ 生徒カルテ機能
-        // ==========================================
-        function saveProfile() {
-            const profile = {
-                name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim()
-            };
-            saveFB('profile', profile); alert("生徒カルテを保存しました！\n（※現在接続中の生徒専用データとして完全に保護・保存されます）");
-        }
-        function loadProfile() {
-            const profile = loadFB('profile', {});
-            document.getElementById('prof-name').value = profile.name || ""; document.getElementById('prof-grade').value = profile.grade || ""; document.getElementById('prof-school').value = profile.school || ""; document.getElementById('prof-parent').value = profile.parent || ""; document.getElementById('prof-phone').value = profile.phone || ""; document.getElementById('prof-email').value = profile.email || ""; document.getElementById('prof-policy').value = profile.policy || ""; document.getElementById('prof-memo').value = profile.memo || "";
-        }
-
-        // ==========================================
-        // ★ 生徒アカウント自動発行機能
-        // ==========================================
-        function generateStudentAccount() {
-            if(!confirm("新しい生徒アカウントを発行しますか？")) return;
-            const yearStr = String(new Date().getFullYear()).slice(-2); 
-
-            db.ref('admin/counters/student_' + yearStr).once('value').then(snapshot => {
-                let count = snapshot.val() || 0; count++;
-                const newId = yearStr + String(count).padStart(3, '0');
-                const chars = "abcdefghijkmnpqrstuvwxyz23456789"; 
-                let newPass = "";
-                for(let i=0; i<6; i++) newPass += chars.charAt(Math.floor(Math.random() * chars.length));
-
-                db.ref('admin/students/' + newId).set({ password: newPass, created_at: new Date().toISOString() }).then(() => {
-                    db.ref('admin/counters/student_' + yearStr).set(count);
-                    document.getElementById('new-account-result').style.display = 'block';
-                    document.getElementById('new-student-id').innerText = newId; document.getElementById('new-student-pass').innerText = newPass;
-                    alert("アカウントの発行が完了しました！");
-                });
-            }).catch(e => alert("通信エラーが発生しました。"));
-        }
-
-        // ==========================================
-        // 🌸 目標送信機能
-        // ==========================================
-        function updateTargetDisplay() {
-            const title = loadFB('target_title', ""); const days = loadFB('target_days', ""); const displayArea = document.getElementById('current-target-display');
-            if (title && days) { displayArea.style.display = 'block'; document.getElementById('current-target-text').innerText = title; document.getElementById('current-target-days-text').innerText = days;
-            } else { displayArea.style.display = 'none'; }
-        }
-
-        function sendTarget() {
-            const title = document.getElementById('target-title').value.trim(); const days = document.getElementById('target-days').value.trim();
-            if(title && days) { saveFB_Raw('target_title', title); saveFB_Raw('target_days', days); alert(`✅ 生徒へ目標を送信・更新しました！`); document.getElementById('target-title').value = ""; document.getElementById('target-days').value = ""; updateTargetDisplay();
-            } else { alert("新しい目標名と日数を入力してください。"); }
-        }
-
-        function clearTarget() { if(!confirm("現在の目標を解除して、生徒の画面から消去しますか？")) return; removeFB('target_title'); removeFB('target_days'); updateTargetDisplay(); }
-
-        // ==========================================
-        // 📅 カレンダー機能
-        // ==========================================
-        let currentDate = new Date(); let selectedDateStr = "";
-        function renderCalendar() {
-            const y = currentDate.getFullYear(); const m = currentDate.getMonth(); document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`;
-            const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-grid');
-            let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
-            for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
-            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
-            for(let i = 1; i <= daysInMonth; i++) {
-                const dateStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; let classes = 'calendar-day' + (dateStr === selectedDateStr ? ' selected' : ''); let badgesHtml = '';
-                if(events[dateStr]) {
-                    events[dateStr].forEach((ev, idx) => {
-                        let c = ev.type === 'lesson' ? 'lesson' : ev.type === 'test' ? 'test' : ev.type === 'student' ? 'student' : ev.type === 'hw' ? 'hw' : 'other';
-                        let txt = ev.type === 'lesson' ? '👨‍🏫 指導' : ev.type === 'test' ? `📝 ${ev.text}` : ev.type === 'student' ? `👦 ${ev.text}` : `宿: ${ev.text}`;
-                        if (ev.type === 'hw' && doneDict[`${dateStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮済: ${ev.text}`; }
-                        badgesHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dateStr}', ${idx})">×</span></span>`;
-                    });
-                }
-                html += `<div class="${classes}" onclick="selectDate('${dateStr}')"><span class="date-num">${i}</span>${badgesHtml}</div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; document.getElementById('selected-date-display').style.color = '#1565c0'; renderCalendar(); }
-        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（タップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
-        function addQuickEvent(type) { if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:type, text:text}); saveFB('cal_events', evs); renderCalendar(); } }
-        function addHomework() { if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！"); let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = ""; renderCalendar(); }
-        window.deleteEvent = function(dateStr, idx) { let evs = loadFB('cal_events', {}); if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); renderCalendar(); } };
-
-        // ==========================================
-        // 💰 給与・指導録（ログ）管理機能
-        // ==========================================
-        let salaryMonthDate = new Date();
+        function loadStudentData() { renderCalendar(); renderMaterialsList(); renderHwLogList(); renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports(); updateTargetDisplay(); loadProfile(); }
+        function updateTargetDisplay() { const t = loadFB('target_title', ""); const d = loadFB('target_days', ""); const area = document.getElementById('current-target-display'); if (t && d) { area.style.display = 'block'; document.getElementById('current-target-text').innerText = t; document.getElementById('current-target-days-text').innerText = d; } else { area.style.display = 'none'; } }
+        function sendTarget() { const t = document.getElementById('target-title').value.trim(); const d = document.getElementById('target-days').value.trim(); if(t && d) { saveFB_Raw('target_title', t); saveFB_Raw('target_days', d); alert(`目標更新完了！`); document.getElementById('target-title').value = ""; document.getElementById('target-days').value = ""; updateTargetDisplay(); } }
+        function clearTarget() { if(!confirm("解除する？")) return; removeFB('target_title'); removeFB('target_days'); updateTargetDisplay(); }
+        function renderCalendar() { const y = currentDate.getFullYear(); const m = currentDate.getMonth(); document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`; const fDay = new Date(y, m, 1).getDay(); const dInM = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-grid'); let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join(''); for(let i = 0; i < fDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`; const evs = loadFB('cal_events', {}); const dDict = loadFB('hw_done', {}); for(let i = 1; i <= dInM; i++) { const dStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; let cls = 'calendar-day' + (dStr === selectedDateStr ? ' selected' : ''); let bHtml = ''; if(evs[dStr]) evs[dStr].forEach((ev, idx) => { let c = ev.type==='lesson'?'lesson':ev.type==='test'?'test':ev.type==='student'?'student':ev.type==='hw'?'hw':'other'; let txt = ev.type==='lesson'?'👨‍🏫 指導':ev.type==='test'?`📝 ${ev.text}`:ev.type==='student'?`👦 ${ev.text}`:`宿: ${ev.text}`; if (ev.type === 'hw' && dDict[`${dStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮済: ${ev.text}`; } bHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dStr}', ${idx})">×</span></span>`; }); html += `<div class="${cls}" onclick="selectDate('${dStr}')"><span class="date-num">${i}</span>${bHtml}</div>`; } grid.innerHTML = html; }
+        function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; renderCalendar(); }
+        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; renderCalendar(); }
+        function addQuickEvent(type) { if(!selectedDateStr) return alert("日付選択してね"); let text = type==='lesson'?"指導日":prompt("予定:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); saveFB('cal_events', evs); renderCalendar(); } }
+        function addHomework() { if(!selectedDateStr) return alert("日付選択してね"); const v = document.getElementById('hw-content').value.trim(); if(!v) return; let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); alert(`宿題送りました`); document.getElementById('hw-content').value = ""; renderCalendar(); }
+        window.deleteEvent = function(dStr, idx) { let evs = loadFB('cal_events', {}); if(evs && evs[dStr]) { evs[dStr].splice(idx, 1); if(evs[dStr].length === 0) delete evs[dStr]; saveFB('cal_events', evs); renderCalendar(); } };
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
-        function saveWageAndCalc() { const wage = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', wage); renderSalaryLogs(); }
+        function saveWageAndCalc() { const w = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', w); }
+        function addSalaryLog() { const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim(); if(!d || h === 0) return alert("必須項目エラー"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs); document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; salaryMonthDate = new Date(d); renderSalaryLogs(); }
+        function renderSalaryLogs() { const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, target = `${y}-${String(m).padStart(2, '0')}`; let logs = loadFB('logs', []); let mLogs = logs.filter(l => l.date.startsWith(target)); const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0; mLogs.forEach(l => { totalH += l.hours; totalT += l.transport; html += `<tr><td>${l.date}</td><td>${l.hours} h</td><td>${l.transport} 円</td><td>${l.summary}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${l.id})">削除</button></td></tr>`; }); tbody.innerHTML = mLogs.length === 0 ? `<tr><td colspan="5">記録なし</td></tr>` : html; const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} h`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`; }
+        function deleteSalaryLog(id) { let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs); renderSalaryLogs(); }
+        function renderMistakeReports() { const tbody = document.getElementById('mistake-report-list'); const r = loadFB('mistake_reports', []); if(r.length === 0) { tbody.innerHTML = `<tr><td colspan="6">なし</td></tr>`; return; } tbody.innerHTML = [...r].reverse().map(x => `<tr><td>${x.date}</td><td><b>${x.mat}</b><br>P.${x.p} 大問${x.q1} 小問${x.q2}</td><td>${x.reason}</td><td>${x.solved}</td><td>⏱️${x.time||0}分<br>${x.memo||''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${x.id})">削除</button></td></tr>`).join(''); }
+        function deleteMistakeReport(id) { let r = loadFB('mistake_reports', []); r = r.filter(x => x.id !== id); saveFB('mistake_reports', r); }
+        function clearAllMistakeReports() { removeFB('mistake_reports'); }
+        function sendMaterial() { const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0]; if(!title || !file) return; const r = new FileReader(); r.onload = function(e) { let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type==='application/pdf'?'pdf':'img' }); saveFB('materials', mats); }; r.readAsDataURL(file); }
+        function renderMaterialsList() { const m = loadFB('materials', []); document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join(''); }
+        function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); }
 
-        function addSalaryLog() {
-            const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim();
-            if(!d || h === 0) return alert("日付と時間は必須です。"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs);
-            document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; alert("保存しました！"); salaryMonthDate = new Date(d); renderSalaryLogs();
-        }
-
-        function renderSalaryLogs() {
-            const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, targetMonthStr = `${y}-${String(m).padStart(2, '0')}`; document.getElementById('salary-month-display').innerText = `${y}年 ${m}月`;
-            let logs = loadFB('logs', []); let monthLogs = logs.filter(log => log.date.startsWith(targetMonthStr)); monthLogs.sort((a,b) => a.date.localeCompare(b.date));
-            const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0;
-            monthLogs.forEach(log => { totalH += log.hours; totalT += log.transport; html += `<tr><td>${log.date}</td><td>${log.hours} h</td><td>${log.transport} 円</td><td style="font-size:11px; color:#555;">${log.summary.replace(/\n/g, '<br>')}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${log.id})">削除</button></td></tr>`; });
-            if(monthLogs.length === 0) { html = `<tr><td colspan="5" style="text-align:center; color:#999;">記録なし</td></tr>`; } tbody.innerHTML = html;
-            const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} 時間`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`;
-        }
-        function deleteSalaryLog(id) { if(!confirm("削除しますか？")) return; let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs); renderSalaryLogs(); }
-
-        // ==========================================
-        // 🚨 間違え直し報告 受信
-        // ==========================================
-        function renderMistakeReports() {
-            const listTbody = document.getElementById('mistake-report-list'); const reports = loadFB('mistake_reports', []);
-            if(reports.length === 0) { listTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999;">報告はありません。</td></tr>`; return; }
-            listTbody.innerHTML = [...reports].reverse().map(r => {
-                const solvedText = r.solved && r.solved.includes('はい') ? '<span style="color:#2e7d32; font-weight:bold;">✅ 解決済</span>' : '<span style="color:#e65100; font-weight:bold;">❌ 未解決</span>';
-                return `<tr><td style="font-size:11px; color:#666;">${r.date}</td><td><b>${r.mat}</b><br><span style="font-size:11px; color:#555;">P.${r.p} / 大問${r.q1} / 小問${r.q2}</span></td><td style="color:#d32f2f; font-weight:bold; font-size:12px;">${r.reason}</td><td>${solvedText}</td><td style="font-size:11px; color:#555;">${r.time ? `⏱️${r.time}分<br>` : ''}${r.memo ? `📝${r.memo}` : ''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${r.id})">削除</button></td></tr>`;
-            }).join('');
-        }
-        function deleteMistakeReport(id) { if(!confirm("削除しますか？")) return; let reports = loadFB('mistake_reports', []); reports = reports.filter(r => r.id !== id); saveFB('mistake_reports', reports); renderMistakeReports(); }
-        function clearAllMistakeReports() { if(confirm("すべて削除しますか？")) { removeFB('mistake_reports'); renderMistakeReports(); } }
-
-        // ==========================================
-        // 📚 教材 & 📊 宿題ログ (★ 完全削除バグ修正)
-        // ==========================================
-        function sendMaterial() {
-            const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0];
-            if(!title || !file) return; const r = new FileReader();
-            r.onload = function(e) { let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type === 'application/pdf' ? 'pdf' : 'img' }); try { saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; renderMaterialsList(); } catch(err) { alert("サイズが大きすぎます。"); } }; r.readAsDataURL(file);
-        }
-        function renderMaterialsList() { const m = loadFB('materials', []); document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:#999;">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" style="background:#2196f3; margin-bottom:5px;" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join(''); }
-        function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); renderMaterialsList(); }
-        function openMaterialPreview(idx) { const m = loadFB('materials', [])[idx]; if(!m) return; document.getElementById('preview-title').innerText = m.name; const frame = document.getElementById('preview-frame'); frame.outerHTML = m.type === 'pdf' ? `<iframe id="preview-frame" style="flex:1; border:none; border-radius:0 0 8px 8px; background:#fff;" src="${m.url}"></iframe>` : `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${m.url}">`; document.getElementById('preview-modal').style.display = 'flex'; }
-
-        function renderHwLogList() {
-            const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = "";
-            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td><button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">完全に消去</button></td></tr>`; } }));
-            document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
-        }
-
-        function deleteHwLog(btn) { 
-            if(!confirm("生徒のリスト・カレンダーからもこの宿題を完全に削除しますか？")) return;
-            const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); 
-            
-            let evs = loadFB('cal_events', {});
-            if(evs[d]) { evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t)); if(evs[d].length === 0) delete evs[d]; saveFB('cal_events', evs); }
-
-            let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); 
-            renderHwLogList(); renderCalendar(); 
-        }
-
+        // ★修正：宿題をカレンダーデータからも完全に消し去る
+        function renderHwLogList() { const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = ""; Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '💮済' : '⏳進行中'}</td><td><button class="btn-danger" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">完全に消去</button></td></tr>`; } })); document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4">なし</td></tr>`; }
+        function deleteHwLog(btn) { if(!confirm("生徒のリスト・カレンダーからも完全に削除しますか？")) return; const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); let evs = loadFB('cal_events', {}); if(evs[d]) { evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t)); if(evs[d].length === 0) delete evs[d]; saveFB('cal_events', evs); } let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); renderHwLogList(); renderCalendar(); }
         function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); saveFB_Raw('stamps', 0); renderHwLogList(); renderCalendar(); } }
 
-        // ==========================================
-        // 🎨 ホワイトボード
-        // ==========================================
-        const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
-        let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
-        function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; }
-        function redrawCanvas() { if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0); if(activeText) { ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180); ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(activeText.text, 0, 0); ctx.restore(); } }
-        function fixText() { if(!activeText) return; redrawCanvas(); savedCanvasData = null; activeText = null; document.getElementById('text-controls').style.display = 'none'; }
-        function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
-        function changeTextAngle(da) { if(activeText) { activeText.angle += da; redrawCanvas(); } }
-        function handleStart(e) { if(e.type === 'touchstart') e.preventDefault(); const p = getPos(e); if(currentTool === 'text') { if(!activeText) { const txt = prompt("テキスト:"); if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); } } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); } return; } if(activeText) fixText(); isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-        function handleMove(e) { if(e.type === 'touchmove') e.preventDefault(); const p = getPos(e); if(currentTool === 'text' && isDraggingText && activeText) { activeText.x = p.x; activeText.y = p.y; redrawCanvas(); return; } if(!isDrawing) return; ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
-        function handleEnd(e) { isDrawing = false; isDraggingText = false; }
-        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd); canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
-        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#drawing-tools .tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
-        function setColor(c) { currentColor = c; setTool('pen'); }
-        function setLineWidth(w) { lineWidth = w; }
-        function clearBoard() { if(confirm("消去しますか？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
-        function sendWhiteboardSlide() { if(activeText) fixText(); let slides = loadFB('wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('wb_slides', slides); alert(`📡 送信しました！`); renderWbSlides(); }
-        function renderWbSlides() { const container = document.getElementById('slides-container'); const slides = loadFB('wb_slides', []); container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><div style="font-size:10px; color:#666; margin-bottom:5px;">スライド ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')"><button class="btn-danger" style="width:100%;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>`).join(''); }
-        function renderStudentSlides() { const container = document.getElementById('student-slides-container'); const slides = loadFB('student_wb_slides', []); container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">届いていません</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box" style="border-color:#bbdefb; background:#e3f2fd;"><div style="font-size:10px; color:#1565c0; font-weight:bold; margin-bottom:5px;">提出物 ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')"><button class="btn-danger" style="width:100%; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>`).join(''); }
-        function deleteSlide(id, type) { const key = type === 'student' ? 'student_wb_slides' : 'wb_slides'; if(!confirm("削除しますか？")) return; let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s); type === 'student' ? renderStudentSlides() : renderWbSlides(); }
-        function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
-        function closePreview() { document.getElementById('preview-modal').style.display = 'none'; document.getElementById('preview-frame').src = ""; }
+        const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d'); let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
+        function renderWbSlides() { const container = document.getElementById('slides-container'); const slides = loadFB('wb_slides', []); container.innerHTML = slides.length === 0 ? `<span>なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><div>スライド ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')"><button class="btn-danger" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>`).join(''); }
+        function renderStudentSlides() { const container = document.getElementById('student-slides-container'); const slides = loadFB('student_wb_slides', []); container.innerHTML = slides.length === 0 ? `<span>なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')"><button class="btn-danger" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>`).join(''); }
+        function closePreview() { document.getElementById('preview-modal').style.display = 'none'; }
         function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
     </script>
 </body>

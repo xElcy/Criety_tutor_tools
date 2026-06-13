@@ -7,13 +7,12 @@
     <style>
         :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
         * { box-sizing: border-box; }
-        /* 横揺れを完全に防ぐ */
         html, body { margin: 0; padding: 0; width: 100vw; overflow-x: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
         
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--sidebar-bg); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { color: var(--sidebar-bg); margin-bottom: 20px; font-size: 24px; }
-        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; } /* スマホズーム対策で16px */
+        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
         
         #top-bar { display: none; background: #0f171e; color: white; padding: 10px 15px; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 100%; }
         #app-layout { display: none; flex: 1; width: 100%; overflow: hidden; }
@@ -39,12 +38,10 @@
         .btn-submit { margin-top: 15px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
         
-        /* 目標送信エリアのレスポンシブ */
         .target-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; }
         .target-group > div { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 100px; }
         .target-group input { margin: 0; }
         
-        /* カレンダー（横スクロールコンテナを追加） */
         .calendar-container { display: flex; gap: 20px; flex-direction: column; width: 100%; }
         @media(min-width: 769px) { .calendar-container { flex-direction: row; } }
         
@@ -72,13 +69,11 @@
         .quick-btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
         .quick-btn { flex: 1; min-width: 30%; padding: 8px 5px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;}
         
-        /* ツールボタン */
         .toolbar-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd;}
         .tool-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 12px; font-weight: bold;}
+        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; font-size: 12px; font-weight: bold;}
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; color: #00838f; }
 
-        /* テキスト操作パネル */
         .text-controls { display: none; flex-wrap: wrap; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
         .text-btn { padding: 6px 12px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
 
@@ -94,7 +89,6 @@
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
-        /* スマホ用レスポンシブ完全対応 */
         @media (max-width: 768px) { 
             #app-layout { flex-direction: column; } 
             .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; } 
@@ -135,7 +129,7 @@
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 12px; font-weight: bold;">生徒:</span>
             <span id="connection-status" style="font-size: 14px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 12px;">未接続</span>
-            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
+            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
         </div>
     </div>
 
@@ -144,7 +138,7 @@
             <h2>Criety</h2>
             <ul>
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
-                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材</li>
+                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
                 <li class="nav-item" onclick="switchPage('notes', this)">📝 ノート</li>
                 <li class="nav-item" onclick="switchPage('salary', this)">💰 給与・ログ</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 データ</li>
@@ -234,8 +228,8 @@
                             </div>
                         </div>
                         <div class="tool-group" style="justify-content: space-between;">
-                            <button class="tool-btn" style="flex:1; background: var(--accent-color); color: white; border:none;" onclick="sendWhiteboardSlide()">📡 新規送信</button>
-                            <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
+                            <button class="tool-btn" style="flex:1; background: var(--accent-color); color: white; border:none;" onclick="sendWhiteboardSlide()">📡 スライドとして新規送信</button>
+                            <button class="tool-btn" style="flex:0.5; border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
                         </div>
                     </div>
 
@@ -322,6 +316,30 @@
                         <div style="font-size: 18px; color: #666;">個 獲得済み</div>
                     </div>
                 </div>
+                
+                <div class="panel" style="border: 2px solid #e91e63;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+                        <h3 style="margin: 0; color: #c2185b;">🚨 生徒からの間違え直し・質問報告ログ</h3>
+                        <button class="btn-danger" style="background:#e91e63;" onclick="clearAllMistakeReports()">⚠️ 報告ログを一括リセット</button>
+                    </div>
+                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">生徒がアプリから送信したミスの自己分析ログです。今後の指導方針や弱点分析に活用できます。</p>
+                    <div class="scrollable-wrap">
+                        <table class="list-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:120px;">送信日時</th>
+                                    <th style="min-width:150px;">教材・箇所</th>
+                                    <th style="min-width:150px;">ミスの種類</th>
+                                    <th style="min-width:100px;">自己解決</th>
+                                    <th style="min-width:60px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mistake-report-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="margin: 0;">📋 宿題完了ログの管理</h3>
@@ -428,6 +446,7 @@
         function loadStudentData() {
             renderCalendar(); renderMaterialsList(); renderHwLogList();
             renderWbSlides(); renderStudentSlides(); renderSalaryLogs();
+            renderMistakeReports(); // 新機能：間違え直しレポートの描画
         }
 
         // ==========================================
@@ -530,6 +549,44 @@
             if(!confirm("削除しますか？")) return;
             let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || []; logs = logs.filter(l => l.id !== id);
             localStorage.setItem('criety_logs_' + managedStudentId, JSON.stringify(logs)); renderSalaryLogs();
+        }
+
+        // ==========================================
+        // 🚨 間違え直し報告 受信・管理機能（新設）
+        // ==========================================
+        function renderMistakeReports() {
+            const listTbody = document.getElementById('mistake-report-list');
+            const reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + managedStudentId)) || [];
+
+            if(reports.length === 0) {
+                listTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">まだ生徒からの報告はありません。</td></tr>`;
+                return;
+            }
+
+            // 新しい報告を上に表示するため、配列をリバース
+            listTbody.innerHTML = [...reports].reverse().map(r => `
+                <tr>
+                    <td style="font-size:11px; color:#666;">${r.date}</td>
+                    <td><b>${r.mat}</b><br><span style="font-size:11px; color:#555;">P.${r.p} / 大問${r.q1} / 小問${r.q2}</span></td>
+                    <td style="color:#d32f2f; font-weight:bold; font-size:12px;">${r.reason}</td>
+                    <td>${r.solved.includes('はい') ? '<span style="color:#2e7d32; font-weight:bold;">✅ 解決済</span>' : '<span style="color:#e65100; font-weight:bold;">❌ 未解決</span>'}</td>
+                    <td><button class="btn-danger" onclick="deleteMistakeReport(${r.id})">削除</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteMistakeReport(id) {
+            if(!confirm("この報告ログを削除しますか？")) return;
+            let reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + managedStudentId)) || [];
+            reports = reports.filter(r => r.id !== id);
+            localStorage.setItem('criety_mistake_reports_' + managedStudentId, JSON.stringify(reports));
+            renderMistakeReports();
+        }
+
+        function clearAllMistakeReports() {
+            if(!confirm("⚠️ すべての報告ログを削除して初期化しますか？")) return;
+            localStorage.removeItem('criety_mistake_reports_' + managedStudentId);
+            renderMistakeReports();
         }
 
         // ==========================================
@@ -658,6 +715,7 @@
             if(s === 'completed') { document.getElementById('student-notification').style.display = 'flex'; localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); renderCalendar(); renderHwLogList(); }
             document.getElementById('stamp-display-count').innerText = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
             renderStudentSlides();
+            renderMistakeReports(); // レポートの定期受信
         }, 1500);
     </script>
 </body>

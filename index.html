@@ -17,73 +17,81 @@
         #top-bar { display: none; background: #0f171e; color: white; padding: 10px 20px; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         #app-layout { display: none; flex: 1; overflow: hidden; }
 
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); padding: 20px; display: flex; flex-direction: column; z-index: 100;}
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); padding: 20px; display: flex; flex-direction: column; z-index: 100; overflow-y: auto;}
         .sidebar h2 { margin-top: 0; margin-bottom: 30px; font-size: 24px; font-weight: bold; }
         .sidebar ul { list-style: none; padding: 0; margin: 0; }
-        .sidebar li { padding: 15px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: all 0.2s; border-radius: 4px; margin-bottom: 5px; }
-        .sidebar li:hover, .sidebar li.active { color: var(--accent-color); background-color: rgba(255, 255, 255, 0.05); }
+        .sidebar li { padding: 15px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: all 0.2s; border-radius: 4px; margin-bottom: 5px; font-size: 14px;}
+        .sidebar li:hover, .sidebar li.active { color: var(--accent-color); background-color: rgba(255, 255, 255, 0.05); font-weight: bold;}
         
-        .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; position: relative;}
-        .header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 24px; }
+        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; position: relative;}
+        .header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 22px; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        .panel { background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .panel h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; border-left: 4px solid var(--sidebar-bg); padding-left: 10px; }
-        label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
-        input[type="text"], input[type="number"], input[type="password"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .panel { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .panel h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; border-left: 4px solid var(--sidebar-bg); padding-left: 10px; }
+        label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 13px; }
+        input[type="text"], input[type="number"], input[type="password"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         input[type="file"] { padding: 10px; border: 1px dashed #ccc; width: 100%; background: #f9f9f9; cursor: pointer; }
-        .btn-submit { margin-top: 25px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-submit { margin-top: 15px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-submit:hover { background-color: var(--accent-color); color: var(--sidebar-bg); }
         
-        /* 📅 カレンダー */
-        .calendar-container { display: flex; gap: 20px; }
-        .calendar-box { flex: 2; width: 100%; overflow-x: auto; }
+        /* カレンダー */
+        .calendar-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .calendar-box { flex: 2; min-width: 300px; overflow-x: auto; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-btn { background: #eee; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; min-width: 600px; padding-bottom: 10px;}
-        .calendar-day-head { font-weight: bold; padding: 10px; background-color: #f4f6f8; border-radius: 4px; }
-        .calendar-day { border: 1px solid var(--border-color); padding: 5px; min-height: 80px; border-radius: 4px; background: #fff; text-align: left; font-size: 12px; cursor: pointer; position: relative;}
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; min-width: 500px; padding-bottom: 10px;}
+        .calendar-day-head { font-weight: bold; padding: 10px; background-color: #f4f6f8; border-radius: 4px; font-size: 12px;}
+        .calendar-day { border: 1px solid var(--border-color); padding: 5px; min-height: 70px; border-radius: 4px; background: #fff; text-align: left; font-size: 12px; cursor: pointer; position: relative;}
         .calendar-day.selected { border: 2px solid var(--accent-color); background: #fffcf5; box-shadow: 0 0 10px rgba(212,175,55,0.3); }
         .calendar-day.today { background: #e3f2fd; }
         .calendar-day .date-num { font-weight: bold; display: block; margin-bottom: 4px; }
         
-        .badge { background: #e0e4e8; padding: 4px 6px; border-radius: 3px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; margin-top: 3px; overflow: hidden; font-weight: bold; }
+        .badge { background: #e0e4e8; padding: 3px 5px; border-radius: 3px; font-size: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 3px; overflow: hidden; font-weight: bold; }
         .badge.lesson { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
         .badge.test { background: #ffebee; color: #c62828; border-left: 3px solid #c62828; }
         .badge.other { background: #f5f5f5; color: #424242; border-left: 3px solid #9e9e9e; }
         .badge.hw { background: #fff3e0; color: #e65100; border-left: 3px solid #e65100; }
         .badge.hw-done { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
         .badge.student { background: #f3e5f5; color: #8e24aa; border-left: 3px solid #8e24aa; }
-        .badge-del { color: #ff5252; cursor: pointer; font-size: 14px; padding-left: 5px; }
-        .badge-del:hover { color: #d32f2f; }
+        .badge-del { color: #ff5252; cursor: pointer; font-size: 12px; padding-left: 5px; }
         
         .task-box { flex: 1; min-width: 250px; }
         .quick-btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
-        .quick-btn { flex: 1; min-width: 30%; padding: 10px 5px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s;}
-        .quick-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .quick-btn { flex: 1; min-width: 30%; padding: 8px 5px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s;}
         
-        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; font-size: 14px;}
-        .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; font-weight: bold; }
-        
-        .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; }
-        .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        .list-table th, .list-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        /* ツールボタン（スマホではみ出さないように） */
+        .toolbar-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd;}
+        .tool-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; transition: all 0.2s; font-size: 12px; font-weight: bold;}
+        .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; color: #00838f; }
+
+        /* テキスト操作パネル */
+        .text-controls { display: none; flex-wrap: wrap; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
+        .text-btn { padding: 6px 12px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
+
+        .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; font-size: 14px;}
+        .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .list-table th, .list-table td { border: 1px solid #eee; padding: 8px; text-align: left; }
         .list-table th { background: #f8f9fa; font-weight: bold; }
-        .btn-danger { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-danger:hover { background: #e53935; }
+        .btn-danger { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
 
-        /* スライドサムネイル用 */
-        .slide-preview-box { min-width: 150px; max-width: 200px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; flex-shrink: 0;}
-        .slide-preview-box img { width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; background: #fff;}
-        .slide-preview-box img:hover { opacity: 0.8; }
-
+        .slide-preview-box { min-width: 140px; max-width: 160px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; text-align: center; flex-shrink: 0;}
+        .slide-preview-box img { width: 100%; height: 80px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; cursor: pointer; background: #fff;}
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
-        .preview-content { background: #fff; width: 85%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
+        .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
-        @media (max-width: 768px) { #app-layout { flex-direction: column; height: auto; overflow: auto; } .sidebar { width: 100%; padding: 15px; } .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } .main-content { padding: 15px; } .calendar-container { flex-direction: column; } }
+        @media (max-width: 768px) { 
+            #app-layout { flex-direction: column; height: auto; overflow: auto; } 
+            .sidebar { width: 100%; padding: 15px; } 
+            .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; gap: 10px; padding-bottom: 5px; } 
+            .main-content { padding: 15px; } 
+            .calendar-container { flex-direction: column; } 
+            .tool-btn { padding: 6px 8px; font-size: 11px; }
+        }
     </style>
 </head>
 <body>
@@ -93,27 +101,27 @@
             <h2 id="auth-title">先生 ログイン</h2>
             <input type="text" id="auth-email" placeholder="メール (例: xelcys@gmail.com)">
             <input type="password" id="auth-password" placeholder="パスワード">
-            <button class="btn-submit" style="margin-top: 10px;" onclick="handleAuth()">次へ</button>
+            <button class="btn-submit" onclick="handleAuth()">次へ</button>
         </div>
         <div class="auth-box" id="auth-step-2" style="display: none;">
             <h2>メール認証</h2>
             <p style="font-size: 12px; color: #666; margin-bottom: 20px;"><span style="color:red;">※「123456」と入力</span></p>
             <input type="text" id="auth-code" placeholder="認証コード (123456)">
-            <button class="btn-submit" style="margin-top: 10px;" onclick="verifyCode()">認証完了</button>
+            <button class="btn-submit" onclick="verifyCode()">認証完了</button>
         </div>
         <div class="auth-box" id="auth-step-3" style="display: none;">
             <h2 style="color: #d4af37;">管理する生徒の選択</h2>
             <input type="text" id="target-student-id" placeholder="生徒ID (例: kage)" style="font-size: 18px; font-weight: bold; text-align: center;">
-            <button class="btn-submit" style="margin-top: 10px; background-color: #d4af37; color: #1a2530;" onclick="startManage()">ダッシュボードを開く</button>
+            <button class="btn-submit" style="background-color: #d4af37; color: #1a2530;" onclick="startManage()">ダッシュボードを開く</button>
         </div>
     </div>
 
     <div id="top-bar">
-        <div><span style="font-size: 12px; color: #aaa;">ログイン中: <span id="logged-in-display">未ログイン</span></span></div>
+        <div><span style="font-size: 12px; color: #aaa;">ログイン: <span id="logged-in-display">未ログイン</span></span></div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 14px; font-weight: bold;">接続中の生徒:</span>
-            <span id="connection-status" style="font-size: 16px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 4px 12px; border-radius: 12px;">未接続</span>
-            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 10px;">生徒切替</button>
+            <span style="font-size: 12px; font-weight: bold;">生徒:</span>
+            <span id="connection-status" style="font-size: 14px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 12px;">未接続</span>
+            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
         </div>
     </div>
 
@@ -122,8 +130,9 @@
             <h2>Criety</h2>
             <ul>
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
-                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材・ファイル送信</li>
-                <li class="nav-item" onclick="switchPage('notes', this)">📝 指導ノート（スライド）</li>
+                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
+                <li class="nav-item" onclick="switchPage('notes', this)">📝 指導ノート（双方向）</li>
+                <li class="nav-item" onclick="switchPage('salary', this)">💰 給与・指導録</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 学習進捗データ</li>
                 <li class="nav-item" onclick="switchPage('settings', this)">⚙️ 設定</li>
             </ul>
@@ -132,14 +141,14 @@
         <div class="main-content">
             <div id="home" class="page active">
                 <div class="header"><h1>ホーム・ダッシュボード</h1></div>
-                <div id="student-notification" class="notification-banner">🔔 <span id="notification-text">生徒が宿題を完了しました！</span><button onclick="clearNotification()" style="margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer;">×</button></div>
+                <div id="student-notification" class="notification-banner">🔔 <span id="notification-text">生徒が宿題を完了しました！</span><button onclick="clearNotification()" style="margin-left: auto; background: none; border: none; font-size: 16px; cursor: pointer;">×</button></div>
                 
-                <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5;">
+                <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5; padding: 15px;">
                     <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="target-title" placeholder="目標名 (例: 中学受験本番)" style="flex: 2;">
-                        <input type="number" id="target-days" placeholder="日数" style="flex: 1;"> <span style="font-weight: bold;">日</span>
-                        <button class="btn-submit" style="margin-top: 0; flex: 1; padding: 10px; background: #ff9800;" onclick="sendTarget()">生徒へ送信</button>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="target-title" placeholder="目標名 (例: 中学受験本番)" style="flex: 2; min-width:150px;">
+                        <div style="display:flex; align-items:center; gap:5px;"><input type="number" id="target-days" placeholder="日数" style="width: 80px;"> <span style="font-weight: bold; font-size:12px;">日</span></div>
+                        <button class="btn-submit" style="margin-top: 0; width: auto; padding: 8px 15px; background: #ff9800;" onclick="sendTarget()">送信</button>
                     </div>
                 </div>
 
@@ -150,12 +159,14 @@
                             <h3 id="cal-month-year">2026年 6月</h3>
                             <button class="cal-btn" onclick="changeMonth(1)">次月 ▶</button>
                         </div>
-                        <div class="calendar" id="calendar-grid"></div>
+                        <div style="overflow-x:auto;">
+                            <div class="calendar" id="calendar-grid"></div>
+                        </div>
                     </div>
                     <div class="panel task-box">
                         <h3>予定・課題の追加</h3>
-                        <div style="font-size:14px; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; background: #fffcf5; padding: 8px; border-radius: 4px;">
-                            選択中の日付: <span id="selected-date-display" style="color:#d32f2f;">未選択（カレンダーをタップ）</span>
+                        <div style="font-size:12px; font-weight: bold; color: var(--accent-color); margin-bottom: 10px; background: #fffcf5; padding: 8px; border-radius: 4px;">
+                            選択中: <span id="selected-date-display" style="color:#d32f2f;">未選択（タップ）</span>
                         </div>
                         
                         <div class="quick-btn-group">
@@ -163,11 +174,10 @@
                             <button class="quick-btn" style="background: #ffebee; color: #c62828; border: 1px solid #c62828;" onclick="addQuickEvent('test')">📝 テスト</button>
                             <button class="quick-btn" style="background: #f5f5f5; color: #424242; border: 1px solid #9e9e9e;" onclick="addQuickEvent('other')">➕ その他</button>
                         </div>
-                        
-                        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                            <h4 style="margin-top:0; margin-bottom:10px; font-size: 14px;">生徒へ宿題を送る</h4>
-                            <input type="text" id="hw-content" placeholder="例: 数学ワークP.24〜25">
-                            <button class="btn-submit" style="padding:10px; margin-top:10px; background: #4caf50;" onclick="addHomework()">📚 選択した日に追加</button>
+                        <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                            <h4 style="margin-top:0; margin-bottom:5px; font-size: 12px;">生徒へ宿題を送る</h4>
+                            <input type="text" id="hw-content" placeholder="例: 数学ワークP.24">
+                            <button class="btn-submit" style="padding:8px; margin-top:5px; background: #4caf50;" onclick="addHomework()">📚 選択した日に追加</button>
                         </div>
                     </div>
                 </div>
@@ -177,18 +187,15 @@
                 <div class="header"><h1>教材・ファイル送信</h1></div>
                 <div class="panel">
                     <h3>📥 生徒アプリに教材ファイルを送る</h3>
-                    <p style="font-size:12px; color:#666; margin-bottom: 20px;">パソコン内のPDFファイルや画像を選んで生徒に送ることができます。</p>
-                    <label>教材のタイトル (生徒に表示されます)</label>
+                    <label>教材のタイトル</label>
                     <input type="text" id="mat-title" placeholder="例: 算数 小数のかけ算プリント">
-                    <label>ファイルを選択 (PDF または 画像)</label>
+                    <label>ファイルを選択 (PDF / 画像)</label>
                     <input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
-                    <button class="btn-submit" onclick="sendMaterial()">🚀 このファイルを生徒に送信する</button>
+                    <button class="btn-submit" onclick="sendMaterial()">🚀 送信する</button>
                 </div>
-
                 <div class="panel">
-                    <h3>📋 送信済みの教材一覧・削除</h3>
-                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">現在生徒の画面に表示されている教材です。「プレビュー」で中身の確認ができます。</p>
-                    <div id="sent-materials-container">
+                    <h3>📋 送信済みの教材一覧</h3>
+                    <div style="overflow-x:auto;">
                         <table class="list-table">
                             <thead><tr><th>教材タイトル</th><th>種類</th><th>操作</th></tr></thead>
                             <tbody id="sent-materials-list"></tbody>
@@ -199,36 +206,94 @@
 
             <div id="notes" class="page">
                 <div class="header"><h1>指導ノート（双方向スライド）</h1></div>
-                <div class="panel" id="whiteboard-panel" style="position: relative;">
-                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
-                        <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="panel" style="padding:15px;">
+                    <div class="toolbar-container">
+                        <div class="tool-group">
                             <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')">✏️ ペン</button>
                             <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')">🧽 消しゴム</button>
-                            <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 テキスト</button>
-                            <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)">
-                            <span style="font-size:12px; font-weight:bold;">太さ:</span>
-                            <input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)">
+                            <button class="tool-btn" id="btn-text" onclick="setTool('text')">🔤 文字</button>
+                            <input type="color" id="color-picker" value="#1a2530" onchange="setColor(this.value)" style="width:30px; height:30px; padding:0; border:none; cursor:pointer;">
+                            <div style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:bold;">
+                                <span>太さ:</span><input type="range" id="line-width" min="1" max="20" value="5" style="width:60px;" onchange="setLineWidth(this.value)">
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="tool-btn" style="background: var(--accent-color); color: white; font-weight:bold; border:none;" onclick="sendWhiteboardSlide()">📡 スライドとして新規送信</button>
-                            <button class="tool-btn" style="border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ キャンバス全消去</button>
+                        <div class="tool-group" style="justify-content: space-between;">
+                            <button class="tool-btn" style="flex:1; background: var(--accent-color); color: white; border:none;" onclick="sendWhiteboardSlide()">📡 スライドとして新規送信</button>
+                            <button class="tool-btn" style="flex:0.5; border-color: #c62828; color: #c62828;" onclick="clearBoard()">🗑️ 全消去</button>
                         </div>
                     </div>
+
+                    <div class="text-controls" id="text-controls">
+                        <button class="text-btn" onclick="changeTextScale(0.2)">大きく ➕</button>
+                        <button class="text-btn" onclick="changeTextScale(-0.2)">小さく ➖</button>
+                        <button class="text-btn" onclick="changeTextAngle(15)">回転 ↻</button>
+                        <button class="text-btn" style="background:#4caf50; color:white; border-color:#388e3c;" onclick="fixText()">✅ キャンバスに固定</button>
+                    </div>
+
                     <canvas id="whiteboard" width="1000" height="600" style="width: 100%; border: 2px solid #ccc; border-radius: 8px; cursor: crosshair; background: white; touch-action: none;"></canvas>
                 </div>
 
                 <div class="panel">
                     <h3 style="color: #d32f2f;">👨‍🏫 先生が送ったスライド（履歴）</h3>
-                    <p style="font-size:12px; color:#666;">生徒側に表示されているあなたのスライドです。画像タップでプレビュー、削除で生徒側からも消えます。</p>
-                    <div id="slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
-                        </div>
+                    <div id="slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;"></div>
                 </div>
 
                 <div class="panel" style="border: 2px solid #1565c0;">
                     <h3 style="color: #1565c0;">👦 生徒から届いたスライド（提出物）</h3>
-                    <p style="font-size:12px; color:#666;">生徒が自分の画面で書き込んで送信してきたノートです。</p>
-                    <div id="student-slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
+                    <div id="student-slides-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;"></div>
+                </div>
+            </div>
+
+            <div id="salary" class="page">
+                <div class="header"><h1>給与・指導録管理</h1></div>
+                
+                <div class="panel" style="background:#fffcf5; border: 2px solid #d4af37;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <button class="cal-btn" onclick="changeSalaryMonth(-1)">◀</button>
+                        <h3 style="margin:0; border:none; padding:0; color:#d4af37;">💰 <span id="salary-month-display"></span> のまとめ</h3>
+                        <button class="cal-btn" onclick="changeSalaryMonth(1)">▶</button>
+                    </div>
+                    
+                    <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="flex:1; min-width:120px;">
+                            <label style="color:#666;">生徒ごとの時給 (円)</label>
+                            <input type="number" id="hourly-wage" value="1500" onchange="saveWageAndCalc()">
                         </div>
+                        <div style="flex:1; min-width:120px;">
+                            <label style="color:#666;">当月 指導時間</label>
+                            <div id="total-hours" style="font-size:20px; font-weight:bold;">0 時間</div>
+                        </div>
+                        <div style="flex:1; min-width:120px;">
+                            <label style="color:#666;">当月 交通費</label>
+                            <div id="total-transport" style="font-size:20px; font-weight:bold;">0 円</div>
+                        </div>
+                        <div style="flex:1; min-width:150px; border-left: 2px solid #eee; padding-left:15px;">
+                            <label style="color:#c62828;">当月 給与予測額</label>
+                            <div id="total-salary" style="font-size:24px; font-weight:bold; color:#c62828;">0 円</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📝 本日の指導記録を追加</h3>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:130px;"><label>日付</label><input type="date" id="log-date"></div>
+                        <div style="flex:1; min-width:130px;"><label>指導時間 (h)</label><input type="number" id="log-hours" step="0.5" placeholder="例: 2"></div>
+                        <div style="flex:1; min-width:130px;"><label>交通費 (円)</label><input type="number" id="log-transport" placeholder="往復金額"></div>
+                    </div>
+                    <label>指導内容・メモ</label>
+                    <textarea id="log-summary" rows="3" placeholder="例: 算数の割合を指導。テキストP30〜35。次回は小テストを実施予定。"></textarea>
+                    <button class="btn-submit" onclick="addSalaryLog()">✅ 記録を保存する</button>
+                </div>
+
+                <div class="panel">
+                    <h3>📋 過去の指導履歴（選択月）</h3>
+                    <div style="overflow-x:auto;">
+                        <table class="list-table">
+                            <thead><tr><th style="min-width:90px;">日付</th><th style="min-width:60px;">時間</th><th style="min-width:80px;">交通費</th><th style="min-width:200px;">指導内容メモ</th><th style="min-width:60px;">操作</th></tr></thead>
+                            <tbody id="salary-log-list"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -237,41 +302,30 @@
                 <div class="panel" style="border: 2px solid var(--accent-color); background: #fffcf5;">
                     <h3 style="color: var(--accent-color);">💮 生徒の獲得ごほうびスタンプ</h3>
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="font-size: 64px;" id="stamp-display-count">0</div>
-                        <div style="font-size: 24px; color: #666;">個 獲得済み</div>
+                        <div style="font-size: 48px;" id="stamp-display-count">0</div>
+                        <div style="font-size: 18px; color: #666;">個 獲得済み</div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin: 0;">📋 指導履歴・宿題完了ログ（log）の管理</h3>
-                        <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 全日程の完了ログを一括リセット</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+                        <h3 style="margin: 0;">📋 宿題完了ログの管理</h3>
+                        <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 完了ログを一括リセット</button>
                     </div>
-                    <table class="list-table">
-                        <thead><tr><th>日付</th><th>宿題・課題内容</th><th>ステータス</th><th>操作</th></tr></thead>
-                        <tbody id="hw-log-list"></tbody>
-                    </table>
-                </div>
-                <div class="panel">
-                    <h3>宿題・課題の達成率</h3>
-                    <div style="display: flex; gap: 20px; align-items: flex-end; height: 200px; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 20px;">
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;"><div style="width: 60%; background: #1565c0; height: 60%; color: white; text-align: center;">60%</div><span>2週前</span></div>
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;"><div style="width: 60%; background: #1565c0; height: 80%; color: white; text-align: center;">80%</div><span>先週</span></div>
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;"><div id="dynamic-graph" style="width: 60%; background: var(--accent-color); height: 0%; color: white; text-align: center; transition: height 1s;">0%</div><span style="font-weight: bold;">今週</span></div>
+                    <div style="overflow-x:auto;">
+                        <table class="list-table">
+                            <thead><tr><th>日付</th><th>宿題内容</th><th>ステータス</th><th>操作</th></tr></thead>
+                            <tbody id="hw-log-list"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <div id="settings" class="page">
                 <div class="header"><h1>設定・アカウント管理</h1></div>
-                <div class="workspace">
-                    <div class="panel">
-                        <h3>アカウント情報</h3>
-                        <label>ログイン中のメールアドレス</label>
-                        <input type="text" id="setting-email" readonly style="background: #eee; cursor: not-allowed; color: #666;">
-                    </div>
-                    <div class="panel">
-                        <button style="width: 100%; padding: 15px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">システムからログアウト</button>
-                    </div>
+                <div class="panel">
+                    <label>ログイン中のメールアドレス</label>
+                    <input type="text" id="setting-email" readonly style="background: #eee; color: #666;">
+                    <button style="width: 100%; padding: 12px; margin-top:20px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">ログアウト</button>
                 </div>
             </div>
         </div>
@@ -279,9 +333,9 @@
 
     <div id="preview-modal">
         <div class="preview-content">
-            <div style="padding: 15px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
-                <h3 style="margin: 0; font-size: 16px;" id="preview-title">プレビュー</h3>
-                <button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">閉じる</button>
+            <div style="padding: 10px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
+                <h3 style="margin: 0; font-size: 14px;" id="preview-title">プレビュー</h3>
+                <button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold;">閉じる</button>
             </div>
             <iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src=""></iframe>
         </div>
@@ -291,54 +345,40 @@
         // ==========================================
         // 🔒 認証＆初期化
         // ==========================================
-        let tempEmail = "";
-        let managedStudentId = ""; 
+        let tempEmail = ""; let managedStudentId = ""; 
 
         document.addEventListener("DOMContentLoaded", () => {
-            if (!localStorage.getItem('criety_user_xelcys@gmail.com')) {
-                localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
-            }
+            if (!localStorage.getItem('criety_user_xelcys@gmail.com')) localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
             const loggedInUser = localStorage.getItem('criety_logged_in_user');
             if(loggedInUser) {
                 tempEmail = loggedInUser;
                 document.getElementById('auth-step-1').style.display = 'none';
                 const lastStudent = sessionStorage.getItem('current_managed_student');
-                if(lastStudent) {
-                    document.getElementById('target-student-id').value = lastStudent;
-                    startManage();
-                } else {
-                    document.getElementById('auth-step-3').style.display = 'block';
-                }
+                if(lastStudent) { document.getElementById('target-student-id').value = lastStudent; startManage(); } 
+                else { document.getElementById('auth-step-3').style.display = 'block'; }
             }
+            // 今日の日付をセット
+            document.getElementById('log-date').valueAsDate = new Date();
         });
 
         function handleAuth() {
             const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             if(!email || !pass) return;
-            if(email === 'xelcys@gmail.com' && pass === '123456') { 
-                localStorage.setItem('criety_user_xelcys@gmail.com', '123456'); 
-            } else if(localStorage.getItem('criety_user_' + email) !== pass) { 
-                return alert("情報が間違っています。"); 
-            }
-            tempEmail = email;
-            document.getElementById('auth-step-1').style.display = 'none';
-            document.getElementById('auth-step-2').style.display = 'block';
+            if(email === 'xelcys@gmail.com' && pass === '123456') { localStorage.setItem('criety_user_xelcys@gmail.com', '123456'); } 
+            else if(localStorage.getItem('criety_user_' + email) !== pass) { return alert("情報が間違っています。"); }
+            tempEmail = email; document.getElementById('auth-step-1').style.display = 'none'; document.getElementById('auth-step-2').style.display = 'block';
         }
-
         function verifyCode() {
             if(document.getElementById('auth-code').value.trim() === '123456') {
                 localStorage.setItem('criety_logged_in_user', tempEmail);
-                document.getElementById('auth-step-2').style.display = 'none';
-                document.getElementById('auth-step-3').style.display = 'block';
+                document.getElementById('auth-step-2').style.display = 'none'; document.getElementById('auth-step-3').style.display = 'block';
             }
         }
-
         function startManage() {
             const id = document.getElementById('target-student-id').value.trim().toLowerCase();
             if(!id) return alert("生徒IDを入力してください。");
-            managedStudentId = id;
-            sessionStorage.setItem('current_managed_student', id);
+            managedStudentId = id; sessionStorage.setItem('current_managed_student', id);
             
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('top-bar').style.display = 'flex';
@@ -351,42 +391,29 @@
             document.getElementById('target-title').value = localStorage.getItem('criety_target_title_' + managedStudentId) || "";
             document.getElementById('target-days').value = localStorage.getItem('criety_target_days_' + managedStudentId) || "";
             
+            // 時給の読み込み
+            document.getElementById('hourly-wage').value = localStorage.getItem('criety_salary_wage_' + managedStudentId) || "1500";
+
             loadStudentData();
         }
 
-        function changeStudent() {
-            sessionStorage.removeItem('current_managed_student');
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('top-bar').style.display = 'none';
-            document.getElementById('auth-overlay').style.display = 'flex';
-            document.getElementById('auth-step-1').style.display = 'none';
-            document.getElementById('auth-step-2').style.display = 'none';
-            document.getElementById('auth-step-3').style.display = 'block';
-            document.getElementById('target-student-id').value = "";
-        }
-
+        function changeStudent() { sessionStorage.removeItem('current_managed_student'); location.reload(); }
         function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
-        
         function switchPage(pageId, el) { 
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active'); 
-            if(el) el.classList.add('active');
+            document.getElementById(pageId).classList.add('active'); if(el) el.classList.add('active');
         }
 
         function loadStudentData() {
-            renderCalendar();
-            renderMaterialsList();
-            renderHwLogList();
-            renderWbSlides();
-            renderStudentSlides(); // 生徒の提出物も描画
+            renderCalendar(); renderMaterialsList(); renderHwLogList();
+            renderWbSlides(); renderStudentSlides(); renderSalaryLogs();
         }
 
         // ==========================================
         // 📅 カレンダー機能
         // ==========================================
         let currentDate = new Date(); let selectedDateStr = "";
-        
         function renderCalendar() {
             const y = currentDate.getFullYear(); const m = currentDate.getMonth();
             document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`;
@@ -394,7 +421,6 @@
             const grid = document.getElementById('calendar-grid');
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
-            
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {};
             const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
             
@@ -407,9 +433,7 @@
                     events[dateStr].forEach((ev, idx) => {
                         let c = ev.type === 'lesson' ? 'lesson' : ev.type === 'test' ? 'test' : ev.type === 'student' ? 'student' : ev.type === 'hw' ? 'hw' : 'other';
                         let txt = ev.type === 'lesson' ? '👨‍🏫 指導日' : ev.type === 'test' ? `📝 ${ev.text}` : ev.type === 'student' ? `👦 ${ev.text}` : `宿: ${ev.text}`;
-                        
                         if (ev.type === 'hw' && doneDict[`${dateStr}_${ev.text}`]) { c = 'hw-done'; txt = `💮 済: ${ev.text}`; }
-                        
                         badgesHtml += `<span class="badge ${c}"><span>${txt}</span> <span class="badge-del" onclick="event.stopPropagation(); window.deleteEvent('${dateStr}', ${idx})">×</span></span>`;
                     });
                 }
@@ -419,25 +443,19 @@
         }
 
         function selectDate(d) { selectedDateStr = d; document.getElementById('selected-date-display').innerText = d; document.getElementById('selected-date-display').style.color = '#1565c0'; renderCalendar(); }
-        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（カレンダーをタップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
-
+        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); selectedDateStr = ""; document.getElementById('selected-date-display').innerText = "未選択（タップ）"; document.getElementById('selected-date-display').style.color = '#d32f2f'; renderCalendar(); }
         function addQuickEvent(type) { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:");
             if(text) addEvent(type, text); 
         }
-        
         function addHomework() { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
-            const v = document.getElementById('hw-content').value.trim(); 
-            if(!v) return alert("宿題の内容を入力してください！");
+            const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！");
             addEvent('hw', v); 
-            localStorage.setItem('criety_new_task_' + managedStudentId, JSON.stringify({date:selectedDateStr, content:v})); 
             localStorage.setItem('criety_task_status_' + managedStudentId, 'pending'); 
-            alert(`✅ 宿題を追加しました！`); 
-            document.getElementById('hw-content').value = "";
+            alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = "";
         }
-
         function addEvent(type, text) { 
             let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {}; 
             if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
@@ -445,257 +463,224 @@
             localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
             renderCalendar(); renderHwLogList(); 
         }
-
         window.deleteEvent = function(dateStr, idx) { 
             let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)); 
-            if(evs && evs[dateStr]) {
-                evs[dateStr].splice(idx, 1); 
-                if(evs[dateStr].length === 0) delete evs[dateStr]; 
-                localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
-                renderCalendar(); renderHwLogList();
-            }
+            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); renderCalendar(); renderHwLogList(); }
         };
 
         function sendTarget() {
-            const title = document.getElementById('target-title').value.trim();
-            const days = document.getElementById('target-days').value.trim();
-            if(title && days) {
-                localStorage.setItem('criety_target_title_' + managedStudentId, title);
-                localStorage.setItem('criety_target_days_' + managedStudentId, days);
-                alert(`✅ 目標を送信しました！`);
-            } else { alert("目標名と日数を両方入力してください。"); }
+            const title = document.getElementById('target-title').value.trim(), days = document.getElementById('target-days').value.trim();
+            if(title && days) { localStorage.setItem('criety_target_title_' + managedStudentId, title); localStorage.setItem('criety_target_days_' + managedStudentId, days); alert(`✅ 送信しました！`); }
         }
 
         // ==========================================
-        // 📚 教材機能
+        // 💰 給与・指導録（ログ）管理機能
+        // ==========================================
+        let salaryMonthDate = new Date();
+
+        function changeSalaryMonth(d) {
+            salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d);
+            renderSalaryLogs();
+        }
+
+        function saveWageAndCalc() {
+            const wage = document.getElementById('hourly-wage').value;
+            localStorage.setItem('criety_salary_wage_' + managedStudentId, wage);
+            renderSalaryLogs();
+        }
+
+        function addSalaryLog() {
+            const d = document.getElementById('log-date').value;
+            const h = parseFloat(document.getElementById('log-hours').value) || 0;
+            const t = parseInt(document.getElementById('log-transport').value) || 0;
+            const s = document.getElementById('log-summary').value.trim();
+
+            if(!d || h === 0) return alert("日付と指導時間は必ず入力してください。");
+
+            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || [];
+            logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s });
+            localStorage.setItem('criety_logs_' + managedStudentId, JSON.stringify(logs));
+
+            // 入力欄リセット
+            document.getElementById('log-hours').value = "";
+            document.getElementById('log-transport').value = "";
+            document.getElementById('log-summary').value = "";
+            alert("✅ 記録を保存しました！");
+            
+            // 該当月に移動して再描画
+            salaryMonthDate = new Date(d);
+            renderSalaryLogs();
+        }
+
+        function renderSalaryLogs() {
+            const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1;
+            const targetMonthStr = `${y}-${String(m).padStart(2, '0')}`;
+            document.getElementById('salary-month-display').innerText = `${y}年 ${m}月`;
+
+            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || [];
+            let monthLogs = logs.filter(log => log.date.startsWith(targetMonthStr));
+            monthLogs.sort((a,b) => a.date.localeCompare(b.date)); // 日付順
+
+            const tbody = document.getElementById('salary-log-list');
+            let html = ""; let totalH = 0; let totalT = 0;
+
+            monthLogs.forEach(log => {
+                totalH += log.hours;
+                totalT += log.transport;
+                html += `
+                <tr>
+                    <td>${log.date}</td><td>${log.hours} h</td><td>${log.transport} 円</td>
+                    <td style="font-size:11px; color:#555;">${log.summary.replace(/\n/g, '<br>')}</td>
+                    <td><button class="btn-danger" onclick="deleteSalaryLog(${log.id})">削除</button></td>
+                </tr>`;
+            });
+
+            if(monthLogs.length === 0) { html = `<tr><td colspan="5" style="text-align:center; color:#999;">この月の記録はありません。</td></tr>`; }
+            tbody.innerHTML = html;
+
+            // 計算結果の更新
+            const wage = parseInt(document.getElementById('hourly-wage').value) || 0;
+            document.getElementById('total-hours').innerText = `${totalH} 時間`;
+            document.getElementById('total-transport').innerText = `${totalT} 円`;
+            document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`;
+        }
+
+        function deleteSalaryLog(id) {
+            if(!confirm("この指導記録を削除しますか？")) return;
+            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || [];
+            logs = logs.filter(l => l.id !== id);
+            localStorage.setItem('criety_logs_' + managedStudentId, JSON.stringify(logs));
+            renderSalaryLogs();
+        }
+
+        // ==========================================
+        // 📚 教材 & 📊 宿題ログ
         // ==========================================
         function sendMaterial() {
-            const title = document.getElementById('mat-title').value.trim();
-            const fileInput = document.getElementById('mat-file-input');
-            if(!title || !fileInput.files[0]) return alert("タイトルとファイルを選択してください！");
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const dataUrl = e.target.result;
-                let type = file.type === 'application/pdf' ? 'pdf' : 'img';
-                let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-                materials.push({ name: title, url: dataUrl, type: type });
-                try {
-                    localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
-                    alert(`✅ 教材「${title}」を送信しました！`);
-                    document.getElementById('mat-title').value = ""; fileInput.value = ""; renderMaterialsList();
-                } catch(err) { alert("❌ エラー: ファイルサイズが大きすぎます。"); }
-            };
-            reader.readAsDataURL(file);
+            const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0];
+            if(!title || !file) return; const r = new FileReader();
+            r.onload = function(e) {
+                let mats = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+                mats.push({ name: title, url: e.target.result, type: file.type === 'application/pdf' ? 'pdf' : 'img' });
+                try { localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(mats)); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; renderMaterialsList(); } catch(err) { alert("サイズが大きすぎます。"); }
+            }; r.readAsDataURL(file);
         }
-
         function renderMaterialsList() {
-            const listTbody = document.getElementById('sent-materials-list');
-            const materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-            if(materials.length === 0) { listTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">まだ送信した教材はありません。</td></tr>`; return; }
-            listTbody.innerHTML = materials.map((m, idx) => `
-                <tr>
-                    <td><strong>${m.name}</strong></td>
-                    <td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:12px;">${m.type.toUpperCase()}</span></td>
-                    <td>
-                        <button class="btn-submit" style="margin:0; padding:6px 12px; width:auto; font-size:12px; background:#2196f3;" onclick="openMaterialPreview(${idx})">確認</button>
-                        <button class="btn-danger" style="margin-left:5px;" onclick="deleteMaterial(${idx})">削除</button>
-                    </td>
-                </tr>
-            `).join('');
+            const m = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+            document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:#999;">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" style="background:#2196f3;" onclick="openPreview('${x.url}','${x.type}')">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join('');
         }
+        function delMat(i) { let m = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)); m.splice(i,1); localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(m)); renderMaterialsList(); }
 
-        function deleteMaterial(idx) {
-            if(!confirm("この教材を削除しますか？")) return;
-            let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-            materials.splice(idx, 1);
-            localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(materials));
-            renderMaterialsList();
-        }
-
-        function openMaterialPreview(idx) {
-            let materials = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
-            let m = materials[idx];
-            if(!m) return;
-            document.getElementById('preview-title').innerText = m.name;
-            const frame = document.getElementById('preview-frame');
-            if(m.type === 'pdf') frame.outerHTML = `<iframe id="preview-frame" style="flex: 1; border: none; border-radius: 0 0 8px 8px;" src="${m.url}"></iframe>`;
-            else frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${m.url}">`;
-            document.getElementById('preview-modal').style.display = 'flex';
-        }
-
-        // ==========================================
-        // 📊 宿題ログ管理
-        // ==========================================
         function renderHwLogList() {
-            const logTbody = document.getElementById('hw-log-list');
-            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {};
-            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
-            let html = ""; let hasHw = false;
-            Object.keys(events).sort().forEach(dateStr => {
-                events[dateStr].forEach(ev => {
-                    if(ev.type === 'hw') {
-                        hasHw = true;
-                        const isDone = doneDict[`${dateStr}_${ev.text}`];
-                        html += `<tr>
-                            <td><code>${dateStr}</code></td><td>${ev.text}</td>
-                            <td>${isDone ? '<span style="color:#2e7d32; font-weight:bold;">💮 クリア済</span>' : '<span style="color:#e65100; font-weight:bold;">⏳ 進行中</span>'}</td>
-                            <td>${isDone ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${dateStr}', '${ev.text}')">ログを消去</button>` : '<span style="color:#aaa;">-</span>'}</td>
-                        </tr>`;
-                    }
-                });
-            });
-            logTbody.innerHTML = hasHw ? html : `<tr><td colspan="4" style="text-align:center; color:#999;">まだ宿題の予定が組まれていません。</td></tr>`;
+            const evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {}, done = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
+            let html = ""; Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${d}', '${ev.text}')">消去</button>` : '-'}</td></tr>`; } }));
+            document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
         }
-
-        function deleteHwLog(dateStr, hwText) {
-            if(!confirm(`完了ログを削除しますか？`)) return;
-            let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
-            if(doneDict[`${dateStr}_${hwText}`]) {
-                delete doneDict[`${dateStr}_${hwText}`];
-                localStorage.setItem('criety_hw_done_' + managedStudentId, JSON.stringify(doneDict));
-                localStorage.setItem('criety_task_status_' + managedStudentId, 'pending');
-                let stamps = parseInt(localStorage.getItem('criety_stamps_' + managedStudentId)) || 0;
-                if(stamps > 0) localStorage.setItem('criety_stamps_' + managedStudentId, stamps - 1);
-                renderCalendar(); renderHwLogList();
-            }
-        }
-
-        function resetAllHwLog() {
-            if(!confirm("⚠️ すべての宿題完了ログを削除して初期化しますか？")) return;
-            localStorage.removeItem('criety_hw_done_' + managedStudentId);
-            localStorage.setItem('criety_task_status_' + managedStudentId, 'pending');
-            localStorage.setItem('criety_stamps_' + managedStudentId, '0');
-            localStorage.setItem('criety_stamp_cards_' + managedStudentId, '1');
-            renderCalendar(); renderHwLogList();
-        }
+        function deleteHwLog(d, t) { let done = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)); delete done[`${d}_${t}`]; localStorage.setItem('criety_hw_done_' + managedStudentId, JSON.stringify(done)); renderCalendar(); renderHwLogList(); }
+        function resetAllHwLog() { if(confirm("初期化しますか？")){ localStorage.removeItem('criety_hw_done_' + managedStudentId); localStorage.setItem('criety_stamps_' + managedStudentId, '0'); renderCalendar(); renderHwLogList(); } }
 
         // ==========================================
-        // 🎨 ホワイトボード＆スライド管理
+        // 🎨 ホワイトボード（スマホ完全対応 ＆ 文字スタンプ）
         // ==========================================
         const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5;
         
-        function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) * (canvas.width / rect.width), y: ((e.clientY || (e.touches && e.touches[0].clientY)) - rect.top) * (canvas.height / rect.height) }; }
+        let activeText = null; let isDraggingText = false; let savedCanvasData = null;
+
+        function getPos(e) { 
+            const rect = canvas.getBoundingClientRect(); 
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; 
+        }
+
+        function redrawCanvas() {
+            if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0);
+            if(activeText) {
+                ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180);
+                ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(activeText.text, 0, 0); ctx.restore();
+            }
+        }
+        function fixText() { if(!activeText) return; redrawCanvas(); savedCanvasData = null; activeText = null; document.getElementById('text-controls').style.display = 'none'; }
+        function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
+        function changeTextAngle(da) { if(activeText) { activeText.angle += da; redrawCanvas(); } }
         
-        canvas.onmousedown = (e) => { 
-            if(currentTool === 'text') { const text = prompt("テキスト:"); if(text) { const p = getPos(e); ctx.font = `bold ${lineWidth * 8}px sans-serif`; ctx.fillStyle = currentColor; ctx.fillText(text, p.x, p.y); } return; } 
-            isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); 
-        };
-        canvas.onmousemove = (e) => { if(isDrawing && currentTool !== 'text') { e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); } };
-        canvas.onmouseup = () => isDrawing = false; canvas.onmouseout = () => isDrawing = false;
+        function handleStart(e) {
+            if(e.type === 'touchstart') e.preventDefault(); // スマホスクロール防止
+            const p = getPos(e);
+            if(currentTool === 'text') { 
+                if(!activeText) {
+                    const txt = prompt("テキストを入力:"); 
+                    if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); }
+                } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); }
+                return;
+            }
+            if(activeText) fixText();
+            isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); 
+        }
+        function handleMove(e) {
+            if(e.type === 'touchmove') e.preventDefault(); // スマホスクロール防止
+            const p = getPos(e);
+            if(currentTool === 'text' && isDraggingText && activeText) { activeText.x = p.x; activeText.y = p.y; redrawCanvas(); return; }
+            if(!isDrawing) return;
+            ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+        }
+        function handleEnd(e) { isDrawing = false; isDraggingText = false; }
+
+        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
+        canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
         
-        function setTool(t) { currentTool = t; document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
+        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#whiteboard-panel .tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
-        function clearBoard() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function clearBoard() { if(confirm("消去しますか？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
         
-        // ★ 先生がスライドを送信
         function sendWhiteboardSlide() { 
+            if(activeText) fixText(); // 送信前に文字を固定
             let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
             slides.push({ id: Date.now(), data: canvas.toDataURL() });
             localStorage.setItem('criety_wb_slides_' + managedStudentId, JSON.stringify(slides));
-            alert(`📡 キャンバスを新しいスライドとして送信しました！`); 
-            renderWbSlides();
+            alert(`📡 新しいスライドとして送信しました！`); renderWbSlides();
         }
 
-        // ★ 先生の送ったスライドを描画
         function renderWbSlides() {
-            const container = document.getElementById('slides-container');
-            const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
-            
-            if(slides.length === 0) {
-                container.innerHTML = `<span style="color:#999; font-size:12px;">まだ送信されたスライドはありません。</span>`;
-                return;
-            }
-
-            container.innerHTML = [...slides].reverse().map((s, i) => `
-                <div class="slide-preview-box">
-                    <div style="font-size: 10px; color: #666; font-weight:bold; margin-bottom: 5px;">スライド ${slides.length - i}</div>
-                    <img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')">
-                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button>
-                </div>
+            const container = document.getElementById('slides-container'); const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">なし</span>` : [...slides].reverse().map((s, i) => `
+                <div class="slide-preview-box"><div style="font-size:10px; color:#666; margin-bottom:5px;">スライド ${slides.length - i}</div><img src="${s.data}" onclick="openPreview('${s.data}','img')"><button class="btn-danger" style="width:100%;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>
             `).join('');
         }
-
-        // ★ 生徒から届いたスライドを描画
         function renderStudentSlides() {
-            const container = document.getElementById('student-slides-container');
-            const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + managedStudentId)) || [];
-            
-            if(slides.length === 0) {
-                container.innerHTML = `<span style="color:#999; font-size:12px;">まだ生徒から届いた提出物はありません。</span>`;
-                return;
-            }
-
-            container.innerHTML = [...slides].reverse().map((s, i) => `
-                <div class="slide-preview-box" style="border-color: #bbdefb; background: #e3f2fd;">
-                    <div style="font-size: 10px; color: #1565c0; font-weight:bold; margin-bottom: 5px;">提出物 ${slides.length - i}</div>
-                    <img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')">
-                    <button class="btn-danger" style="width:100%; font-size:11px; padding:6px; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button>
-                </div>
+            const container = document.getElementById('student-slides-container'); const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + managedStudentId)) || [];
+            container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">まだ届いていません</span>` : [...slides].reverse().map((s, i) => `
+                <div class="slide-preview-box" style="border-color:#bbdefb; background:#e3f2fd;"><div style="font-size:10px; color:#1565c0; font-weight:bold; margin-bottom:5px;">提出物 ${slides.length - i}</div><img src="${s.data}" onclick="openPreview('${s.data}','img')"><button class="btn-danger" style="width:100%; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>
             `).join('');
         }
-
-        // ★ スライドの削除（先生用・生徒用共通）
         function deleteSlide(id, type) {
-            const isStudent = type === 'student';
-            const storageKey = isStudent ? 'criety_student_wb_slides_' : 'criety_wb_slides_';
-            
-            if(!confirm(isStudent ? "この生徒の提出物を削除しますか？" : "このスライドを生徒の画面からも削除しますか？")) return;
-            
-            let slides = JSON.parse(localStorage.getItem(storageKey + managedStudentId)) || [];
-            slides = slides.filter(s => s.id !== id);
-            localStorage.setItem(storageKey + managedStudentId, JSON.stringify(slides));
-            
-            if(isStudent) renderStudentSlides();
-            else renderWbSlides();
+            const key = (type === 'student' ? 'criety_student_wb_slides_' : 'criety_wb_slides_') + managedStudentId;
+            if(!confirm("削除しますか？")) return;
+            let s = JSON.parse(localStorage.getItem(key)) || []; s = s.filter(x => x.id !== id); localStorage.setItem(key, JSON.stringify(s));
+            type === 'student' ? renderStudentSlides() : renderWbSlides();
         }
 
-        // ★ スライドのプレビュー（先生用・生徒用共通）
-        function openSlidePreview(id, type) {
-            const isStudent = type === 'student';
-            const storageKey = isStudent ? 'criety_student_wb_slides_' : 'criety_wb_slides_';
-            
-            let slides = JSON.parse(localStorage.getItem(storageKey + managedStudentId)) || [];
-            let slide = slides.find(s => s.id === id);
-            if(slide) {
-                document.getElementById('preview-title').innerText = isStudent ? "生徒の提出物 プレビュー" : "ホワイトボード プレビュー";
-                const frame = document.getElementById('preview-frame');
-                frame.outerHTML = `<img id="preview-frame" style="flex: 1; object-fit: contain; border-radius: 0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`;
-                document.getElementById('preview-modal').style.display = 'flex';
-            }
+        // ==========================================
+        // プレビューと定期監視
+        // ==========================================
+        function openPreview(url, type) {
+            const frame = document.getElementById('preview-frame');
+            frame.outerHTML = type === 'pdf' ? `<iframe id="preview-frame" style="flex:1; border:none; border-radius:0 0 8px 8px; background:#fff;" src="${url}"></iframe>` : `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${url}">`;
+            document.getElementById('preview-modal').style.display = 'flex';
         }
-
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; document.getElementById('preview-frame').src = ""; }
-
-        // ==========================================
-        // 🔄 リアルタイム監視機能
-        // ==========================================
         function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
 
         setInterval(() => {
             if(!managedStudentId) return;
-
             const s = localStorage.getItem('criety_task_status_' + managedStudentId);
-            if(s === 'completed') { 
-                document.getElementById('notification-text').innerText = `生徒が新しい宿題を完了しました！`;
-                document.getElementById('student-notification').style.display = 'flex'; 
-                localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); 
-                renderCalendar(); renderHwLogList(); 
-            }
-            
-            const g = document.getElementById('dynamic-graph');
-            if(s === 'completed' || s === 'notified') { g.style.height='100%'; g.innerText='100%'; } else if(s === 'pending') { g.style.height='0%'; g.innerText='進行中'; }
-            
+            if(s === 'completed') { document.getElementById('student-notification').style.display = 'flex'; localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); renderCalendar(); renderHwLogList(); }
             document.getElementById('stamp-display-count').innerText = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
-            
-            // ★ 定期的に生徒から提出物がないかチェックして更新
-            renderStudentSlides();
-            
-        }, 1000);
+            renderStudentSlides(); // 生徒の提出物を監視
+        }, 1500);
     </script>
 </body>
 </html>

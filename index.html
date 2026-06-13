@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Criety - 家庭教師ダッシュボード</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <style>
         :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
         * { box-sizing: border-box; }
@@ -63,6 +67,7 @@
         .badge.other { background: #f5f5f5; color: #424242; border-left: 2px solid #9e9e9e; }
         .badge.hw { background: #fff3e0; color: #e65100; border-left: 2px solid #e65100; }
         .badge.hw-done { background: #e8f5e9; color: #2e7d32; border-left: 2px solid #2e7d32; }
+        .badge.student { background: #f3e5f5; color: #8e24aa; border-left: 2px solid #8e24aa; }
         .badge-del { color: #ff5252; cursor: pointer; padding-left: 3px; }
         
         .task-box { width: 100%; }
@@ -129,7 +134,7 @@
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 12px; font-weight: bold;">生徒:</span>
             <span id="connection-status" style="font-size: 14px; color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 12px;">未接続</span>
-            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
+            <button onclick="changeStudent()" style="background: transparent; border: 1px solid #aaa; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">切替</button>
         </div>
     </div>
 
@@ -322,7 +327,7 @@
                         <h3 style="margin: 0; color: #c2185b;">🚨 生徒からの間違え直し・質問報告ログ</h3>
                         <button class="btn-danger" style="background:#e91e63;" onclick="clearAllMistakeReports()">⚠️ 報告ログを一括リセット</button>
                     </div>
-                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">生徒がアプリから送信したミスの自己分析ログです。今後の指導方針や弱点分析に活用できます。</p>
+                    <p style="font-size:12px; color:#666; margin-bottom: 10px;">生徒がアプリから送信したミスの自己分析ログです。</p>
                     <div class="scrollable-wrap">
                         <table class="list-table">
                             <thead>
@@ -331,11 +336,11 @@
                                     <th style="min-width:150px;">教材・箇所</th>
                                     <th style="min-width:150px;">ミスの種類</th>
                                     <th style="min-width:100px;">自己解決</th>
+                                    <th style="min-width:150px;">メモ・時間</th>
                                     <th style="min-width:60px;">操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="mistake-report-list">
-                                </tbody>
+                            <tbody id="mistake-report-list"></tbody>
                         </table>
                     </div>
                 </div>
@@ -343,7 +348,7 @@
                 <div class="panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="margin: 0;">📋 宿題完了ログの管理</h3>
-                        <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 全リセット</button>
+                        <button class="btn-danger" onclick="resetAllHwLog()">⚠️ 完了ログを一括リセット</button>
                     </div>
                     <div class="scrollable-wrap">
                         <table class="list-table">
@@ -383,10 +388,39 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔒 認証＆初期化
-        // ==========================================
-        let tempEmail = ""; let managedStudentId = ""; 
+        // ----------------------------------------------------
+        // 1. Firebaseの合鍵（firebaseConfig）をセット
+        // ----------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
+            authDomain: "criety-app-f76d4.firebaseapp.com",
+            projectId: "criety-app-f76d4",
+            storageBucket: "criety-app-f76d4.firebasestorage.app",
+            messagingSenderId: "826655717900",
+            appId: "1:826655717900:web:d724b66a1deec6505e4c29"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let tempEmail = ""; 
+        let managedStudentId = ""; 
+        let studentDataCache = {}; // ★ クラウドから受信したデータを保持する金庫
+
+        // ★ localStorageの代わりにクラウド(Firebase)とやり取りする関数
+        function setFB(key, val) {
+            db.ref('students/' + managedStudentId + '/' + key).set(val);
+        }
+        function getFB(key) {
+            return studentDataCache[key];
+        }
+        function removeFB(key) {
+            db.ref('students/' + managedStudentId + '/' + key).remove();
+        }
+        function getFB_JSON(key, defaultVal) {
+            const data = getFB(key);
+            if (!data) return defaultVal;
+            try { return JSON.parse(data); } catch(e) { return data; }
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             if (!localStorage.getItem('criety_user_xelcys@gmail.com')) localStorage.setItem('criety_user_xelcys@gmail.com', '123456');
@@ -415,6 +449,7 @@
                 document.getElementById('auth-step-2').style.display = 'none'; document.getElementById('auth-step-3').style.display = 'block';
             }
         }
+        
         function startManage() {
             const id = document.getElementById('target-student-id').value.trim().toLowerCase();
             if(!id) return alert("生徒IDを入力してください。");
@@ -428,11 +463,29 @@
             document.getElementById('connection-status').innerText = id;
             document.getElementById('setting-email').value = tempEmail;
             
-            document.getElementById('target-title').value = localStorage.getItem('criety_target_title_' + managedStudentId) || "";
-            document.getElementById('target-days').value = localStorage.getItem('criety_target_days_' + managedStudentId) || "";
-            document.getElementById('hourly-wage').value = localStorage.getItem('criety_salary_wage_' + managedStudentId) || "1500";
+            // ★ Firebaseからリアルタイムでデータを受信するリスナーを開始
+            db.ref('students/' + managedStudentId).on('value', (snapshot) => {
+                studentDataCache = snapshot.val() || {};
+                
+                // 画面を再描画
+                loadStudentData();
 
-            loadStudentData();
+                // 入力中でない時だけUIを更新
+                if(document.activeElement.id !== 'target-title') document.getElementById('target-title').value = getFB('target_title') || "";
+                if(document.activeElement.id !== 'target-days') document.getElementById('target-days').value = getFB('target_days') || "";
+                if(document.activeElement.id !== 'hourly-wage') document.getElementById('hourly-wage').value = getFB('salary_wage') || "1500";
+
+                // 通知のチェック
+                const s = getFB('task_status');
+                if(s === 'completed') { 
+                    document.getElementById('student-notification').style.display = 'flex'; 
+                    setFB('task_status', 'notified'); // Firebase側をnotifiedに更新
+                }
+                const g = document.getElementById('dynamic-graph');
+                if(s === 'completed' || s === 'notified') { g.style.height='100%'; g.innerText='100%'; } else if(s === 'pending') { g.style.height='0%'; g.innerText='進行中'; }
+                
+                document.getElementById('stamp-display-count').innerText = getFB('stamps') || 0;
+            });
         }
 
         function changeStudent() { sessionStorage.removeItem('current_managed_student'); location.reload(); }
@@ -446,7 +499,7 @@
         function loadStudentData() {
             renderCalendar(); renderMaterialsList(); renderHwLogList();
             renderWbSlides(); renderStudentSlides(); renderSalaryLogs();
-            renderMistakeReports(); // 新機能：間違え直しレポートの描画
+            renderMistakeReports();
         }
 
         // ==========================================
@@ -460,8 +513,8 @@
             const grid = document.getElementById('calendar-grid');
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
-            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {};
-            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
+            const events = getFB_JSON('cal_events', {});
+            const doneDict = getFB_JSON('hw_done', {});
             
             for(let i = 1; i <= daysInMonth; i++) {
                 const dateStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -491,23 +544,22 @@
         function addHomework() { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！");
-            addEvent('hw', v); localStorage.setItem('criety_task_status_' + managedStudentId, 'pending'); 
+            addEvent('hw', v); setFB('task_status', 'pending'); 
             alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = "";
         }
         function addEvent(type, text) { 
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {}; 
+            let evs = getFB_JSON('cal_events', {}); 
             if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); 
-            localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); 
-            renderCalendar(); renderHwLogList(); 
+            setFB('cal_events', JSON.stringify(evs)); 
         }
         window.deleteEvent = function(dateStr, idx) { 
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)); 
-            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; localStorage.setItem('criety_cal_events_' + managedStudentId, JSON.stringify(evs)); renderCalendar(); renderHwLogList(); }
+            let evs = getFB_JSON('cal_events', {}); 
+            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; setFB('cal_events', JSON.stringify(evs)); }
         };
 
         function sendTarget() {
             const title = document.getElementById('target-title').value.trim(), days = document.getElementById('target-days').value.trim();
-            if(title && days) { localStorage.setItem('criety_target_title_' + managedStudentId, title); localStorage.setItem('criety_target_days_' + managedStudentId, days); alert(`✅ 送信しました！`); }
+            if(title && days) { setFB('target_title', title); setFB('target_days', days); alert(`✅ 送信しました！`); }
         }
 
         // ==========================================
@@ -516,14 +568,14 @@
         let salaryMonthDate = new Date();
 
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
-        function saveWageAndCalc() { const wage = document.getElementById('hourly-wage').value; localStorage.setItem('criety_salary_wage_' + managedStudentId, wage); renderSalaryLogs(); }
+        function saveWageAndCalc() { const wage = document.getElementById('hourly-wage').value; setFB('salary_wage', wage); }
 
         function addSalaryLog() {
             const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim();
             if(!d || h === 0) return alert("日付と指導時間は必ず入力してください。");
-            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || [];
+            let logs = getFB_JSON('logs', []);
             logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s });
-            localStorage.setItem('criety_logs_' + managedStudentId, JSON.stringify(logs));
+            setFB('logs', JSON.stringify(logs));
             document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = "";
             alert("✅ 記録を保存しました！"); salaryMonthDate = new Date(d); renderSalaryLogs();
         }
@@ -531,7 +583,7 @@
         function renderSalaryLogs() {
             const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, targetMonthStr = `${y}-${String(m).padStart(2, '0')}`;
             document.getElementById('salary-month-display').innerText = `${y}年 ${m}月`;
-            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || [];
+            let logs = getFB_JSON('logs', []);
             let monthLogs = logs.filter(log => log.date.startsWith(targetMonthStr)); monthLogs.sort((a,b) => a.date.localeCompare(b.date));
             const tbody = document.getElementById('salary-log-list');
             let html = ""; let totalH = 0; let totalT = 0;
@@ -547,29 +599,26 @@
 
         function deleteSalaryLog(id) {
             if(!confirm("削除しますか？")) return;
-            let logs = JSON.parse(localStorage.getItem('criety_logs_' + managedStudentId)) || []; logs = logs.filter(l => l.id !== id);
-            localStorage.setItem('criety_logs_' + managedStudentId, JSON.stringify(logs)); renderSalaryLogs();
+            let logs = getFB_JSON('logs', []); logs = logs.filter(l => l.id !== id);
+            setFB('logs', JSON.stringify(logs));
         }
 
         // ==========================================
-        // 🚨 間違え直し報告 受信・管理機能（新設）
+        // 🚨 間違え直し報告 受信
         // ==========================================
         function renderMistakeReports() {
             const listTbody = document.getElementById('mistake-report-list');
-            const reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + managedStudentId)) || [];
+            const reports = getFB_JSON('mistake_reports', []);
 
-            if(reports.length === 0) {
-                listTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">まだ生徒からの報告はありません。</td></tr>`;
-                return;
-            }
+            if(reports.length === 0) { listTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999;">まだ生徒からの報告はありません。</td></tr>`; return; }
 
-            // 新しい報告を上に表示するため、配列をリバース
             listTbody.innerHTML = [...reports].reverse().map(r => `
                 <tr>
                     <td style="font-size:11px; color:#666;">${r.date}</td>
                     <td><b>${r.mat}</b><br><span style="font-size:11px; color:#555;">P.${r.p} / 大問${r.q1} / 小問${r.q2}</span></td>
                     <td style="color:#d32f2f; font-weight:bold; font-size:12px;">${r.reason}</td>
-                    <td>${r.solved.includes('はい') ? '<span style="color:#2e7d32; font-weight:bold;">✅ 解決済</span>' : '<span style="color:#e65100; font-weight:bold;">❌ 未解決</span>'}</td>
+                    <td>${r.solved && r.solved.includes('はい') ? '<span style="color:#2e7d32; font-weight:bold;">✅ 解決済</span>' : '<span style="color:#e65100; font-weight:bold;">❌ 未解決</span>'}</td>
+                    <td style="font-size:11px; color:#555;">${r.time ? `⏱️${r.time}分<br>` : ''}${r.memo ? `📝${r.memo}` : ''}</td>
                     <td><button class="btn-danger" onclick="deleteMistakeReport(${r.id})">削除</button></td>
                 </tr>
             `).join('');
@@ -577,16 +626,13 @@
 
         function deleteMistakeReport(id) {
             if(!confirm("この報告ログを削除しますか？")) return;
-            let reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + managedStudentId)) || [];
-            reports = reports.filter(r => r.id !== id);
-            localStorage.setItem('criety_mistake_reports_' + managedStudentId, JSON.stringify(reports));
-            renderMistakeReports();
+            let reports = getFB_JSON('mistake_reports', []); reports = reports.filter(r => r.id !== id);
+            setFB('mistake_reports', JSON.stringify(reports));
         }
 
         function clearAllMistakeReports() {
             if(!confirm("⚠️ すべての報告ログを削除して初期化しますか？")) return;
-            localStorage.removeItem('criety_mistake_reports_' + managedStudentId);
-            renderMistakeReports();
+            removeFB('mistake_reports');
         }
 
         // ==========================================
@@ -596,24 +642,24 @@
             const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0];
             if(!title || !file) return; const r = new FileReader();
             r.onload = function(e) {
-                let mats = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+                let mats = getFB_JSON('materials', []);
                 mats.push({ name: title, url: e.target.result, type: file.type === 'application/pdf' ? 'pdf' : 'img' });
-                try { localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(mats)); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; renderMaterialsList(); } catch(err) { alert("サイズが大きすぎます。"); }
+                try { setFB('materials', JSON.stringify(mats)); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; } catch(err) { alert("サイズが大きすぎます。"); }
             }; r.readAsDataURL(file);
         }
         function renderMaterialsList() {
-            const m = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)) || [];
+            const m = getFB_JSON('materials', []);
             document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:#999;">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" style="background:#2196f3; margin-bottom:5px;" onclick="openPreview('${x.url}','${x.type}')">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join('');
         }
-        function delMat(i) { let m = JSON.parse(localStorage.getItem('criety_materials_' + managedStudentId)); m.splice(i,1); localStorage.setItem('criety_materials_' + managedStudentId, JSON.stringify(m)); renderMaterialsList(); }
+        function delMat(i) { let m = getFB_JSON('materials', []); m.splice(i,1); setFB('materials', JSON.stringify(m)); }
 
         function renderHwLogList() {
-            const evs = JSON.parse(localStorage.getItem('criety_cal_events_' + managedStudentId)) || {}, done = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)) || {};
+            const evs = getFB_JSON('cal_events', {}), done = getFB_JSON('hw_done', {});
             let html = ""; Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog('${d}', '${ev.text}')">消去</button>` : '-'}</td></tr>`; } }));
             document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
         }
-        function deleteHwLog(d, t) { let done = JSON.parse(localStorage.getItem('criety_hw_done_' + managedStudentId)); delete done[`${d}_${t}`]; localStorage.setItem('criety_hw_done_' + managedStudentId, JSON.stringify(done)); renderCalendar(); renderHwLogList(); }
-        function resetAllHwLog() { if(confirm("初期化しますか？")){ localStorage.removeItem('criety_hw_done_' + managedStudentId); localStorage.setItem('criety_stamps_' + managedStudentId, '0'); renderCalendar(); renderHwLogList(); } }
+        function deleteHwLog(d, t) { let done = getFB_JSON('hw_done', {}); delete done[`${d}_${t}`]; setFB('hw_done', JSON.stringify(done)); setFB('task_status', 'pending'); let stamps = parseInt(getFB('stamps')) || 0; if(stamps > 0) setFB('stamps', stamps - 1); }
+        function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); setFB('stamps', 0); } }
 
         // ==========================================
         // 🎨 ホワイトボード（スマホ完全対応 ＆ 文字スタンプ）
@@ -673,33 +719,32 @@
         
         function sendWhiteboardSlide() { 
             if(activeText) fixText();
-            let slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            let slides = getFB_JSON('wb_slides', []);
             slides.push({ id: Date.now(), data: canvas.toDataURL() });
-            localStorage.setItem('criety_wb_slides_' + managedStudentId, JSON.stringify(slides));
-            alert(`📡 新しいスライドとして送信しました！`); renderWbSlides();
+            setFB('wb_slides', JSON.stringify(slides));
+            alert(`📡 新しいスライドとして送信しました！`); 
         }
 
         function renderWbSlides() {
-            const container = document.getElementById('slides-container'); const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + managedStudentId)) || [];
+            const container = document.getElementById('slides-container'); const slides = getFB_JSON('wb_slides', []);
             container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">なし</span>` : [...slides].reverse().map((s, i) => `
                 <div class="slide-preview-box"><div style="font-size:10px; color:#666; margin-bottom:5px;">スライド ${slides.length - i}</div><img src="${s.data}" onclick="openPreview('${s.data}','img')"><button class="btn-danger" style="width:100%;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>
             `).join('');
         }
         function renderStudentSlides() {
-            const container = document.getElementById('student-slides-container'); const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + managedStudentId)) || [];
+            const container = document.getElementById('student-slides-container'); const slides = getFB_JSON('student_wb_slides', []);
             container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">まだ届いていません</span>` : [...slides].reverse().map((s, i) => `
                 <div class="slide-preview-box" style="border-color:#bbdefb; background:#e3f2fd;"><div style="font-size:10px; color:#1565c0; font-weight:bold; margin-bottom:5px;">提出物 ${slides.length - i}</div><img src="${s.data}" onclick="openPreview('${s.data}','img')"><button class="btn-danger" style="width:100%; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>
             `).join('');
         }
         function deleteSlide(id, type) {
-            const key = (type === 'student' ? 'criety_student_wb_slides_' : 'criety_wb_slides_') + managedStudentId;
+            const key = type === 'student' ? 'student_wb_slides' : 'wb_slides';
             if(!confirm("削除しますか？")) return;
-            let s = JSON.parse(localStorage.getItem(key)) || []; s = s.filter(x => x.id !== id); localStorage.setItem(key, JSON.stringify(s));
-            type === 'student' ? renderStudentSlides() : renderWbSlides();
+            let s = getFB_JSON(key, []); s = s.filter(x => x.id !== id); setFB(key, JSON.stringify(s));
         }
 
         // ==========================================
-        // プレビューと定期監視
+        // プレビュー表示
         // ==========================================
         function openPreview(url, type) {
             const frame = document.getElementById('preview-frame');
@@ -708,15 +753,6 @@
         }
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; document.getElementById('preview-frame').src = ""; }
         function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
-
-        setInterval(() => {
-            if(!managedStudentId) return;
-            const s = localStorage.getItem('criety_task_status_' + managedStudentId);
-            if(s === 'completed') { document.getElementById('student-notification').style.display = 'flex'; localStorage.setItem('criety_task_status_' + managedStudentId, 'notified'); renderCalendar(); renderHwLogList(); }
-            document.getElementById('stamp-display-count').innerText = localStorage.getItem('criety_stamps_' + managedStudentId) || 0;
-            renderStudentSlides();
-            renderMistakeReports(); // レポートの定期受信
-        }, 1500);
     </script>
 </body>
 </html>

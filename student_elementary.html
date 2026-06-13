@@ -11,19 +11,44 @@
     <style>
         :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; padding-bottom: 30px;}
+        body { font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; flex-direction: column; min-height: 100vh;}
         
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffb74d; z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px;}
         .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220,140,0,0.3); }
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
         .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #fffcf2; position: relative; padding: 15px; overflow-x: hidden; }
-        .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
-        .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
+        /* 💻 PC・タブレット向けのグリッドレイアウト */
+        .app-container { 
+            width: 100%; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        .mid-countdown { 
+            grid-column: 1 / -1; /* 目標は常に全幅 */
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); 
+            color: #fff; padding: 20px; border-radius: 20px; text-align: center; 
+            box-shadow: 0 6px 15px rgba(255,154,158,0.4); 
+        }
+        
+        .mid-card { 
+            background: #fff; border-radius: 15px; padding: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; 
+        }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
-        /* ⏱️ タイマー機能（高精度版） */
+        /* 📱 スマホ時のレイアウト（縦並び） */
+        @media (max-width: 768px) {
+            .app-container { display: flex; flex-direction: column; gap: 15px; padding: 15px; padding-bottom: 40px; }
+        }
+
+        /* ⏱️ タイマー機能 */
         .timer-display { 
             font-size: 38px; font-weight: bold; color: #ff9800; text-align: center; 
             margin: 15px 0; background: #fff3e0; padding: 10px; border-radius: 20px; 
@@ -43,7 +68,7 @@
         .form-col-2 { display: flex; gap: 10px; }
         .form-col-2 > div { flex: 1; }
 
-        /* ミニカレンダー（横ぶち抜き対策版） */
+        /* ミニカレンダー */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; font-size: 10px; text-align: center; width: 100%; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
         .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa; overflow: hidden; }
@@ -64,7 +89,7 @@
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         /* リスト系 */
-        .hw-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        .hw-list { max-height: 350px; overflow-y: auto; padding-right: 5px; }
         .hw-item { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
         .hw-item.done-bg { background: #e8f5e9; border-color: #c8e6c9; }
         .btn-complete { padding: 10px; background: var(--success); color: #fff; border: none; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; box-shadow: 0 4px 0 #43a047; font-size: 14px;}
@@ -86,7 +111,8 @@
         .text-btn { padding: 6px 10px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
 
         #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
-        .settings-btn { text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; padding: 10px;}
+        
+        .settings-btn { grid-column: 1 / -1; text-align: center; margin-top: 20px; color: #aaa; font-size: 12px; cursor: pointer; padding: 10px;}
     </style>
 </head>
 <body>
@@ -94,8 +120,8 @@
     <div id="auth-overlay">
         <div class="auth-box">
             <h2 style="color:var(--main)">Criety ログイン</h2>
-            <input type="text" id="student-email" placeholder="ユーザーID (kage)">
-            <input type="password" id="student-password" placeholder="パスワード (123)">
+            <input type="text" id="student-email" placeholder="ユーザーID">
+            <input type="password" id="student-password" placeholder="パスワード">
             <button class="btn-auth" onclick="studentLogin()">はじめる！</button>
         </div>
     </div>
@@ -235,7 +261,7 @@
         <div class="mid-card">
             <h3>📤 自分が送ったノート（履歴）</h3>
             <p style="font-size:10px; color:#999; margin-bottom: 10px;">先生に送ったスライドの確認・取り消し（削除）ができます。</p>
-            <div id="my-sent-slides-container" style="display:flex; flex-direction: column; max-height: 300px; overflow-y: auto;">
+            <div id="my-sent-slides-container" style="display:flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
                 <p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>
             </div>
         </div>
@@ -243,7 +269,7 @@
         <div class="mid-card" id="shared-board-card" style="display: none;">
             <h3>👨‍🏫 せんせいの指導ノート（スライド）</h3>
             <p style="font-size:10px; color:#999; margin-bottom: 10px;">新しいスライドが上に追加されていくよ！タップで大きく見れます。</p>
-            <div id="teacher-slides-container" style="display:flex; flex-direction: column; max-height: 400px; overflow-y: auto;"></div>
+            <div id="teacher-slides-container" style="display:flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;"></div>
         </div>
 
         <div class="mid-card">
@@ -291,7 +317,7 @@
         const STAMP_MAX = 10;
         let selectedDateStr = "";
 
-        // ★ タイマー用変数（高精度）
+        // ★ タイマー用変数
         let timerInterval = null;
         let timerRunning = false;
         let timerStartTime = 0;
@@ -323,16 +349,17 @@
             }
         });
 
+        // ★ 修正：任意のIDでログインできるように変更
         function studentLogin() {
             const id = document.getElementById('student-email').value.trim().toLowerCase();
             const pass = document.getElementById('student-password').value.trim();
-            if(id === 'kage' && pass === '123') {
+            if(id && pass) {
                 myStudentId = id;
                 localStorage.setItem('student_elementary_logged_in', 'true');
                 localStorage.setItem('my_student_id', id);
                 document.getElementById('auth-overlay').style.display = 'none';
                 startApp();
-            } else { alert("IDかパスワードがちがうみたい！"); }
+            } else { alert("ユーザーIDとパスワードを正しく入力してね！"); }
         }
 
         function studentLogout() { 
@@ -356,7 +383,7 @@
         }
 
         // ==========================================
-        // ⏱️ タイマー機能（ミリ秒・高精度版）
+        // ⏱️ アラーム機能つきタイマー
         // ==========================================
         function initAudio() {
             if(!audioCtx) {
@@ -384,24 +411,17 @@
 
         function updateTimerDisplay(elapsedMs) {
             let displayMs = elapsedMs;
-            
-            // カウントダウンモードの場合
             if(timerTargetSeconds > 0) {
                 displayMs = (timerTargetSeconds * 1000) - elapsedMs;
                 if(displayMs <= 0) {
-                    displayMs = 0;
-                    stopTimer();
-                    playAlarm();
+                    displayMs = 0; stopTimer(); playAlarm();
                     setTimeout(() => alert("⏰ じかんになりました！よくがんばったね！"), 100);
                 }
             }
-
-            // 00:00.00 形式への変換
             let totalSec = Math.floor(displayMs / 1000);
             let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0');
             let m = String(Math.floor(totalSec / 60)).padStart(2, '0');
             let s = String(totalSec % 60).padStart(2, '0');
-
             document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`;
         }
 
@@ -414,12 +434,10 @@
         function startTimer() { 
             initAudio(); 
             if(timerRunning) return; 
-            
-            timerRunning = true;
-            timerStartTime = Date.now();
+            if(totalSeconds === 0 && timerTargetSeconds === 0) { /* ストップウォッチモード */ }
+            timerRunning = true; timerStartTime = Date.now();
             document.getElementById('timer-setup').style.display = 'none';
 
-            // 10ミリ秒（100分の1秒）ごとに画面を更新
             timerInterval = setInterval(() => { 
                 let elapsed = Date.now() - timerStartTime + timerSavedTime;
                 updateTimerDisplay(elapsed); 
@@ -428,18 +446,14 @@
 
         function stopTimer() { 
             if(!timerRunning) return;
-            timerRunning = false;
-            timerSavedTime += Date.now() - timerStartTime;
+            timerRunning = false; timerSavedTime += Date.now() - timerStartTime;
             clearInterval(timerInterval); 
             document.getElementById('timer-setup').style.display = 'flex';
         }
 
         function resetTimer() { 
             if(confirm("タイマーを 0 にもどす？")) { 
-                stopTimer(); 
-                timerSavedTime = 0;
-                timerTargetSeconds = 0;
-                updateTimerDisplay(0); 
+                stopTimer(); timerSavedTime = 0; timerTargetSeconds = 0; updateTimerDisplay(0); 
             } 
         }
 
@@ -492,7 +506,7 @@
         }
 
         // ==========================================
-        // 📅 カレンダー機能（横ぶち抜き対策 ＆ 詳細表示パネル）
+        // 📅 カレンダー機能
         // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
@@ -519,15 +533,12 @@
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
 
-                        // カレンダー内のマスでは省略記号で表示し、削除ボタンは出さない（横ぶち抜き防止）
                         badgeHtml += `<div class="cal-badge" style="background:${color}"><span>${text}</span></div>`;
                     });
                 }
                 
                 grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b style="display:block;margin-bottom:2px;">${i}</b>${badgeHtml}</div>`;
             }
-            
-            // カレンダー再描画時に、選択中の日付の詳細リストも再描画する
             if(selectedDateStr) renderSelectedDateEvents();
         }
 
@@ -538,17 +549,13 @@
             renderCalendar(); 
         }
 
-        // ★ タップした日付の詳細リストを描画（ここに消すボタンを設置）
         function renderSelectedDateEvents() {
             const listDiv = document.getElementById('selected-date-events-list');
             const events = loadFB('cal_events', {});
             const evs = events[selectedDateStr] || [];
             const doneDict = loadFB('hw_done', {});
 
-            if(evs.length === 0) {
-                listDiv.innerHTML = `<div style="font-size:11px; color:#999; text-align:center; padding:5px;">この日のよていは ありません。</div>`;
-                return;
-            }
+            if(evs.length === 0) { listDiv.innerHTML = `<div style="font-size:11px; color:#999; text-align:center; padding:5px;">この日のよていは ありません。</div>`; return; }
 
             let html = "";
             evs.forEach((ev, idx) => {
@@ -560,7 +567,6 @@
                 } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫 指導日`; }
                 else if (ev.type === 'test') { color = '#f44336'; text = `📝 ${ev.text}`; }
 
-                // 生徒が自分で入れた予定のみ削除可能
                 if(ev.type === 'student') {
                     delBtn = `<button onclick="deleteEvent('${selectedDateStr}', ${idx})" style="background:#ff5252; color:white; border:none; border-radius:4px; padding:6px 12px; font-size:10px; font-weight:bold; cursor:pointer;">✖ 消す</button>`;
                 }

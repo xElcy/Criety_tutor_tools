@@ -23,14 +23,15 @@
         .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
-        /* ⏱️ タイマー機能 */
+        /* ⏱️ タイマー機能（高精度版） */
         .timer-display { 
-            font-size: 40px; font-weight: bold; color: #ff9800; text-align: center; 
+            font-size: 38px; font-weight: bold; color: #ff9800; text-align: center; 
             margin: 15px 0; background: #fff3e0; padding: 10px; border-radius: 20px; 
-            border: 3px dashed #ffb74d; letter-spacing: 2px;
+            border: 3px dashed #ffb74d; letter-spacing: 2px; font-variant-numeric: tabular-nums;
         }
         .timer-btn-group { display: flex; gap: 10px; }
         .timer-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; }
+        .time-add-btn { flex: 1; padding: 8px 0; border: none; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; background:#ffe0b2; color:#e65100; }
         
         /* 📝 報告フォーム */
         .form-row { margin-bottom: 12px; }
@@ -42,17 +43,15 @@
         .form-col-2 { display: flex; gap: 10px; }
         .form-col-2 > div { flex: 1; }
 
-        /* ミニカレンダー */
+        /* ミニカレンダー（横ぶち抜き対策版） */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; font-size: 10px; text-align: center; width: 100%; }
         .cal-day-head { font-weight: bold; padding-bottom: 5px; color: #999; }
         .cal-day { border: 1px solid #f0f0f0; border-radius: 5px; min-height: 50px; padding: 2px; position: relative; cursor: pointer; background: #fafafa; overflow: hidden; }
         .cal-day.today { background: #fff9c4; }
         .cal-day.selected { border: 2px solid #ff9800; background: #fff3e0; }
-        .cal-badge { font-size: 9px; border-radius: 3px; color: white; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding: 2px; overflow: hidden; width: 100%; box-sizing: border-box; }
-        .cal-badge span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; text-align: left; }
-        .badge-del { color: #fff; background: rgba(0,0,0,0.2); border-radius: 50%; width: 12px; height: 12px; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; margin-left: 2px; }
+        .cal-badge { font-size: 9px; border-radius: 3px; color: white; display: block; margin-top: 2px; padding: 2px; overflow: hidden; width: 100%; box-sizing: border-box; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; text-align: left; }
 
-        .event-add-panel { background: #fff9e6; border: 1px solid #ffe0b2; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; }
+        .event-add-panel { background: #fff9e6; border: 1px solid #ffe0b2; border-radius: 10px; padding: 12px; margin-top: 10px; display: none; }
         .event-btn-group { display: flex; gap: 5px; margin-top: 10px; }
         .event-btn { flex: 1; padding: 8px 0; border: none; border-radius: 50px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
         .event-btn:active { transform: translateY(2px); box-shadow: none; }
@@ -117,12 +116,13 @@
             <h3 style="color: #e65100; border-bottom-color: #ffe0b2;">⏱️ べんきょうタイマー</h3>
             <p style="font-size:10px; color:#666; margin-bottom: 5px;">時間をえらんでスタートするとアラームが鳴るよ！<br>えらばずにスタートするとストップウォッチになるよ。</p>
             
-            <div class="timer-display" id="timer-display">00:00</div>
+            <div class="timer-display" id="timer-display">00:00.00</div>
             
             <div style="display:flex; gap:5px; margin-bottom:15px;" id="timer-setup">
-                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(10)">+10分</button>
-                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(5)">+5分</button>
-                <button class="timer-btn" style="background:#ffe0b2; color:#e65100;" onclick="addTime(1)">+1分</button>
+                <button class="time-add-btn" onclick="addTime(600)">+10分</button>
+                <button class="time-add-btn" onclick="addTime(300)">+5分</button>
+                <button class="time-add-btn" onclick="addTime(60)">+1分</button>
+                <button class="time-add-btn" onclick="addTime(10)">+10秒</button>
             </div>
 
             <div class="timer-btn-group">
@@ -189,8 +189,11 @@
             <div class="mini-calendar" id="mini-calendar"></div>
             
             <div class="event-add-panel" id="event-add-panel">
-                <div style="font-size:12px; font-weight:bold; color:#e65100; margin-bottom:5px;">選択中: <span id="selected-date-display"></span></div>
-                <div style="font-size:10px; color:#666;">この日に じぶんの予定をいれよう！</div>
+                <div style="font-size:14px; font-weight:bold; color:#e65100; margin-bottom:10px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 5px;">📅 <span id="selected-date-display"></span> のよてい</div>
+                
+                <div id="selected-date-events-list" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px;"></div>
+
+                <div style="font-size:10px; color:#666;">あたらしい予定をいれよう！</div>
                 <div class="event-btn-group">
                     <button class="event-btn" style="background:#42a5f5;" onclick="addStudentEvent('🔵 勉強', '#42a5f5')">勉強</button>
                     <button class="event-btn" style="background:#66bb6a;" onclick="addStudentEvent('🟢 あそび', '#66bb6a')">あそび</button>
@@ -288,11 +291,13 @@
         const STAMP_MAX = 10;
         let selectedDateStr = "";
 
-        // ★ 音声・タイマー用変数
-        let audioCtx = null;
+        // ★ タイマー用変数（高精度）
         let timerInterval = null;
-        let totalSeconds = 0;
-        let isCountdown = false;
+        let timerRunning = false;
+        let timerStartTime = 0;
+        let timerSavedTime = 0;
+        let timerTargetSeconds = 0; 
+        let audioCtx = null;
 
         function saveFB(key, data) { 
             studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data));
@@ -338,6 +343,7 @@
 
         function startApp() {
             renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
+
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
@@ -350,7 +356,7 @@
         }
 
         // ==========================================
-        // ⏱️ アラーム機能つきタイマー
+        // ⏱️ タイマー機能（ミリ秒・高精度版）
         // ==========================================
         function initAudio() {
             if(!audioCtx) {
@@ -366,74 +372,74 @@
                 function beep(freq, time, startOffset) {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
+                    osc.type = 'sine'; osc.frequency.value = freq;
                     gain.gain.setValueAtTime(0.3, audioCtx.currentTime + startOffset);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
                     osc.start(audioCtx.currentTime + startOffset);
                     osc.stop(audioCtx.currentTime + startOffset + time);
                 }
-                // ピピピピッ
                 beep(880, 0.1, 0); beep(880, 0.1, 0.2); beep(880, 0.1, 0.4); beep(880, 0.4, 0.6);
-            } catch(e) { console.error("Audio Play Error:", e); }
+            } catch(e) { console.error("Audio Error:", e); }
         }
 
-        function updateTimerDisplay() {
-            const h = Math.floor(totalSeconds / 3600);
-            const m = Math.floor((totalSeconds % 3600) / 60);
-            const s = totalSeconds % 60;
-            if(h > 0) {
-                document.getElementById('timer-display').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            } else {
-                document.getElementById('timer-display').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        function updateTimerDisplay(elapsedMs) {
+            let displayMs = elapsedMs;
+            
+            // カウントダウンモードの場合
+            if(timerTargetSeconds > 0) {
+                displayMs = (timerTargetSeconds * 1000) - elapsedMs;
+                if(displayMs <= 0) {
+                    displayMs = 0;
+                    stopTimer();
+                    playAlarm();
+                    setTimeout(() => alert("⏰ じかんになりました！よくがんばったね！"), 100);
+                }
             }
+
+            // 00:00.00 形式への変換
+            let totalSec = Math.floor(displayMs / 1000);
+            let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0');
+            let m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+            let s = String(totalSec % 60).padStart(2, '0');
+
+            document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`;
         }
 
-        function addTime(min) {
-            if(timerInterval) return; // 動いている時は追加不可
-            totalSeconds += min * 60;
-            isCountdown = true;
-            updateTimerDisplay();
+        function addTime(sec) {
+            if(timerRunning) return;
+            timerTargetSeconds += sec;
+            updateTimerDisplay(0);
         }
 
         function startTimer() { 
-            initAudio(); // スマホの音声再生のブロックを解除
-            if(timerInterval) return; 
+            initAudio(); 
+            if(timerRunning) return; 
             
-            // 時間セットなしでスタートしたらストップウォッチにする
-            if(totalSeconds === 0) isCountdown = false;
-
+            timerRunning = true;
+            timerStartTime = Date.now();
             document.getElementById('timer-setup').style.display = 'none';
 
+            // 10ミリ秒（100分の1秒）ごとに画面を更新
             timerInterval = setInterval(() => { 
-                if(isCountdown) {
-                    totalSeconds--; 
-                    if(totalSeconds <= 0) {
-                        totalSeconds = 0;
-                        stopTimer();
-                        playAlarm();
-                        setTimeout(() => alert("⏰ じかんになりました！よくがんばったね！"), 500); // 音が鳴るのを待つ
-                    }
-                } else {
-                    totalSeconds++; 
-                }
-                updateTimerDisplay(); 
-            }, 1000); 
+                let elapsed = Date.now() - timerStartTime + timerSavedTime;
+                updateTimerDisplay(elapsed); 
+            }, 10); 
         }
 
         function stopTimer() { 
+            if(!timerRunning) return;
+            timerRunning = false;
+            timerSavedTime += Date.now() - timerStartTime;
             clearInterval(timerInterval); 
-            timerInterval = null; 
             document.getElementById('timer-setup').style.display = 'flex';
         }
 
         function resetTimer() { 
             if(confirm("タイマーを 0 にもどす？")) { 
                 stopTimer(); 
-                totalSeconds = 0; 
-                isCountdown = false;
-                updateTimerDisplay(); 
+                timerSavedTime = 0;
+                timerTargetSeconds = 0;
+                updateTimerDisplay(0); 
             } 
         }
 
@@ -486,7 +492,7 @@
         }
 
         // ==========================================
-        // 📅 カレンダー機能
+        // 📅 カレンダー機能（横ぶち抜き対策 ＆ 詳細表示パネル）
         // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
@@ -505,7 +511,7 @@
 
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
-                        let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
+                        let color = ev.color || '#9e9e9e'; let text = ev.text;
                         
                         if(ev.type === 'hw') {
                             if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
@@ -513,16 +519,16 @@
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
 
-                        if(ev.type === 'student') {
-                            delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
-                        }
-
-                        badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
+                        // カレンダー内のマスでは省略記号で表示し、削除ボタンは出さない（横ぶち抜き防止）
+                        badgeHtml += `<div class="cal-badge" style="background:${color}"><span>${text}</span></div>`;
                     });
                 }
                 
-                grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b>${i}</b>${badgeHtml}</div>`;
+                grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b style="display:block;margin-bottom:2px;">${i}</b>${badgeHtml}</div>`;
             }
+            
+            // カレンダー再描画時に、選択中の日付の詳細リストも再描画する
+            if(selectedDateStr) renderSelectedDateEvents();
         }
 
         function selectDate(dStr) {
@@ -530,6 +536,42 @@
             document.getElementById('event-add-panel').style.display = 'block';
             document.getElementById('selected-date-display').innerText = dStr;
             renderCalendar(); 
+        }
+
+        // ★ タップした日付の詳細リストを描画（ここに消すボタンを設置）
+        function renderSelectedDateEvents() {
+            const listDiv = document.getElementById('selected-date-events-list');
+            const events = loadFB('cal_events', {});
+            const evs = events[selectedDateStr] || [];
+            const doneDict = loadFB('hw_done', {});
+
+            if(evs.length === 0) {
+                listDiv.innerHTML = `<div style="font-size:11px; color:#999; text-align:center; padding:5px;">この日のよていは ありません。</div>`;
+                return;
+            }
+
+            let html = "";
+            evs.forEach((ev, idx) => {
+                let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
+                
+                if(ev.type === 'hw') {
+                    if(doneDict[`${selectedDateStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済: ${ev.text}`; }
+                    else { color = '#ff9800'; text = `宿: ${ev.text}`; }
+                } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫 指導日`; }
+                else if (ev.type === 'test') { color = '#f44336'; text = `📝 ${ev.text}`; }
+
+                // 生徒が自分で入れた予定のみ削除可能
+                if(ev.type === 'student') {
+                    delBtn = `<button onclick="deleteEvent('${selectedDateStr}', ${idx})" style="background:#ff5252; color:white; border:none; border-radius:4px; padding:6px 12px; font-size:10px; font-weight:bold; cursor:pointer;">✖ 消す</button>`;
+                }
+
+                html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-left:4px solid ${color}; padding:8px 10px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size:13px; font-weight:bold; color:#333;">${text}</span>
+                    ${delBtn}
+                </div>`;
+            });
+            listDiv.innerHTML = html;
         }
 
         function addStudentEvent(prefix, colorCode) {
@@ -542,6 +584,7 @@
         }
 
         function deleteEvent(dateStr, idx) {
+            if(!confirm("この予定を消してもいい？")) return;
             let evs = loadFB('cal_events', {});
             evs[dateStr].splice(idx, 1);
             if(evs[dateStr].length === 0) delete evs[dateStr];

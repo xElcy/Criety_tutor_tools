@@ -50,6 +50,7 @@
         @media(min-width: 769px) { .calendar-container { flex-direction: row; } }
         
         .calendar-box { width: 100%; }
+        /* 画面のはみ出し・横揺れを防止する枠 */
         .scrollable-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; border: 1px solid #eee; border-radius: 4px; background: #fff;}
         
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -84,6 +85,7 @@
 
         .notification-banner { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; font-weight: bold; font-size: 14px;}
         
+        /* テーブルの横揺れ防止 */
         .list-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; min-width: 500px;}
         .list-table th, .list-table td { border: 1px solid #eee; padding: 8px; text-align: left; vertical-align: middle; }
         .list-table th { background: #f8f9fa; font-weight: bold; white-space: nowrap; }
@@ -159,12 +161,20 @@
                 
                 <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5;">
                     <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
+                    
+                    <div id="current-target-display" style="margin-bottom: 15px; padding: 12px; background: #fff; border: 1px dashed #ffb74d; border-radius: 8px; font-size: 14px; display: none;">
+                        <span style="color: #666; font-size: 12px;">現在生徒のアプリに表示中の目標：</span><br>
+                        <b id="current-target-text" style="color: #e65100; font-size: 18px;"></b> 
+                        <span style="font-weight: bold; margin-left: 5px;">（あと <b id="current-target-days-text" style="font-size: 18px;"></b> 日）</span>
+                        <button onclick="clearTarget()" style="margin-top: 8px; display: block; padding: 6px 12px; font-size: 11px; background: #ffe0b2; color: #e65100; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ 生徒の画面から消す（目標解除）</button>
+                    </div>
+
                     <div class="target-group">
-                        <input type="text" id="target-title" placeholder="目標名 (例: 中学受験本番)" style="flex: 2;">
+                        <input type="text" id="target-title" placeholder="新しい目標名を入力" style="flex: 2;">
                         <div>
                             <input type="number" id="target-days" placeholder="日数" style="width: 80px;"> <span style="font-weight: bold; font-size:12px;">日</span>
                         </div>
-                        <button class="btn-submit" style="margin-top: 0; width: auto; padding: 10px 20px; background: #ff9800;" onclick="sendTarget()">送信</button>
+                        <button class="btn-submit" style="margin-top: 0; width: auto; padding: 10px 20px; background: #ff9800;" onclick="sendTarget()">生徒へ送信・更新</button>
                     </div>
                 </div>
 
@@ -385,7 +395,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
             authDomain: "criety-app-f76d4.firebaseapp.com",
-            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app", // ★重要：スクショから追加！
+            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "criety-app-f76d4",
             storageBucket: "criety-app-f76d4.firebasestorage.app",
             messagingSenderId: "826655717900",
@@ -470,21 +480,16 @@
             document.getElementById('connection-status').innerText = id;
             document.getElementById('setting-email').value = tempEmail;
 
-            // ★ まず強制的に画面を描画する（データが空でもカレンダーの枠組みを作る）
+            // ★ エラーで止まらないよう、通信前に必ず初回描画を行う
             loadStudentData();
 
-            // ★ Firebaseからデータを受信
+            // ★ リアルタイム通信の開始
             if(!db) return;
             db.ref('students/' + managedStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 
-                // 受信したデータで画面を再描画
+                // 画面再描画
                 loadStudentData();
-
-                // 入力中でない時だけUIを更新
-                if(document.activeElement.id !== 'target-title') document.getElementById('target-title').value = loadFB('target_title', "");
-                if(document.activeElement.id !== 'target-days') document.getElementById('target-days').value = loadFB('target_days', "");
-                if(document.activeElement.id !== 'hourly-wage') document.getElementById('hourly-wage').value = loadFB('salary_wage', "1500");
 
                 // 通知のチェック
                 const s = studentDataCache['task_status'];
@@ -492,7 +497,6 @@
                     document.getElementById('student-notification').style.display = 'flex'; 
                     saveFB_Raw('task_status', 'notified');
                 }
-                document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
             }, (error) => {
                 console.error("Firebase Read Error:", error);
             });
@@ -509,6 +513,52 @@
         function loadStudentData() {
             renderCalendar(); renderMaterialsList(); renderHwLogList();
             renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports();
+            
+            // ★ 新機能：現在の目標状態のUI更新
+            updateTargetDisplay();
+
+            // 設定用項目の復元
+            if(document.activeElement.id !== 'hourly-wage') document.getElementById('hourly-wage').value = loadFB('salary_wage', "1500");
+            document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
+        }
+
+        // ==========================================
+        // 🌸 目標送信機能（現在の状況表示対応）
+        // ==========================================
+        function updateTargetDisplay() {
+            const title = loadFB('target_title', "");
+            const days = loadFB('target_days', "");
+            const displayArea = document.getElementById('current-target-display');
+            
+            if (title && days) {
+                displayArea.style.display = 'block';
+                document.getElementById('current-target-text').innerText = title;
+                document.getElementById('current-target-days-text').innerText = days;
+            } else {
+                displayArea.style.display = 'none';
+            }
+        }
+
+        function sendTarget() {
+            const title = document.getElementById('target-title').value.trim();
+            const days = document.getElementById('target-days').value.trim();
+            if(title && days) { 
+                saveFB_Raw('target_title', title); 
+                saveFB_Raw('target_days', days); 
+                alert(`✅ 生徒へ目標を送信・更新しました！`); 
+                document.getElementById('target-title').value = "";
+                document.getElementById('target-days').value = "";
+                updateTargetDisplay();
+            } else {
+                alert("新しい目標名と日数を入力してください。");
+            }
+        }
+
+        function clearTarget() {
+            if(!confirm("現在の目標を解除して、生徒の画面から消去しますか？")) return;
+            removeFB('target_title');
+            removeFB('target_days');
+            updateTargetDisplay();
         }
 
         // ==========================================
@@ -522,7 +572,6 @@
             const grid = document.getElementById('calendar-grid');
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join('');
             for(let i = 0; i < firstDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`;
-            
             const events = loadFB('cal_events', {});
             const doneDict = loadFB('hw_done', {});
             
@@ -549,37 +598,19 @@
         function addQuickEvent(type) { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             let text = type === 'lesson' ? "指導日" : prompt(type === 'test' ? "テスト名を入力:" : "予定を入力:");
-            if(text) { 
-                let evs = loadFB('cal_events', {}); 
-                if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
-                evs[selectedDateStr].push({type:type, text:text}); 
-                saveFB('cal_events', evs); 
-                renderCalendar(); 
-            }
+            if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:type, text:text}); saveFB('cal_events', evs); renderCalendar(); }
         }
         function addHomework() { 
             if(!selectedDateStr) return alert("カレンダーで日付を選択してください！"); 
             const v = document.getElementById('hw-content').value.trim(); if(!v) return alert("内容を入力してください！");
-            let evs = loadFB('cal_events', {}); 
-            if(!evs[selectedDateStr]) evs[selectedDateStr] = []; 
-            evs[selectedDateStr].push({type:'hw', text:v}); 
+            let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); 
             saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); 
             alert(`✅ 宿題を追加しました！`); document.getElementById('hw-content').value = ""; renderCalendar();
         }
         window.deleteEvent = function(dateStr, idx) { 
             let evs = loadFB('cal_events', {}); 
-            if(evs && evs[dateStr]) { 
-                evs[dateStr].splice(idx, 1); 
-                if(evs[dateStr].length === 0) delete evs[dateStr]; 
-                saveFB('cal_events', evs); 
-                renderCalendar(); 
-            }
+            if(evs && evs[dateStr]) { evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); renderCalendar(); }
         };
-
-        function sendTarget() {
-            const title = document.getElementById('target-title').value.trim(), days = document.getElementById('target-days').value.trim();
-            if(title && days) { saveFB_Raw('target_title', title); saveFB_Raw('target_days', days); alert(`✅ 送信しました！`); }
-        }
 
         // ==========================================
         // 💰 給与・指導録（ログ）管理機能
@@ -733,12 +764,11 @@
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
         
-        // ★ 修正：ボタンの切り替え処理を正常化（id="drawing-tools" の中だけを探す）
         function setTool(t) { 
             if(activeText && t !== 'text') fixText(); 
             currentTool = t; 
-            document.querySelectorAll('#drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); 
-            document.getElementById('btn-' + t).classList.add('active'); 
+            document.querySelectorAll('#drawing-tools .tool-btn').forEach(b=>b.classList.remove('active')); 
+            document.getElementById('btn-'+t).classList.add('active'); 
         }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }

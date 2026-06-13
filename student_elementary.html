@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Criety - 生徒アプリ</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <style>
         :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,7 +23,7 @@
         .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
-        /* ⏱️ タイマー機能（かわいく！） */
+        /* ⏱️ タイマー機能 */
         .timer-display { 
             font-size: 40px; font-weight: bold; color: #ff9800; text-align: center; 
             margin: 15px 0; background: #fff3e0; padding: 10px; border-radius: 20px; 
@@ -248,11 +252,35 @@
     </div>
 
     <script>
+        // ----------------------------------------------------
+        // 1. Firebaseの合鍵（firebaseConfig）をセット
+        // ----------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
+            authDomain: "criety-app-f76d4.firebaseapp.com",
+            projectId: "criety-app-f76d4",
+            storageBucket: "criety-app-f76d4.firebasestorage.app",
+            messagingSenderId: "826655717900",
+            appId: "1:826655717900:web:d724b66a1deec6505e4c29"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let myStudentId = "";
+        let studentDataCache = {};
         const STAMP_MAX = 10;
         let selectedDateStr = "";
         let timerInterval = null;
         let totalSeconds = 0;
+
+        // 安全にFirebaseへデータを保存・読み込みする関数
+        function saveFB(key, data) { db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)); }
+        function loadFB(key, defaultVal) { 
+            const data = studentDataCache[key]; 
+            if(!data) return defaultVal; 
+            try { return typeof data === 'string' ? JSON.parse(data) : data; } catch(e) { return defaultVal; } 
+        }
+        function saveFB_Raw(key, val) { db.ref('students/' + myStudentId + '/' + key).set(val); }
 
         document.addEventListener("DOMContentLoaded", () => {
             const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
@@ -260,17 +288,9 @@
             if(isLoggedIn === 'true' && savedId) {
                 myStudentId = savedId;
                 document.getElementById('auth-overlay').style.display = 'none';
-                initApp();
+                startApp();
             }
         });
-
-        function initApp() {
-            renderStamps();
-            renderCalendar();
-            renderHomeworkList();
-            renderMySentSlides();
-            syncData();
-        }
 
         function studentLogin() {
             const id = document.getElementById('student-email').value.trim().toLowerCase();
@@ -280,7 +300,7 @@
                 localStorage.setItem('student_elementary_logged_in', 'true');
                 localStorage.setItem('my_student_id', id);
                 document.getElementById('auth-overlay').style.display = 'none';
-                initApp();
+                startApp();
             } else { alert("IDかパスワードがちがうみたい！"); }
         }
 
@@ -288,6 +308,19 @@
             localStorage.setItem('student_elementary_logged_in', 'false');
             alert("ログアウトしたよ！データはちゃんと保存されています。");
             location.reload(); 
+        }
+
+        function startApp() {
+            // ★ Firebaseからリアルタイムでデータを受信
+            db.ref('students/' + myStudentId).on('value', (snapshot) => {
+                studentDataCache = snapshot.val() || {};
+                
+                renderStamps();
+                renderCalendar();
+                renderHomeworkList();
+                renderMySentSlides();
+                syncData(); // 目標、教材、先生のスライドの同期
+            });
         }
 
         // ==========================================
@@ -309,7 +342,7 @@
         function resetTimer() { if(confirm("タイマーを 0 にもどす？")) { stopTimer(); totalSeconds = 0; updateTimerDisplay(); } }
 
         // ==========================================
-        // 📝 間違え直し報告機能
+        // 📝 間違え直し報告機能 (Firebase送信)
         // ==========================================
         function submitMistakeReport() {
             const mat = document.getElementById('report-mat').value.trim();
@@ -329,9 +362,9 @@
                 time: time, memo: memo
             };
 
-            let reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + myStudentId)) || [];
+            let reports = loadFB('mistake_reports', []);
             reports.push(report);
-            localStorage.setItem('criety_mistake_reports_' + myStudentId, JSON.stringify(reports));
+            saveFB('mistake_reports', reports); // ★ Firebaseに保存
 
             document.getElementById('report-mat').value = ""; document.getElementById('report-p').value = "";
             document.getElementById('report-q1').value = ""; document.getElementById('report-q2').value = "";
@@ -340,12 +373,13 @@
             alert("📨 先生に 報告を送ったよ！よくがんばったね！");
         }
 
+
         // ==========================================
         // 💮 スタンプ機能
         // ==========================================
         function renderStamps() {
-            const count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
-            const cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
+            const count = parseInt(studentDataCache['stamps']) || 0;
+            const cards = parseInt(studentDataCache['stamp_cards']) || 1;
             document.getElementById('stamp-card-level').innerText = `${cards}枚目`;
             const grid = document.getElementById('stamp-grid'); grid.innerHTML = "";
             for(let i=1; i<=STAMP_MAX; i++) {
@@ -363,8 +397,8 @@
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
-            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            const events = loadFB('cal_events', {});
+            const doneDict = loadFB('hw_done', {});
 
             ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
             const startDay = new Date(year, month, 1).getDay();
@@ -373,53 +407,72 @@
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let badgeHtml = "";
+
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
                         let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
+                        
                         if(ev.type === 'hw') {
-                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; } else { color = '#ff9800'; text = `宿:${ev.text}`; }
+                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
+                            else { color = '#ff9800'; text = `宿:${ev.text}`; }
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
-                        if(ev.type === 'student') delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+
+                        if(ev.type === 'student') {
+                            delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
+                        }
+
                         badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
                     });
                 }
+                
                 grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b>${i}</b>${badgeHtml}</div>`;
             }
         }
 
-        function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
-        
+        function selectDate(dStr) {
+            selectedDateStr = dStr;
+            document.getElementById('event-add-panel').style.display = 'block';
+            document.getElementById('selected-date-display').innerText = dStr;
+            renderCalendar(); 
+        }
+
         function addStudentEvent(prefix, colorCode) {
-            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`); if(!text) return;
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
+            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`);
+            if(!text) return;
+            let evs = loadFB('cal_events', {});
             if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
             evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
+            saveFB('cal_events', evs); // ★ Firebaseに保存
         }
 
         function deleteEvent(dateStr, idx) {
-            let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId));
-            evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr];
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
+            let evs = loadFB('cal_events', {});
+            evs[dateStr].splice(idx, 1);
+            if(evs[dateStr].length === 0) delete evs[dateStr];
+            saveFB('cal_events', evs); // ★ Firebaseに保存
         }
 
         // ==========================================
-        // 📚 宿題リスト機能（時間入力対応）
+        // 📚 宿題リスト機能（削除ボタン搭載・Firebase連携）
         // ==========================================
         function renderHomeworkList() {
-            const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
-            const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            const events = loadFB('cal_events', {});
+            const doneDict = loadFB('hw_done', {});
+            // 隠す設定は端末依存のままにしておく（ローカルストレージ）
+            const hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {};
             const hwListDiv = document.getElementById('hw-list');
             let hwHtml = ""; let hasHw = false;
-            let inputIdCounter = 0; // ID用カウンタ
+            let inputIdCounter = 0;
 
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
-                        hasHw = true;
                         const hwKey = `${dateStr}_${ev.text}`;
-                        const isDone = doneDict[hwKey]; // オブジェクトかtrue
+                        if(hiddenDict[hwKey]) return; 
+                        
+                        hasHw = true;
+                        const isDone = doneDict[hwKey];
 
                         if(isDone) {
                             let timeStr = (typeof isDone === 'object' && isDone.time) ? `<span style="color:#2e7d32; font-size:11px;">⏱️ ${isDone.time} かかった</span>` : '';
@@ -428,7 +481,10 @@
                                 <div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
                                 <div style="font-size:14px; font-weight:bold; color:#4a4a4a; margin-bottom: 2px;">${ev.text}</div>
                                 ${timeStr}
-                                <button class="btn-complete done" style="margin-top:5px;">クリア済！🌟</button>
+                                <div style="display:flex; gap:5px; margin-top:5px;">
+                                    <button class="btn-complete done" style="flex:2; margin:0; padding:8px;">クリア済！🌟</button>
+                                    <button onclick="hideHw('${dateStr}', '${ev.text}')" style="flex:1; padding:8px; background:#e0e0e0; color:#555; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:12px;">🗑️ けす</button>
+                                </div>
                             </div>`;
                         } else {
                             const currentInputId = `hw_input_${inputIdCounter}`;
@@ -460,35 +516,42 @@
             const timeStr = `${min}分 ${sec}秒`;
 
             const hwKey = `${dateStr}_${hwText}`;
-            let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            let doneDict = loadFB('hw_done', {});
             
             if(doneDict[hwKey]) return;
 
-            // かかった時間をオブジェクトとして保存！
             doneDict[hwKey] = { done: true, time: timeStr };
-            localStorage.setItem('criety_hw_done_' + myStudentId, JSON.stringify(doneDict));
-            localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
+            saveFB('hw_done', doneDict); // ★ Firebaseへ
+            saveFB_Raw('task_status', 'completed');
 
-            let count = parseInt(localStorage.getItem('criety_stamps_' + myStudentId)) || 0;
-            let cards = parseInt(localStorage.getItem('criety_stamp_cards_' + myStudentId)) || 1;
+            let count = parseInt(studentDataCache['stamps']) || 0;
+            let cards = parseInt(studentDataCache['stamp_cards']) || 1;
             count++;
 
             if(count >= STAMP_MAX) {
-                localStorage.setItem('criety_stamps_' + myStudentId, 0); 
-                localStorage.setItem('criety_stamp_cards_' + myStudentId, cards + 1); 
+                saveFB_Raw('stamps', 0); 
+                saveFB_Raw('stamp_cards', cards + 1); 
                 alert("🎉 おめでとう！！！ 🎉\nスタンプが 10こ たまったよ！\n次のスタンプカードに レベルアップだ！");
             } else {
-                localStorage.setItem('criety_stamps_' + myStudentId, count);
+                saveFB_Raw('stamps', count);
                 alert("すごーい！スタンプを 1こ おしたよ！💮");
             }
+        }
 
-            renderStamps(); renderCalendar(); renderHomeworkList();
+        function hideHw(dateStr, hwText) {
+            if(!confirm("リストから消してもいい？（先生の画面には ちゃーんと残っているから だいじょうぶだよ！）")) return;
+            const hwKey = `${dateStr}_${hwText}`;
+            let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {};
+            hiddenDict[hwKey] = true;
+            localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict));
+            renderHomeworkList();
         }
 
         // ==========================================
         // 🎨 じぶんのノート（ホワイトボード）機能
         // ==========================================
-        const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('student-whiteboard'); 
+        const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#ff9800'; let lineWidth = 5;
         let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         
@@ -550,18 +613,17 @@
         function submitSlide() {
             if(activeText) fixText();
             try {
-                let slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
+                let slides = loadFB('student_wb_slides', []);
                 slides.push({ id: Date.now(), data: canvas.toDataURL() });
-                localStorage.setItem('criety_student_wb_slides_' + myStudentId, JSON.stringify(slides));
+                saveFB('student_wb_slides', slides); // ★ Firebaseへ
                 alert("🚀 先生に ノートを送ったよ！");
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                renderMySentSlides();
             } catch(e) { alert("エラーがおきました！もういちどためしてね。"); }
         }
 
         function renderMySentSlides() {
             const container = document.getElementById('my-sent-slides-container');
-            const slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
+            const slides = loadFB('student_wb_slides', []);
             
             if(slides.length === 0) {
                 container.innerHTML = `<p style="font-size:12px; color:#999; text-align:center;">まだ送ったノートはありません。</p>`;
@@ -579,27 +641,24 @@
 
         function deleteMySlide(id) {
             if(!confirm("先生に送ったこのノートを 取り消して消す？")) return;
-            let slides = JSON.parse(localStorage.getItem('criety_student_wb_slides_' + myStudentId)) || [];
+            let slides = loadFB('student_wb_slides', []);
             slides = slides.filter(s => s.id !== id);
-            localStorage.setItem('criety_student_wb_slides_' + myStudentId, JSON.stringify(slides));
-            renderMySentSlides();
+            saveFB('student_wb_slides', slides); // ★ Firebaseへ
         }
 
         // ==========================================
-        // 🔄 データの同期・読み込み
+        // 🔄 データの表示（受信側）
         // ==========================================
         function syncData() {
-            if(!myStudentId) return;
-
-            const targetTitle = localStorage.getItem('criety_target_title_' + myStudentId);
-            const targetDays = localStorage.getItem('criety_target_days_' + myStudentId);
+            const targetTitle = studentDataCache['target_title'];
+            const targetDays = studentDataCache['target_days'];
             if(targetTitle && targetDays) {
                 document.getElementById('countdown-area').style.display = 'block';
                 document.getElementById('countdown-title').innerText = `🌸 ${targetTitle} あと`;
                 document.getElementById('countdown-days').innerText = `${targetDays} 日`;
             } else { document.getElementById('countdown-area').style.display = 'none'; }
 
-            const files = JSON.parse(localStorage.getItem('criety_materials_' + myStudentId)) || [];
+            const files = loadFB('materials', []);
             const list = document.getElementById('material-list');
             if(files.length > 0) {
                 list.innerHTML = files.map(f => `
@@ -610,11 +669,11 @@
                 `).join('');
             } else { list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`; }
 
-            renderTeacherSlides(); renderCalendar();
+            renderTeacherSlides();
         }
 
         function renderTeacherSlides() {
-            const slides = JSON.parse(localStorage.getItem('criety_wb_slides_' + myStudentId)) || [];
+            const slides = loadFB('wb_slides', []);
             const boardCard = document.getElementById('shared-board-card');
             const container = document.getElementById('teacher-slides-container');
 
@@ -629,8 +688,6 @@
                 if (container.innerHTML !== html) container.innerHTML = html;
             } else { boardCard.style.display = 'none'; container.innerHTML = ''; }
         }
-
-        setInterval(syncData, 2000);
 
         function openFile(url, type) {
             const content = document.getElementById('file-content');

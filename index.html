@@ -36,7 +36,7 @@
         
         .panel { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; width: 100%; max-width: 100%; }
         .panel h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; border-left: 4px solid var(--sidebar-bg); padding-left: 10px; }
-        label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 13px; }
+        label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; font-size: 13px; color: #555;}
         input[type="text"], input[type="number"], input[type="password"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
         input[type="file"] { padding: 10px; border: 1px dashed #ccc; width: 100%; background: #f9f9f9; cursor: pointer; font-size: 14px;}
         .btn-submit { margin-top: 15px; background-color: var(--sidebar-bg); color: #ffffff; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; }
@@ -92,6 +92,8 @@
         #preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999999; justify-content: center; align-items: center; }
         .preview-content { background: #fff; width: 90%; height: 85%; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;}
 
+        /* カルテ用のフォームレイアウト */
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 768px) { 
             #app-layout { flex-direction: column; } 
             .sidebar { width: 100%; padding: 10px; flex-direction: row; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #111;} 
@@ -102,6 +104,7 @@
             .panel { padding: 15px; }
             .target-group { flex-direction: column; align-items: stretch; }
             .target-group input[type="text"] { width: 100%; }
+            .profile-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -141,7 +144,7 @@
             <h2>Criety</h2>
             <ul>
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
-                <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
+                <li class="nav-item" onclick="switchPage('profile', this)">📂 生徒カルテ</li> <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
                 <li class="nav-item" onclick="switchPage('notes', this)">📝 ノート</li>
                 <li class="nav-item" onclick="switchPage('salary', this)">💰 給与・ログ</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 データ</li>
@@ -200,6 +203,33 @@
                             <button class="btn-submit" style="padding:10px; margin-top:5px; background: #4caf50;" onclick="addHomework()">📚 選択した日に追加</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div id="profile" class="page">
+                <div class="header"><h1>生徒情報・指導カルテ</h1></div>
+                <div class="panel" style="border-top: 4px solid var(--accent-color);">
+                    <h3 style="color: var(--accent-color);">👤 基本情報（保護者・連絡先）</h3>
+                    <p style="font-size:12px; color:#666;">この情報は現在接続中の生徒IDにのみ紐づき、他の生徒データとは完全に分離・保護されます。</p>
+                    <div class="profile-grid">
+                        <div><label>生徒氏名</label><input type="text" id="prof-name" placeholder="例: 山田 太郎"></div>
+                        <div><label>学年</label><input type="text" id="prof-grade" placeholder="例: 小学5年生"></div>
+                        <div><label>学校名</label><input type="text" id="prof-school" placeholder="例: ○○小学校"></div>
+                        <div><label>保護者氏名</label><input type="text" id="prof-parent" placeholder="例: 山田 花子"></div>
+                        <div><label>連絡先（電話番号）</label><input type="text" id="prof-phone" placeholder="例: 090-0000-0000"></div>
+                        <div><label>連絡先（メール）</label><input type="text" id="prof-email" placeholder="例: parent@example.com"></div>
+                    </div>
+                </div>
+                
+                <div class="panel" style="border-top: 4px solid #4caf50;">
+                    <h3 style="color: #2e7d32;">🎯 指導方針・特記事項</h3>
+                    <label>現在の目標・指導方針</label>
+                    <textarea id="prof-policy" rows="3" placeholder="例: まずは基礎計算の定着。その後、応用問題へ移行。"></textarea>
+                    
+                    <label>生徒の性格・苦手・メモ</label>
+                    <textarea id="prof-memo" rows="4" placeholder="例: 褒めると伸びるタイプ。図形問題への苦手意識が強いので図を書いて解説する。"></textarea>
+                    
+                    <button class="btn-submit" style="background:#4caf50;" onclick="saveProfile()">✅ カルテの情報を保存する</button>
                 </div>
             </div>
 
@@ -390,9 +420,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. Firebaseの合鍵をセット
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
             authDomain: "criety-app-f76d4.firebaseapp.com",
@@ -404,10 +431,8 @@
         };
         
         let db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-        } catch(e) { console.error("Firebase Init Error:", e); }
+        try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } 
+        catch(e) { console.error("Firebase Init Error:", e); }
 
         let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; 
 
@@ -467,9 +492,23 @@
 
         function loadStudentData() {
             renderCalendar(); renderMaterialsList(); renderHwLogList();
-            renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports(); updateTargetDisplay();
+            renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports(); updateTargetDisplay(); loadProfile();
             if(document.activeElement.id !== 'hourly-wage') document.getElementById('hourly-wage').value = loadFB('salary_wage', "1500");
             document.getElementById('stamp-display-count').innerText = studentDataCache['stamps'] || 0;
+        }
+
+        // ==========================================
+        // ★ 生徒カルテ機能
+        // ==========================================
+        function saveProfile() {
+            const profile = {
+                name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim()
+            };
+            saveFB('profile', profile); alert("生徒カルテを保存しました！\n（※現在接続中の生徒専用データとして完全に保護・保存されます）");
+        }
+        function loadProfile() {
+            const profile = loadFB('profile', {});
+            document.getElementById('prof-name').value = profile.name || ""; document.getElementById('prof-grade').value = profile.grade || ""; document.getElementById('prof-school').value = profile.school || ""; document.getElementById('prof-parent').value = profile.parent || ""; document.getElementById('prof-phone').value = profile.phone || ""; document.getElementById('prof-email').value = profile.email || ""; document.getElementById('prof-policy').value = profile.policy || ""; document.getElementById('prof-memo').value = profile.memo || "";
         }
 
         // ==========================================
@@ -477,36 +516,22 @@
         // ==========================================
         function generateStudentAccount() {
             if(!confirm("新しい生徒アカウントを発行しますか？")) return;
-            const yearStr = String(new Date().getFullYear()).slice(-2); // 2026年なら "26"
+            const yearStr = String(new Date().getFullYear()).slice(-2); 
 
-            // データベースから今年の連番を取得
             db.ref('admin/counters/student_' + yearStr).once('value').then(snapshot => {
-                let count = snapshot.val() || 0;
-                count++;
-
-                // 26001 のような5桁のIDを生成
+                let count = snapshot.val() || 0; count++;
                 const newId = yearStr + String(count).padStart(3, '0');
-
-                // 6桁のランダムな英数字パスワードを生成
-                const chars = "abcdefghijkmnpqrstuvwxyz23456789"; // 読み間違えやすい l, 1, o, 0 などを除外
+                const chars = "abcdefghijkmnpqrstuvwxyz23456789"; 
                 let newPass = "";
                 for(let i=0; i<6; i++) newPass += chars.charAt(Math.floor(Math.random() * chars.length));
 
-                // データベースの admin/students に登録
-                db.ref('admin/students/' + newId).set({
-                    password: newPass,
-                    created_at: new Date().toISOString()
-                }).then(() => {
-                    // カウンターを更新
+                db.ref('admin/students/' + newId).set({ password: newPass, created_at: new Date().toISOString() }).then(() => {
                     db.ref('admin/counters/student_' + yearStr).set(count);
-
-                    // 画面に表示
                     document.getElementById('new-account-result').style.display = 'block';
-                    document.getElementById('new-student-id').innerText = newId;
-                    document.getElementById('new-student-pass').innerText = newPass;
-                    alert("アカウントの発行が完了しました！生徒アプリでこの情報を使ってログインできます。");
+                    document.getElementById('new-student-id').innerText = newId; document.getElementById('new-student-pass').innerText = newPass;
+                    alert("アカウントの発行が完了しました！");
                 });
-            }).catch(e => alert("通信エラーが発生しました: " + e));
+            }).catch(e => alert("通信エラーが発生しました。"));
         }
 
         // ==========================================
@@ -608,33 +633,18 @@
 
         function renderHwLogList() {
             const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = "";
-            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td>${isD ? `<button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">消去</button>` : '-'}</td></tr>`; } }));
+            Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '<b style="color:#2e7d32">💮済</b>' : '<b style="color:#e65100">⏳進行中</b>'}</td><td><button class="btn-danger" style="background:#ff9800" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">完全に消去</button></td></tr>`; } }));
             document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4" style="text-align:center; color:#999;">なし</td></tr>`;
         }
 
-        // ★修正：宿題をカレンダーデータからも完全に消し去る
         function deleteHwLog(btn) { 
-            if(!confirm("生徒のリストからもこの宿題を完全に削除しますか？")) return;
+            if(!confirm("生徒のリスト・カレンダーからもこの宿題を完全に削除しますか？")) return;
             const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); 
             
-            // 1. カレンダーデータ（出題履歴）からの完全削除
             let evs = loadFB('cal_events', {});
-            if(evs[d]) {
-                evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t));
-                if(evs[d].length === 0) delete evs[d];
-                saveFB('cal_events', evs);
-            }
+            if(evs[d]) { evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t)); if(evs[d].length === 0) delete evs[d]; saveFB('cal_events', evs); }
 
-            // 2. 完了履歴からの削除
-            let done = loadFB('hw_done', {}); 
-            delete done[`${d}_${t}`]; 
-            saveFB('hw_done', done); 
-            
-            // 3. その他状態の更新
-            saveFB_Raw('task_status', 'pending'); 
-            let stamps = parseInt(studentDataCache['stamps']) || 0; 
-            if(stamps > 0) saveFB_Raw('stamps', stamps - 1); 
-            
+            let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); 
             renderHwLogList(); renderCalendar(); 
         }
 
@@ -657,7 +667,7 @@
         function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#drawing-tools .tool-btn').forEach(b=>b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
-        function clearBoard() { if(confirm("消す？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
+        function clearBoard() { if(confirm("消去しますか？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
         function sendWhiteboardSlide() { if(activeText) fixText(); let slides = loadFB('wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('wb_slides', slides); alert(`📡 送信しました！`); renderWbSlides(); }
         function renderWbSlides() { const container = document.getElementById('slides-container'); const slides = loadFB('wb_slides', []); container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><div style="font-size:10px; color:#666; margin-bottom:5px;">スライド ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')"><button class="btn-danger" style="width:100%;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>`).join(''); }
         function renderStudentSlides() { const container = document.getElementById('student-slides-container'); const slides = loadFB('student_wb_slides', []); container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px;">届いていません</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box" style="border-color:#bbdefb; background:#e3f2fd;"><div style="font-size:10px; color:#1565c0; font-weight:bold; margin-bottom:5px;">提出物 ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')"><button class="btn-danger" style="width:100%; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>`).join(''); }

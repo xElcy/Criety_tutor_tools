@@ -7,11 +7,10 @@
     <style>
         :root { --bg: #fff9e6; --main: #ff9800; --accent: #29b6f6; --success: #66bb6a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Hiragino Maru Gothic ProN', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; padding-bottom: 30px;}
+        body { font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif; background-color: var(--bg); color: #4a4a4a; display: flex; justify-content: center; padding-bottom: 30px;}
         
-        /* 認証・レイアウト */
-        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffb74d; z-index: 99999; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220,140,0,0.3); }
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffb74d; z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .auth-box { background: #fff; padding: 30px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(220,140,0,0.3); }
         .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 10px; font-size: 16px; outline: none; }
         .btn-auth { width: 100%; padding: 15px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #f57c00; }
 
@@ -20,17 +19,24 @@
         .mid-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #fff3e0; }
         .mid-card h3 { font-size: 16px; color: var(--main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed #ffe0b2; padding-bottom: 8px;}
         
-        /* ⏱️ タイマー機能 */
-        .timer-display { font-size: 42px; font-weight: bold; color: #333; text-align: center; font-family: monospace; letter-spacing: 2px; margin: 10px 0; }
+        /* ⏱️ タイマー機能（かわいく！） */
+        .timer-display { 
+            font-size: 40px; font-weight: bold; color: #ff9800; text-align: center; 
+            margin: 15px 0; background: #fff3e0; padding: 10px; border-radius: 20px; 
+            border: 3px dashed #ffb74d; letter-spacing: 2px;
+        }
         .timer-btn-group { display: flex; gap: 10px; }
         .timer-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; }
         
         /* 📝 報告フォーム */
-        .form-row { margin-bottom: 10px; }
-        .form-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #666; }
-        .form-row input, .form-row select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: #fafafa;}
+        .form-row { margin-bottom: 12px; }
+        .form-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 6px; color: #666; }
+        .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: #fafafa; outline: none; border-color: #ffe0b2;}
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: #ff9800; }
         .form-col-3 { display: flex; gap: 5px; }
         .form-col-3 > div { flex: 1; }
+        .form-col-2 { display: flex; gap: 10px; }
+        .form-col-2 > div { flex: 1; }
 
         /* ミニカレンダー */
         .mini-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: 10px; text-align: center; }
@@ -72,7 +78,6 @@
         .tool-btn { padding: 8px 10px; cursor: pointer; border: 1px solid #ccc; border-radius: 6px; background: #fff; transition: all 0.2s; font-size: 12px; font-weight: bold;}
         .tool-btn.active { background: #e0f7fa; border-color: #00bcd4; color: #00838f; }
 
-        /* テキスト操作パネル */
         .text-controls { display: none; flex-wrap: wrap; justify-content: center; gap: 5px; background: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ffcc80;}
         .text-btn { padding: 6px 10px; background: #fff; border: 1px solid #ffb74d; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight:bold; color: #e65100;}
 
@@ -103,18 +108,18 @@
             <div id="countdown-days" style="font-size:36px; font-weight:bold;">- 日</div>
         </div>
 
-        <div class="mid-card" style="border-color: #4caf50;">
-            <h3 style="color: #388e3c; border-bottom-color: #c8e6c9;">⏱️ べんきょうタイマー</h3>
+        <div class="mid-card" style="border-color: #ff9800;">
+            <h3 style="color: #e65100; border-bottom-color: #ffe0b2;">⏱️ べんきょうタイマー</h3>
             <div class="timer-display" id="timer-display">00:00:00</div>
             <div class="timer-btn-group">
                 <button class="timer-btn" style="background:#4caf50;" onclick="startTimer()">▶ スタート</button>
-                <button class="timer-btn" style="background:#ff9800;" onclick="stopTimer()">⏸ ストップ</button>
+                <button class="timer-btn" style="background:#f44336;" onclick="stopTimer()">⏸ ストップ</button>
                 <button class="timer-btn" style="background:#9e9e9e;" onclick="resetTimer()">🔄 リセット</button>
             </div>
         </div>
 
         <div class="mid-card" style="border-color: #e91e63;">
-            <h3 style="color: #c2185b; border-bottom-color: #f8bbd0;">🚨 間違えたもんだいを先生に送る</h3>
+            <h3 style="color: #c2185b; border-bottom-color: #f8bbd0;">🚨 まちがえた問題を先生に送る</h3>
             <div class="form-row">
                 <label>📚 教材の名前</label>
                 <input type="text" id="report-mat" placeholder="例: 算数のワーク">
@@ -124,12 +129,17 @@
                 <div><label>大問</label><input type="text" id="report-q1" placeholder="3"></div>
                 <div><label>小問</label><input type="text" id="report-q2" placeholder="(1)"></div>
             </div>
+            
+            <div class="form-row form-col-2">
+                <div><label>⏱️ かかった時間 (分)</label><input type="number" id="report-time" placeholder="例: 15"></div>
+            </div>
+
             <div class="form-row">
                 <label>🤔 どういうミスだった？</label>
                 <select id="report-reason">
                     <option value="" disabled selected>えらんでね</option>
                     <option value="ケアレスミス（うっかり）">ケアレスミス（うっかり）</option>
-                    <option value="なんもわからん（お手上げ）">なんもわからん（お手上げ）</option>
+                    <option value="全くわからない（解説がほしい）">全くわからない（解説がほしい）</option>
                     <option value="自分でもなんで間違ったか分からない">自分でもなんで間違ったか分からない</option>
                     <option value="おぼえていなかった">おぼえていなかった</option>
                 </select>
@@ -142,6 +152,12 @@
                     <option value="いいえ（まだ分からない）">いいえ（まだ分からない）</option>
                 </select>
             </div>
+
+            <div class="form-row">
+                <label>✏️ 先生につたえたいこと (自由)</label>
+                <textarea id="report-memo" rows="2" placeholder="むずかしかった所や、がんばった所をかいてね！"></textarea>
+            </div>
+
             <button onclick="submitMistakeReport()" style="width:100%; padding:12px; background:#e91e63; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; margin-top:5px; cursor:pointer;">📨 先生に報告する！</button>
         </div>
 
@@ -215,6 +231,7 @@
 
         <div class="mid-card">
             <h3>📚 すべての しゅくだいリスト</h3>
+            <p style="font-size:10px; color:#999; margin-bottom: 10px;">かかった時間（分・秒）を入れてから「おわった！」をおしてね。</p>
             <div class="hw-list" id="hw-list">
                 <p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>
             </div>
@@ -234,8 +251,6 @@
         let myStudentId = "";
         const STAMP_MAX = 10;
         let selectedDateStr = "";
-
-        // タイマー用変数
         let timerInterval = null;
         let totalSeconds = 0;
 
@@ -288,24 +303,10 @@
 
         function startTimer() {
             if(timerInterval) return;
-            timerInterval = setInterval(() => {
-                totalSeconds++;
-                updateTimerDisplay();
-            }, 1000);
+            timerInterval = setInterval(() => { totalSeconds++; updateTimerDisplay(); }, 1000);
         }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-
-        function resetTimer() {
-            if(confirm("タイマーを 0 にもどす？")) {
-                stopTimer();
-                totalSeconds = 0;
-                updateTimerDisplay();
-            }
-        }
+        function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+        function resetTimer() { if(confirm("タイマーを 0 にもどす？")) { stopTimer(); totalSeconds = 0; updateTimerDisplay(); } }
 
         // ==========================================
         // 📝 間違え直し報告機能
@@ -315,34 +316,29 @@
             const p = document.getElementById('report-p').value.trim();
             const q1 = document.getElementById('report-q1').value.trim();
             const q2 = document.getElementById('report-q2').value.trim();
+            const time = document.getElementById('report-time').value.trim();
             const reason = document.getElementById('report-reason').value;
             const solved = document.getElementById('report-solved').value;
+            const memo = document.getElementById('report-memo').value.trim();
 
-            if(!mat || !reason || !solved) {
-                return alert("「教材の名前」「ミスの種類」「解決したか」は必ずえらんでね！");
-            }
+            if(!mat || !reason || !solved) return alert("「教材の名前」「ミスの種類」「解決したか」は必ずえらんでね！");
 
             const report = {
-                id: Date.now(),
-                date: new Date().toLocaleString(),
-                mat: mat, p: p, q1: q1, q2: q2, reason: reason, solved: solved
+                id: Date.now(), date: new Date().toLocaleString(),
+                mat: mat, p: p, q1: q1, q2: q2, reason: reason, solved: solved,
+                time: time, memo: memo
             };
 
             let reports = JSON.parse(localStorage.getItem('criety_mistake_reports_' + myStudentId)) || [];
             reports.push(report);
             localStorage.setItem('criety_mistake_reports_' + myStudentId, JSON.stringify(reports));
 
-            // 入力リセット
-            document.getElementById('report-mat').value = "";
-            document.getElementById('report-p').value = "";
-            document.getElementById('report-q1').value = "";
-            document.getElementById('report-q2').value = "";
-            document.getElementById('report-reason').selectedIndex = 0;
-            document.getElementById('report-solved').selectedIndex = 0;
-
+            document.getElementById('report-mat').value = ""; document.getElementById('report-p').value = "";
+            document.getElementById('report-q1').value = ""; document.getElementById('report-q2').value = "";
+            document.getElementById('report-time').value = ""; document.getElementById('report-memo').value = "";
+            document.getElementById('report-reason').selectedIndex = 0; document.getElementById('report-solved').selectedIndex = 0;
             alert("📨 先生に 報告を送ったよ！よくがんばったね！");
         }
-
 
         // ==========================================
         // 💮 スタンプ機能
@@ -377,19 +373,14 @@
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let badgeHtml = "";
-
                 if(events[dStr]) {
                     events[dStr].forEach((ev, idx) => {
                         let color = ev.color || '#9e9e9e'; let text = ev.text; let delBtn = "";
-                        
                         if(ev.type === 'hw') {
-                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; }
-                            else { color = '#ff9800'; text = `宿:${ev.text}`; }
+                            if(doneDict[`${dStr}_${ev.text}`]) { color = '#4caf50'; text = `💮済:${ev.text}`; } else { color = '#ff9800'; text = `宿:${ev.text}`; }
                         } else if (ev.type === 'lesson') { color = '#2196f3'; text = `👨‍🏫指導日`; }
                         else if (ev.type === 'test') { color = '#f44336'; text = `📝${ev.text}`; }
-
                         if(ev.type === 'student') delBtn = `<span class="badge-del" onclick="event.stopPropagation(); deleteEvent('${dStr}', ${idx})">×</span>`;
-
                         badgeHtml += `<span class="cal-badge" style="background:${color}"><span>${text}</span>${delBtn}</span>`;
                     });
                 }
@@ -400,43 +391,60 @@
         function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
         
         function addStudentEvent(prefix, colorCode) {
-            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`);
-            if(!text) return;
+            const text = prompt(`${prefix} の予定をいれてね！\n(例: 算数のドリル、ゲームする)`); if(!text) return;
             let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
             if(!evs[selectedDateStr]) evs[selectedDateStr] = [];
             evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode});
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
-            renderCalendar();
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
         }
 
         function deleteEvent(dateStr, idx) {
             let evs = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId));
-            evs[dateStr].splice(idx, 1);
-            if(evs[dateStr].length === 0) delete evs[dateStr];
-            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs));
-            renderCalendar();
+            evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr];
+            localStorage.setItem('criety_cal_events_' + myStudentId, JSON.stringify(evs)); renderCalendar();
         }
 
         // ==========================================
-        // 📚 宿題リスト機能
+        // 📚 宿題リスト機能（時間入力対応）
         // ==========================================
         function renderHomeworkList() {
             const events = JSON.parse(localStorage.getItem('criety_cal_events_' + myStudentId)) || {};
             const doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
             const hwListDiv = document.getElementById('hw-list');
             let hwHtml = ""; let hasHw = false;
+            let inputIdCounter = 0; // ID用カウンタ
 
             Object.keys(events).sort().forEach(dateStr => {
                 events[dateStr].forEach(ev => {
                     if(ev.type === 'hw') {
                         hasHw = true;
                         const hwKey = `${dateStr}_${ev.text}`;
-                        const isDone = doneDict[hwKey];
+                        const isDone = doneDict[hwKey]; // オブジェクトかtrue
 
                         if(isDone) {
-                            hwHtml += `<div class="hw-item done-bg"><div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete done">クリア済！🌟</button></div>`;
+                            let timeStr = (typeof isDone === 'object' && isDone.time) ? `<span style="color:#2e7d32; font-size:11px;">⏱️ ${isDone.time} かかった</span>` : '';
+                            hwHtml += `
+                            <div class="hw-item done-bg">
+                                <div style="font-size:12px; color:#2e7d32; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
+                                <div style="font-size:14px; font-weight:bold; color:#4a4a4a; margin-bottom: 2px;">${ev.text}</div>
+                                ${timeStr}
+                                <button class="btn-complete done" style="margin-top:5px;">クリア済！🌟</button>
+                            </div>`;
                         } else {
-                            hwHtml += `<div class="hw-item"><div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div><div style="font-size:14px; font-weight:bold; color:#4a4a4a;">${ev.text}</div><button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}')">おわった！💮</button></div>`;
+                            const currentInputId = `hw_input_${inputIdCounter}`;
+                            hwHtml += `
+                            <div class="hw-item">
+                                <div style="font-size:12px; color:#e65100; font-weight:bold;">📅 ${dateStr} のしゅくだい</div>
+                                <div style="font-size:14px; font-weight:bold; color:#4a4a4a; margin-bottom: 5px;">${ev.text}</div>
+                                
+                                <div style="display:flex; align-items:center; gap:5px; margin-bottom:8px; font-size:12px; font-weight:bold; color:#666;">
+                                    ⏱️ <input type="number" id="min_${currentInputId}" placeholder="0" style="width:60px; padding:5px; border:1px solid #ccc; border-radius:4px;"> 分
+                                    <input type="number" id="sec_${currentInputId}" placeholder="0" style="width:60px; padding:5px; border:1px solid #ccc; border-radius:4px;"> 秒
+                                </div>
+
+                                <button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}', '${currentInputId}')">おわった！💮</button>
+                            </div>`;
+                            inputIdCounter++;
                         }
                     }
                 });
@@ -446,12 +454,18 @@
             else hwListDiv.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">いまは しゅくだいは ありません✨</p>`;
         }
 
-        function markDone(dateStr, hwText) {
+        function markDone(dateStr, hwText, inputId) {
+            const min = document.getElementById(`min_${inputId}`).value || "0";
+            const sec = document.getElementById(`sec_${inputId}`).value || "0";
+            const timeStr = `${min}分 ${sec}秒`;
+
             const hwKey = `${dateStr}_${hwText}`;
             let doneDict = JSON.parse(localStorage.getItem('criety_hw_done_' + myStudentId)) || {};
+            
             if(doneDict[hwKey]) return;
 
-            doneDict[hwKey] = true;
+            // かかった時間をオブジェクトとして保存！
+            doneDict[hwKey] = { done: true, time: timeStr };
             localStorage.setItem('criety_hw_done_' + myStudentId, JSON.stringify(doneDict));
             localStorage.setItem('criety_task_status_' + myStudentId, 'completed');
 
@@ -472,12 +486,10 @@
         }
 
         // ==========================================
-        // 🎨 ホワイトボード（スマホ＆文字スタンプ完全対応）
+        // 🎨 じぶんのノート（ホワイトボード）機能
         // ==========================================
-        const canvas = document.getElementById('student-whiteboard'); 
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#ff9800'; let lineWidth = 5;
-        
         let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         
         function getPos(e) { 
@@ -491,7 +503,8 @@
             if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0);
             if(activeText) {
                 ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180);
-                ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.font = `bold ${24 * activeText.scale}px 'Hiragino Maru Gothic ProN', sans-serif`; 
+                ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(activeText.text, 0, 0); ctx.restore();
             }
         }
@@ -597,8 +610,7 @@
                 `).join('');
             } else { list.innerHTML = `<p style="font-size:12px; color:#999; text-align:center; padding:10px;">まだ教材はありません✨</p>`; }
 
-            renderTeacherSlides();
-            renderCalendar();
+            renderTeacherSlides(); renderCalendar();
         }
 
         function renderTeacherSlides() {

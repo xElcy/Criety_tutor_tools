@@ -33,9 +33,8 @@
         .mid-card h3 { font-size: 15px; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; font-weight: 700; }
         .mid-card h3 i { color: var(--main); }
         
-        .mid-countdown { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
-        .mid-countdown h2 { font-size: 15px; opacity: 0.9; margin-bottom: 5px; font-weight: normal;}
-        .mid-countdown .days { font-size: 34px; font-weight: 900; letter-spacing: 2px;}
+        .mid-countdown { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: #fff; padding: 15px 20px; border-radius: 12px; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
+        .mid-countdown h2 { font-size: 16px; margin: 0; font-weight: bold;}
 
         .timer-display { font-size: 52px; font-weight: 900; color: var(--text-main); text-align: center; margin: 15px 0; background: #f7fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: 'Courier New', Courier, monospace; letter-spacing: 2px;}
         .timer-setup-row { display: flex; gap: 8px; margin-bottom: 15px; }
@@ -77,7 +76,6 @@
         .slide-delete-btn { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer;}
         #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
         
-        /* スクロールバー装飾 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
@@ -112,7 +110,6 @@
         <div class="dashboard-col col-left">
             <div class="mid-countdown" id="countdown-area" style="display: none;">
                 <h2 id="countdown-title"></h2>
-                <div id="countdown-days" class="days" style="display:none;"></div>
             </div>
 
             <div class="mid-card">
@@ -289,9 +286,6 @@
             });
         }
 
-        // ==========================================
-        // ⏱️ タイマー機能
-        // ==========================================
         function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if(audioCtx.state === 'suspended') { audioCtx.resume(); } }
         function playAlarm() { if(!audioCtx) return; try { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} }
         function updateTimerDisplay(elapsedMs) { let displayMs = elapsedMs; if(timerTargetSeconds > 0) { displayMs = (timerTargetSeconds * 1000) - elapsedMs; if(displayMs <= 0) { displayMs = 0; stopTimer(); playAlarm(); setTimeout(() => alert("⏰ 時間です！"), 100); } } let totalSec = Math.floor(displayMs / 1000); let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0'); let m = String(Math.floor(totalSec / 60)).padStart(2, '0'); let s = String(totalSec % 60).padStart(2, '0'); document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`; }
@@ -300,9 +294,6 @@
         function stopTimer() { if(!timerRunning) return; timerRunning = false; timerSavedTime += Date.now() - timerStartTime; clearInterval(timerInterval); document.getElementById('timer-setup').style.opacity = "1"; document.getElementById('timer-setup').style.pointerEvents = "auto"; }
         function resetTimer() { if(confirm("タイマーをリセットしますか？")) { stopTimer(); timerSavedTime = 0; timerTargetSeconds = 0; updateTimerDisplay(0); } }
 
-        // ==========================================
-        // 📝 報告機能
-        // ==========================================
         function submitMistakeReport() {
             const mat = document.getElementById('report-mat').value.trim(); if(!mat) return alert("教材名を入力してください。");
             const report = { id: Date.now(), date: new Date().toLocaleString(), mat: mat, p: document.getElementById('report-p').value, q1: document.getElementById('report-q1').value, q2: document.getElementById('report-q2').value, time: document.getElementById('report-time').value, reason: document.getElementById('report-reason').value, solved: document.getElementById('report-solved').value, memo: document.getElementById('report-memo').value };
@@ -310,29 +301,21 @@
             document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(e=>e.value=""); document.querySelectorAll('select').forEach(e=>e.selectedIndex=0); alert("送信完了しました。");
         }
 
-        // ==========================================
-        // 💮 スタンプ機能
-        // ==========================================
         function renderStamps() {
             const count = parseInt(studentDataCache['stamps']) || 0; const cards = parseInt(studentDataCache['stamp_cards']) || 1;
             document.getElementById('stamp-card-level').innerText = `Level ${cards}`; const grid = document.getElementById('stamp-grid'); grid.innerHTML = "";
             for(let i=1; i<=STAMP_MAX; i++) grid.innerHTML += `<div class="stamp-slot ${i <= count ? "filled" : ""}">${i <= count ? '<i class="fa-solid fa-check"></i>' : ""}</div>`;
         }
 
-        // ==========================================
-        // 📅 カレンダー＆宿題機能
-        // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate();
             const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
-            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
 
             ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
             for(let i=0; i<new Date(year, month, 1).getDay(); i++) grid.innerHTML += `<div></div>`;
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`; let badgeHtml = "";
-                if(targetTitle && targetDate === dStr) { badgeHtml += `<div class="cal-badge" style="background:#ebf8ff; color:#2b6cb0; border-left:2px solid #2b6cb0;"><i class="fa-solid fa-flag"></i> ${targetTitle}</div>`; }
                 if(events[dStr]) events[dStr].forEach(ev => {
                     let color = ev.color || '#a0aec0'; let text = ev.text;
                     if(ev.type === 'hw') { color = doneDict[`${dStr}_${ev.text}`] ? '#48bb78' : '#ed8936'; text = doneDict[`${dStr}_${ev.text}`] ? `済:${ev.text}` : `宿:${ev.text}`; }
@@ -347,11 +330,8 @@
         function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
         function renderSelectedDateEvents() {
             const listDiv = document.getElementById('selected-date-events-list'); const events = loadFB('cal_events', {}); const evs = events[selectedDateStr] || []; const doneDict = loadFB('hw_done', {});
-            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
             let html = "";
-            if(targetTitle && targetDate === selectedDateStr) { html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border-left:4px solid #2b6cb0; padding:8px 10px; border-radius:6px; border: 1px solid #bee3f8; margin-bottom:5px;"><span style="font-size:13px; font-weight:bold; color:#2c5282;"><i class="fa-solid fa-flag"></i> ${targetTitle}</span></div>`; }
             if(evs.length === 0 && html === "") { listDiv.innerHTML = `<div style="font-size:12px; color:#a0aec0; text-align:center; padding:10px 0;">予定なし</div>`; return; }
-            
             html += evs.map((ev, idx) => {
                 let color = ev.color || '#a0aec0'; let text = ev.text; let delBtn = "";
                 if(ev.type === 'hw') { color = doneDict[`${selectedDateStr}_${ev.text}`] ? '#48bb78' : '#ed8936'; }
@@ -393,9 +373,6 @@
         }
         function hideHw(dateStr, hwText) { if(!confirm("リストから非表示にしますか？")) return; const hwKey = `${dateStr}_${hwText}`; let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true; localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList(); }
 
-        // ==========================================
-        // 🎨 ホワイトボード機能
-        // ==========================================
         const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
         let isDrawing = false; let currentTool = 'pen'; let currentColor = '#2b6cb0'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; }
@@ -417,29 +394,19 @@
         function deleteMySlide(id) { if(!confirm("送信を取り消しますか？")) return; let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); }
 
         // ==========================================
-        // 🔄 データの表示（★目標・自動カウントダウン高精度版）
+        // 🔄 データの表示（★目標・カウントダウン除外版）
         // ==========================================
         function syncData() {
             const targetTitle = studentDataCache['target_title']; 
-            const targetDate = studentDataCache['target_date'];
             const area = document.getElementById('countdown-area');
-            const daysEl = document.getElementById('countdown-days');
             
+            // ★ カウントダウンは表示せず、目標バナーのみ表示
             if(targetTitle) {
                 area.style.display = 'block'; 
                 document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; 
-                
-                if(targetDate) {
-                    const today = new Date(); today.setHours(0,0,0,0);
-                    const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
-                    const diff = tDate - today;
-                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    daysEl.style.display = 'block';
-                    daysEl.innerText = `あと ${d} 日`;
-                } else {
-                    daysEl.style.display = 'none'; 
-                }
-            } else { area.style.display = 'none'; }
+            } else { 
+                area.style.display = 'none'; 
+            }
             
             const files = loadFB('materials', []); const list = document.getElementById('material-list');
             if(files.length > 0) { list.innerHTML = files.map(f => `<div style="display:flex; align-items:center; gap:12px; padding:12px; background:#f7fafc; border-radius:8px; border:1px solid #edf2f7; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'" onclick="openFile('${f.url}', '${f.type}')"><span style="font-size:20px; color:var(--main);">${f.type==='pdf'?'<i class="fa-solid fa-file-pdf"></i>':'<i class="fa-regular fa-image"></i>'}</span><div style="font-size:13px; font-weight:bold; color:var(--text-main);">${f.name}</div></div>`).join(''); } else { list.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">配布された教材はありません</div>`; }

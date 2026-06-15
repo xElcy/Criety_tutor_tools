@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Criety - Student Dashboard</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root { --bg: #e2e8f0; --main: #2b6cb0; --accent: #3182ce; --success: #38a169; --danger: #e53e3e; --card-bg: #ffffff; --text-main: #2d3748; --text-light: #718096; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--bg); color: var(--text-main); min-height: 100vh; }
+        
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%); z-index: 99999; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .auth-box { background: #fff; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .auth-box h2 { color: var(--main); margin-bottom: 25px; font-size: 22px; font-weight: 800; letter-spacing: 1px;}
+        .auth-box input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; outline: none; transition: 0.3s; background: #f7fafc;}
+        .auth-box input:focus { border-color: var(--main); background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,0.2);}
+        .btn-auth { width: 100%; padding: 14px; background: var(--main); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-auth:hover { background: #2c5282; }
+
+        .header-bar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .header-logo { color: var(--main); font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 8px; letter-spacing: 1px;}
+
+        .app-container { display: grid; grid-template-columns: 320px 1fr 340px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 25px; align-items: start; }
+        @media (max-width: 1024px) { .app-container { grid-template-columns: 1fr; padding: 15px; gap: 15px;} }
+
+        .dashboard-col { display: flex; flex-direction: column; gap: 20px; }
+        .mid-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+        .mid-card h3 { font-size: 15px; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; font-weight: 700; }
+        .mid-card h3 i { color: var(--main); }
+        
+        .mid-countdown { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
+        .mid-countdown h2 { font-size: 15px; opacity: 0.9; margin-bottom: 5px; font-weight: normal;}
+        .mid-countdown .days { font-size: 34px; font-weight: 900; letter-spacing: 2px;}
+
+        .timer-display { font-size: 52px; font-weight: 900; color: var(--text-main); text-align: center; margin: 15px 0; background: #f7fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: 'Courier New', Courier, monospace; letter-spacing: 2px;}
+        .timer-setup-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .timer-btn-group { display: flex; gap: 10px; }
+        .timer-btn { flex: 1; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .timer-btn:active { transform: scale(0.98); }
+        .time-add-btn { flex: 1; padding: 10px 0; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12px; cursor: pointer; background:#fff; color:var(--text-main); font-weight: bold; transition: 0.2s;}
+        .time-add-btn:hover { background: #edf2f7; }
+        
+        .form-row { margin-bottom: 12px; }
+        .form-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 6px; color: var(--text-light); }
+        .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; background: #f7fafc; transition: 0.2s;}
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); background: #fff; }
+        .form-col-3 { display: flex; gap: 8px; } .form-col-3 > div { flex: 1; }
+
+        .mini-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 11px; text-align: center; }
+        .cal-day-head { font-weight: bold; padding-bottom: 8px; color: var(--text-light); }
+        .cal-day { border: 1px solid #edf2f7; border-radius: 6px; min-height: 45px; padding: 4px; cursor: pointer; background: #fcfcfc; transition: 0.2s;}
+        .cal-day:hover { border-color: #cbd5e0; }
+        .cal-day.today { background: #ebf8ff; color: #2b6cb0; font-weight: bold; border-color: #bee3f8;}
+        .cal-day.selected { border: 2px solid var(--accent); background: #fff; }
+        .cal-badge { font-size: 9px; border-radius: 4px; color: white; margin-top: 3px; padding: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; text-align: left; }
+
+        .event-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; cursor: pointer; }
+        .stamp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .stamp-slot { aspect-ratio: 1; border: 2px dashed #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #f7fafc;}
+        .stamp-slot.filled { background: #ebf8ff; border: 2px solid #90cdf4; color: #3182ce; animation: pop 0.3s; }
+
+        .hw-list { max-height: 300px; overflow-y: auto; padding-right: 5px;}
+        .hw-item { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .hw-item.done-bg { background: #f0fff4; border-color: #c6f6d5; }
+        .btn-complete { padding: 10px; background: var(--success); color: #fff; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 13px; transition: 0.2s;}
+        .btn-complete:hover { background: #2f855a; }
+
+        .tool-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; font-size: 13px; font-weight: bold; color: var(--text-main);}
+        .tool-btn.active { background: #ebf8ff; border-color: #63b3ed; color: #2b6cb0; }
+        .slide-item { background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; text-align: center; position: relative;}
+        .slide-item img { width: 100%; border-radius: 6px; border: 1px solid #cbd5e0; cursor: pointer; }
+        .slide-delete-btn { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer;}
+        #preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 100000; flex-direction: column; }
+        
+        /* スクロールバー装飾 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+        @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <h2><i class="fa-solid fa-graduation-cap"></i> Criety ログイン</h2>
+            <input type="text" id="student-email" placeholder="生徒ID">
+            <input type="password" id="student-password" placeholder="パスワード">
+            <button class="btn-auth" onclick="studentLogin()">ログイン</button>
+        </div>
+    </div>
+
+    <div class="header-bar">
+        <div class="header-logo"><i class="fa-solid fa-layer-group"></i> Criety Dashboard</div>
+        <div id="user-display" style="font-size: 13px; font-weight: bold; color: var(--text-light);"></div>
+        <button onclick="studentLogout()" style="background: none; border: none; color: var(--text-light); font-size: 13px; cursor: pointer; font-weight: bold;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
+    </div>
+
+    <div id="preview-overlay">
+        <div style="background:#fff; padding:10px; text-align:right;"><button onclick="closeFile()" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold;">閉じる ✖</button></div>
+        <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
+    </div>
+
+    <div class="app-container">
+        
+        <div class="dashboard-col col-left">
+            <div class="mid-countdown" id="countdown-area" style="display: none;">
+                <h2 id="countdown-title"></h2>
+                <div id="countdown-days" class="days" style="display:none;"></div>
+            </div>
+
+            <div class="mid-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                    <h3 style="border:none; margin:0;"><i class="fa-solid fa-award"></i> 達成スタンプ</h3>
+                    <span id="stamp-card-level" style="font-size: 11px; font-weight: bold; color: var(--main); background: #ebf8ff; padding: 4px 10px; border-radius: 12px;">Level 1</span>
+                </div>
+                <div class="stamp-grid" id="stamp-grid"></div>
+            </div>
+
+            <div class="mid-card">
+                <h3><i class="fa-regular fa-calendar-check"></i> スケジュール</h3>
+                <div class="mini-calendar" id="mini-calendar"></div>
+                <div id="event-add-panel" style="display: none; background:#f7fafc; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #edf2f7;">
+                    <div style="font-size:13px; font-weight:bold; color:var(--text-main); border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:12px;"><i class="fa-regular fa-clock"></i> <span id="selected-date-display"></span></div>
+                    <div id="selected-date-events-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom:15px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="event-btn" style="background:var(--accent);" onclick="addStudentEvent('📝 自習', 'var(--accent)')">自習追加</button>
+                        <button class="event-btn" style="background:#4a5568;" onclick="addStudentEvent('☕ 休憩・私用', '#4a5568')">予定追加</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-list"></i> 課題リスト</h3>
+                <div class="hw-list" id="hw-list"></div>
+            </div>
+        </div>
+
+        <div class="dashboard-col col-center">
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-stopwatch"></i> スタディタイマー</h3>
+                <div class="timer-display" id="timer-display">00:00.00</div>
+                <div class="timer-setup-row" id="timer-setup">
+                    <button class="time-add-btn" onclick="addTime(600)">+ 10 min</button>
+                    <button class="time-add-btn" onclick="addTime(300)">+ 5 min</button>
+                    <button class="time-add-btn" onclick="addTime(60)">+ 1 min</button>
+                    <button class="time-add-btn" onclick="addTime(10)">+ 10 sec</button>
+                </div>
+                <div class="timer-btn-group">
+                    <button class="timer-btn" style="background:var(--main);" onclick="startTimer()"><i class="fa-solid fa-play"></i> START</button>
+                    <button class="timer-btn" style="background:var(--danger);" onclick="stopTimer()"><i class="fa-solid fa-pause"></i> STOP</button>
+                    <button class="timer-btn" style="background:#a0aec0;" onclick="resetTimer()"><i class="fa-solid fa-rotate-left"></i> RESET</button>
+                </div>
+            </div>
+
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-pen-to-square"></i> 提出用ホワイトボード</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;" id="student-drawing-tools">
+                    <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')"><i class="fa-solid fa-pen"></i> ペン</button>
+                    <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i> 消しゴム</button>
+                    <button class="tool-btn" id="btn-text" onclick="setTool('text')"><i class="fa-solid fa-t"></i> テキスト</button>
+                    <input type="color" id="color-picker" value="#2b6cb0" onchange="setColor(this.value)" style="width: 32px; height: 32px; border: none; padding: 0; cursor: pointer; border-radius:4px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight:bold; color:var(--text-light); margin-left:auto;">
+                        太さ<input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)" style="width: 70px;">
+                    </div>
+                </div>
+                <div id="text-controls" style="display: none; justify-content: center; gap: 8px; margin-bottom: 12px;">
+                    <button class="tool-btn" onclick="changeTextScale(0.2)">サイズ ＋</button>
+                    <button class="tool-btn" onclick="changeTextScale(-0.2)">サイズ ➖</button>
+                    <button class="tool-btn" style="background:var(--success); color:white; border:none;" onclick="fixText()">配置を確定</button>
+                </div>
+                <canvas id="student-whiteboard" width="600" height="400" style="width: 100%; border: 1px solid #cbd5e0; border-radius: 8px; background: white; touch-action: none; display: block; margin-bottom: 12px;"></canvas>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="submitSlide()" style="flex: 2; padding: 14px; background: var(--main); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:14px;"><i class="fa-regular fa-paper-plane"></i> 先生に送信する</button>
+                    <button onclick="clearBoard()" style="flex: 1; padding: 14px; background: #edf2f7; color: var(--danger); border: 1px solid #e2e8f0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:13px;"><i class="fa-solid fa-trash-can"></i> 全消去</button>
+                </div>
+            </div>
+            
+            <div class="mid-card" id="shared-board-card" style="display: none;">
+                <h3><i class="fa-solid fa-chalkboard-user"></i> 先生からの共有ノート</h3>
+                <div id="teacher-slides-container" style="display:flex; flex-direction: column; gap:10px; max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="dashboard-col col-right">
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> 質問・間違い直しレポート</h3>
+                <div class="form-row"><label>教材名</label><input type="text" id="report-mat" placeholder="例: 数学 新ワーク"></div>
+                <div class="form-row form-col-3">
+                    <div><label>ページ</label><input type="text" id="report-p" placeholder="P. 24"></div>
+                    <div><label>大問</label><input type="text" id="report-q1" placeholder="3"></div>
+                    <div><label>小問</label><input type="text" id="report-q2" placeholder="(1)"></div>
+                </div>
+                <div class="form-row"><label>かかった時間 (分)</label><input type="number" id="report-time" placeholder="所要時間"></div>
+                <div class="form-row">
+                    <label>ミスの原因</label>
+                    <select id="report-reason">
+                        <option value="" disabled selected>選択してください</option>
+                        <option value="ケアレスミス">ケアレスミス（計算・読み間違い）</option>
+                        <option value="理解不足">解説を読んでも分からない</option>
+                        <option value="忘却">暗記事項を忘れていた</option>
+                        <option value="原因不明">なぜ間違えたか分からない</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>自己解決状況</label>
+                    <select id="report-solved">
+                        <option value="" disabled selected>選択してください</option>
+                        <option value="解決済">解説を読んで解決した</option>
+                        <option value="未解決">先生の解説が必要</option>
+                    </select>
+                </div>
+                <div class="form-row"><label>補足メモ (自由記入)</label><textarea id="report-memo" rows="2" placeholder="難しかったポイントなどを記入"></textarea></div>
+                <button onclick="submitMistakeReport()" style="width:100%; padding:12px; background:var(--text-main); color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; margin-top:8px; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i> レポートを送信</button>
+            </div>
+
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> 送信済みノート履歴</h3>
+                <div id="my-sent-slides-container" style="display:flex; flex-direction: column; gap:10px; max-height: 250px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="mid-card">
+                <h3><i class="fa-solid fa-file-pdf"></i> 配布教材</h3>
+                <div id="material-list" style="display:flex; flex-direction: column; gap:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF_AIVWGLu6OI1HVflHRVwCta6dcPu0Bw",
+            authDomain: "criety-app-f76d4.firebaseapp.com",
+            databaseURL: "https://criety-app-f76d4-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "criety-app-f76d4",
+            storageBucket: "criety-app-f76d4.firebasestorage.app",
+            messagingSenderId: "826655717900",
+            appId: "1:826655717900:web:d724b66a1deec6505e4c29"
+        };
+        
+        let db;
+        try { firebase.initializeApp(firebaseConfig); db = firebase.database(); } 
+        catch(e) { console.error("Firebase Error:", e); }
+
+        let myStudentId = ""; let studentDataCache = {}; const STAMP_MAX = 10; let selectedDateStr = "";
+        let timerInterval = null; let timerRunning = false; let timerStartTime = 0; let timerSavedTime = 0; let timerTargetSeconds = 0; let audioCtx = null;
+
+        function loadFB(key, defaultVal) { const data = studentDataCache[key]; if(data === undefined || data === null) return defaultVal; try { const parsed = typeof data === 'string' ? JSON.parse(data) : data; return parsed !== null ? parsed : defaultVal; } catch(e) { return defaultVal; } }
+        function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)); }
+        function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + myStudentId + '/' + key).set(val); }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const isLoggedIn = localStorage.getItem('student_junior_logged_in');
+            const savedId = localStorage.getItem('my_junior_student_id');
+            if(isLoggedIn === 'true' && savedId) {
+                myStudentId = savedId;
+                document.getElementById('auth-overlay').style.display = 'none';
+                startApp();
+            }
+        });
+
+        function studentLogin() {
+            const id = document.getElementById('student-email').value.trim().toLowerCase();
+            const pass = document.getElementById('student-password').value.trim();
+            if(!id || !pass) return alert("IDとパスワードを入力してください。");
+            
+            db.ref('admin/students/' + id).once('value').then(snapshot => {
+                const data = snapshot.val();
+                if (data && data.password === pass) {
+                    myStudentId = id; localStorage.setItem('student_junior_logged_in', 'true'); localStorage.setItem('my_junior_student_id', id);
+                    document.getElementById('auth-overlay').style.display = 'none'; startApp();
+                } else { alert("IDまたはパスワードが間違っています。"); }
+            }).catch(e => alert("通信エラーが発生しました。"));
+        }
+        function studentLogout() { localStorage.clear(); location.reload(); }
+
+        function startApp() {
+            document.getElementById('user-display').innerText = "ID: " + myStudentId;
+            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
+            if(!db) return;
+            db.ref('students/' + myStudentId).on('value', (snapshot) => {
+                studentDataCache = snapshot.val() || {};
+                renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); 
+            });
+        }
+
+        // ==========================================
+        // ⏱️ タイマー機能
+        // ==========================================
+        function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if(audioCtx.state === 'suspended') { audioCtx.resume(); } }
+        function playAlarm() { if(!audioCtx) return; try { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} }
+        function updateTimerDisplay(elapsedMs) { let displayMs = elapsedMs; if(timerTargetSeconds > 0) { displayMs = (timerTargetSeconds * 1000) - elapsedMs; if(displayMs <= 0) { displayMs = 0; stopTimer(); playAlarm(); setTimeout(() => alert("⏰ 時間です！"), 100); } } let totalSec = Math.floor(displayMs / 1000); let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0'); let m = String(Math.floor(totalSec / 60)).padStart(2, '0'); let s = String(totalSec % 60).padStart(2, '0'); document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`; }
+        function addTime(sec) { if(timerRunning) return; timerTargetSeconds += sec; updateTimerDisplay(0); }
+        function startTimer() { initAudio(); if(timerRunning) return; timerRunning = true; timerStartTime = Date.now(); document.getElementById('timer-setup').style.opacity = "0.3"; document.getElementById('timer-setup').style.pointerEvents = "none"; timerInterval = setInterval(() => { updateTimerDisplay(Date.now() - timerStartTime + timerSavedTime); }, 10); }
+        function stopTimer() { if(!timerRunning) return; timerRunning = false; timerSavedTime += Date.now() - timerStartTime; clearInterval(timerInterval); document.getElementById('timer-setup').style.opacity = "1"; document.getElementById('timer-setup').style.pointerEvents = "auto"; }
+        function resetTimer() { if(confirm("タイマーをリセットしますか？")) { stopTimer(); timerSavedTime = 0; timerTargetSeconds = 0; updateTimerDisplay(0); } }
+
+        // ==========================================
+        // 📝 報告機能
+        // ==========================================
+        function submitMistakeReport() {
+            const mat = document.getElementById('report-mat').value.trim(); if(!mat) return alert("教材名を入力してください。");
+            const report = { id: Date.now(), date: new Date().toLocaleString(), mat: mat, p: document.getElementById('report-p').value, q1: document.getElementById('report-q1').value, q2: document.getElementById('report-q2').value, time: document.getElementById('report-time').value, reason: document.getElementById('report-reason').value, solved: document.getElementById('report-solved').value, memo: document.getElementById('report-memo').value };
+            let reports = loadFB('mistake_reports', []); reports.push(report); saveFB('mistake_reports', reports); 
+            document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(e=>e.value=""); document.querySelectorAll('select').forEach(e=>e.selectedIndex=0); alert("送信完了しました。");
+        }
+
+        // ==========================================
+        // 💮 スタンプ機能
+        // ==========================================
+        function renderStamps() {
+            const count = parseInt(studentDataCache['stamps']) || 0; const cards = parseInt(studentDataCache['stamp_cards']) || 1;
+            document.getElementById('stamp-card-level').innerText = `Level ${cards}`; const grid = document.getElementById('stamp-grid'); grid.innerHTML = "";
+            for(let i=1; i<=STAMP_MAX; i++) grid.innerHTML += `<div class="stamp-slot ${i <= count ? "filled" : ""}">${i <= count ? '<i class="fa-solid fa-check"></i>' : ""}</div>`;
+        }
+
+        // ==========================================
+        // 📅 カレンダー＆宿題機能
+        // ==========================================
+        function renderCalendar() {
+            const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
+            const today = new Date(); const year = today.getFullYear(), month = today.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {});
+            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
+
+            ['日','月','火','水','木','金','土'].forEach(h => grid.innerHTML += `<div class="cal-day-head">${h}</div>`);
+            for(let i=0; i<new Date(year, month, 1).getDay(); i++) grid.innerHTML += `<div></div>`;
+            for(let i=1; i<=daysInMonth; i++) {
+                const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`; let badgeHtml = "";
+                if(targetTitle && targetDate === dStr) { badgeHtml += `<div class="cal-badge" style="background:#ebf8ff; color:#2b6cb0; border-left:2px solid #2b6cb0;"><i class="fa-solid fa-flag"></i> ${targetTitle}</div>`; }
+                if(events[dStr]) events[dStr].forEach(ev => {
+                    let color = ev.color || '#a0aec0'; let text = ev.text;
+                    if(ev.type === 'hw') { color = doneDict[`${dStr}_${ev.text}`] ? '#48bb78' : '#ed8936'; text = doneDict[`${dStr}_${ev.text}`] ? `済:${ev.text}` : `宿:${ev.text}`; }
+                    else if (ev.type === 'lesson') { color = '#4299e1'; text = `👨‍🏫 指導`; } else if (ev.type === 'test') { color = '#f56565'; text = `📝 ${ev.text}`; }
+                    badgeHtml += `<div class="cal-badge" style="background:${color}">${text}</div>`;
+                });
+                grid.innerHTML += `<div class="cal-day ${i === today.getDate() ? 'today' : ''} ${dStr === selectedDateStr ? 'selected' : ''}" onclick="selectDate('${dStr}')"><b style="display:block;margin-bottom:2px;">${i}</b>${badgeHtml}</div>`;
+            }
+            if(selectedDateStr) renderSelectedDateEvents();
+        }
+
+        function selectDate(dStr) { selectedDateStr = dStr; document.getElementById('event-add-panel').style.display = 'block'; document.getElementById('selected-date-display').innerText = dStr; renderCalendar(); }
+        function renderSelectedDateEvents() {
+            const listDiv = document.getElementById('selected-date-events-list'); const events = loadFB('cal_events', {}); const evs = events[selectedDateStr] || []; const doneDict = loadFB('hw_done', {});
+            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
+            let html = "";
+            if(targetTitle && targetDate === selectedDateStr) { html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border-left:4px solid #2b6cb0; padding:8px 10px; border-radius:6px; border: 1px solid #bee3f8; margin-bottom:5px;"><span style="font-size:13px; font-weight:bold; color:#2c5282;"><i class="fa-solid fa-flag"></i> ${targetTitle}</span></div>`; }
+            if(evs.length === 0 && html === "") { listDiv.innerHTML = `<div style="font-size:12px; color:#a0aec0; text-align:center; padding:10px 0;">予定なし</div>`; return; }
+            
+            html += evs.map((ev, idx) => {
+                let color = ev.color || '#a0aec0'; let text = ev.text; let delBtn = "";
+                if(ev.type === 'hw') { color = doneDict[`${selectedDateStr}_${ev.text}`] ? '#48bb78' : '#ed8936'; }
+                else if (ev.type === 'lesson') { color = '#4299e1'; text = `👨‍🏫 指導日`; } else if (ev.type === 'test') { color = '#f56565'; text = `📝 ${ev.text}`; }
+                if(ev.type === 'student') delBtn = `<button onclick="deleteEvent('${selectedDateStr}', ${idx})" style="background:var(--danger); color:white; border:none; border-radius:4px; padding:5px 10px; font-size:10px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>`;
+                return `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-left:4px solid ${color}; padding:8px 10px; border-radius:6px; border: 1px solid #e2e8f0;"><span style="font-size:13px; font-weight:bold;">${text}</span>${delBtn}</div>`;
+            }).join('');
+            listDiv.innerHTML = html;
+        }
+        function addStudentEvent(prefix, colorCode) { const text = prompt(`予定の内容を入力してください`); if(!text) return; let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type: 'student', text: `${prefix} ${text}`, color: colorCode}); saveFB('cal_events', evs); }
+        function deleteEvent(dateStr, idx) { if(!confirm("削除しますか？")) return; let evs = loadFB('cal_events', {}); evs[dateStr].splice(idx, 1); if(evs[dateStr].length === 0) delete evs[dateStr]; saveFB('cal_events', evs); }
+
+        function renderHomeworkList() {
+            const events = loadFB('cal_events', {}); const doneDict = loadFB('hw_done', {}); const hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {};
+            const hwListDiv = document.getElementById('hw-list'); let hwHtml = ""; let hasHw = false; let inputIdCounter = 0;
+            Object.keys(events).sort().forEach(dateStr => {
+                events[dateStr].forEach(ev => {
+                    if(ev.type === 'hw') {
+                        const hwKey = `${dateStr}_${ev.text}`; if(hiddenDict[hwKey]) return; hasHw = true; const isDone = doneDict[hwKey];
+                        if(isDone) {
+                            let timeStr = (typeof isDone === 'object' && isDone.time) ? `<span style="color:#2f855a; font-size:11px; background:#c6f6d5; padding:2px 6px; border-radius:10px;"><i class="fa-solid fa-stopwatch"></i> ${isDone.time}</span>` : '';
+                            hwHtml += `<div class="hw-item done-bg"><div style="font-size:11px; color:#2f855a; font-weight:bold; margin-bottom:4px;"><i class="fa-regular fa-calendar"></i> ${dateStr}</div><div style="font-size:14px; font-weight:bold; margin-bottom:6px; color:#22543d;">${ev.text}</div>${timeStr}<div style="display:flex; gap:8px; margin-top:10px;"><button class="btn-complete done" style="flex:2; background:#a0aec0; cursor:default;"><i class="fa-solid fa-check"></i> 完了済</button><button onclick="hideHw('${dateStr}', '${ev.text}')" style="flex:1; padding:8px; background:#fff; border:1px solid #cbd5e0; color:#718096; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">非表示</button></div></div>`;
+                        } else {
+                            const cid = `hw_input_${inputIdCounter}`;
+                            hwHtml += `<div class="hw-item"><div style="font-size:11px; color:var(--main); font-weight:bold; margin-bottom:4px;"><i class="fa-regular fa-calendar"></i> ${dateStr}</div><div style="font-size:14px; font-weight:bold; margin-bottom:10px; color:var(--text-main);">${ev.text}</div><div style="display:flex; align-items:center; gap:5px; margin-bottom:12px; font-size:12px; font-weight:bold; color:var(--text-light);"><i class="fa-solid fa-stopwatch"></i> <input type="number" id="min_${cid}" placeholder="0" style="width:50px; padding:6px; text-align:center;"> 分 <input type="number" id="sec_${cid}" placeholder="0" style="width:50px; padding:6px; text-align:center;"> 秒</div><button class="btn-complete" onclick="markDone('${dateStr}', '${ev.text}', '${cid}')"><i class="fa-solid fa-check"></i> 完了にする</button></div>`;
+                            inputIdCounter++;
+                        }
+                    }
+                });
+            });
+            hwListDiv.innerHTML = hasHw ? hwHtml : `<div style="text-align:center; color:var(--text-light); padding:20px 0; font-size:13px;"><i class="fa-solid fa-mug-hot" style="font-size:24px; margin-bottom:10px; display:block; color:#cbd5e0;"></i>現在、未完了の課題はありません。</div>`;
+        }
+        function markDone(dateStr, hwText, inputId) {
+            const min = document.getElementById(`min_${inputId}`).value || "0"; const sec = document.getElementById(`sec_${inputId}`).value || "0";
+            const hwKey = `${dateStr}_${hwText}`; let doneDict = loadFB('hw_done', {}); if(doneDict[hwKey]) return;
+            doneDict[hwKey] = { done: true, time: `${min}分${sec}秒` }; saveFB('hw_done', doneDict); saveFB_Raw('task_status', 'completed');
+            let count = parseInt(studentDataCache['stamps']) || 0; let cards = parseInt(studentDataCache['stamp_cards']) || 1; count++;
+            if(count >= STAMP_MAX) { saveFB_Raw('stamps', 0); saveFB_Raw('stamp_cards', cards + 1); alert("🎉 レベルアップ！次のステージへ進みました。"); } else { saveFB_Raw('stamps', count); }
+        }
+        function hideHw(dateStr, hwText) { if(!confirm("リストから非表示にしますか？")) return; const hwKey = `${dateStr}_${hwText}`; let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true; localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList(); }
+
+        // ==========================================
+        // 🎨 ホワイトボード機能
+        // ==========================================
+        const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
+        let isDrawing = false; let currentTool = 'pen'; let currentColor = '#2b6cb0'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
+        function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; }
+        function redrawCanvas() { if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0); if(activeText) { ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180); ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(activeText.text, 0, 0); ctx.restore(); } }
+        function fixText() { if(!activeText) return; redrawCanvas(); savedCanvasData = null; activeText = null; document.getElementById('text-controls').style.display = 'none'; }
+        function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
+        function handleStart(e) { if(e.type === 'touchstart') e.preventDefault(); const p = getPos(e); if(currentTool === 'text') { if(!activeText) { const txt = prompt("テキスト入力:"); if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); } } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); } return; } if(activeText) fixText(); isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function handleMove(e) { if(e.type === 'touchmove') e.preventDefault(); const p = getPos(e); if(currentTool === 'text' && isDraggingText && activeText) { activeText.x = p.x; activeText.y = p.y; redrawCanvas(); return; } if(!isDrawing) return; ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
+        function handleEnd(e) { isDrawing = false; isDraggingText = false; }
+        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#student-drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
+        function setColor(c) { currentColor = c; setTool('pen'); }
+        function setLineWidth(w) { lineWidth = w; }
+        function clearBoard() { if(confirm("全て消去しますか？")) { activeText = null; savedCanvasData = null; document.getElementById('text-controls').style.display = 'none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
+        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
+        canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
+
+        function submitSlide() { if(activeText) fixText(); try { let slides = loadFB('student_wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('student_wb_slides', slides); alert("🚀 送信しました！"); ctx.clearRect(0, 0, canvas.width, canvas.height); } catch(e) { alert("エラーが発生しました。"); } }
+        function renderMySentSlides() { const container = document.getElementById('my-sent-slides-container'); const slides = loadFB('student_wb_slides', []); if(slides.length === 0) { container.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">送信したノートはありません</div>`; return; } container.innerHTML = [...slides].reverse().map((s, idx) => `<div class="slide-item"><button class="slide-delete-btn" onclick="deleteMySlide(${s.id})"><i class="fa-solid fa-xmark"></i></button><div style="font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:8px; text-align:left;">送信済み ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); }
+        function deleteMySlide(id) { if(!confirm("送信を取り消しますか？")) return; let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); }
+
+        // ==========================================
+        // 🔄 データの表示（★目標・自動カウントダウン高精度版）
+        // ==========================================
+        function syncData() {
+            const targetTitle = studentDataCache['target_title']; 
+            const targetDate = studentDataCache['target_date'];
+            const area = document.getElementById('countdown-area');
+            const daysEl = document.getElementById('countdown-days');
+            
+            if(targetTitle) {
+                area.style.display = 'block'; 
+                document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; 
+                
+                if(targetDate) {
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
+                    const diff = tDate - today;
+                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                    daysEl.style.display = 'block';
+                    daysEl.innerText = `あと ${d} 日`;
+                } else {
+                    daysEl.style.display = 'none'; 
+                }
+            } else { area.style.display = 'none'; }
+            
+            const files = loadFB('materials', []); const list = document.getElementById('material-list');
+            if(files.length > 0) { list.innerHTML = files.map(f => `<div style="display:flex; align-items:center; gap:12px; padding:12px; background:#f7fafc; border-radius:8px; border:1px solid #edf2f7; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'" onclick="openFile('${f.url}', '${f.type}')"><span style="font-size:20px; color:var(--main);">${f.type==='pdf'?'<i class="fa-solid fa-file-pdf"></i>':'<i class="fa-regular fa-image"></i>'}</span><div style="font-size:13px; font-weight:bold; color:var(--text-main);">${f.name}</div></div>`).join(''); } else { list.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">配布された教材はありません</div>`; }
+            renderTeacherSlides();
+        }
+
+        function renderTeacherSlides() { const slides = loadFB('wb_slides', []); const boardCard = document.getElementById('shared-board-card'); const container = document.getElementById('teacher-slides-container'); if(slides.length > 0) { boardCard.style.display = 'block'; const html = [...slides].reverse().map((s, idx) => `<div class="slide-item"><div style="font-size:11px; font-weight:bold; color:var(--main); margin-bottom:8px; text-align:left;">共有ノート ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); if (container.innerHTML !== html) container.innerHTML = html; } else { boardCard.style.display = 'none'; container.innerHTML = ''; } }
+        function openFile(url, type) { const content = document.getElementById('file-content'); content.innerHTML = type==='pdf' ? `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:8px;"></iframe>` : `<img src="${url}" style="max-width:100%; max-height:85vh; border-radius:8px;">`; document.getElementById('preview-overlay').style.display='flex'; }
+        function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
+    </script>
+</body>
+</html>

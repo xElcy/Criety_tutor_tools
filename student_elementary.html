@@ -242,6 +242,17 @@
                 <h3><i class="fa-solid fa-file-pdf"></i> 先生からのプリント</h3>
                 <div id="material-list" style="display:flex; flex-direction: column; gap:8px;"></div>
             </div>
+            
+            <div class="mid-card" style="border-color: #9c27b0;">
+                <h3 style="color: #8e24aa; border-bottom-color: #f3e5f5;"><i class="fa-solid fa-key"></i> あんごう（パスワード）をかえる</h3>
+                <div class="form-row">
+                    <label>あたらしいパスワード（半角えいすう）</label>
+                    <input type="text" id="new-password-input" placeholder="あたらしいパスワードをいれてね">
+                </div>
+                <button onclick="changeMyPassword()" style="width:100%; padding:14px; background:#9c27b0; color:white; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 4px 0 #6a1b9a;">
+                    <i class="fa-solid fa-lock"></i> パスワードをかえる
+                </button>
+            </div>
         </div>
     </div>
 
@@ -580,6 +591,22 @@
         function renderTeacherSlides() { const slides = loadFB('wb_slides', []); const boardCard = document.getElementById('shared-board-card'); const container = document.getElementById('teacher-slides-container'); if(slides.length > 0) { boardCard.style.display = 'block'; const html = [...slides].reverse().map((s, idx) => `<div class="slide-item"><div style="font-size:11px; font-weight:bold; color:var(--main); margin-bottom:8px; text-align:left;">先生のノート ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); if (container.innerHTML !== html) container.innerHTML = html; } else { boardCard.style.display = 'none'; container.innerHTML = ''; } }
         function openFile(url, type) { const content = document.getElementById('file-content'); content.innerHTML = type==='pdf' ? `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:8px;"></iframe>` : `<img src="${url}" style="max-width:100%; max-height:85vh; border-radius:8px;">`; document.getElementById('preview-overlay').style.display='flex'; }
         function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
+        function changeMyPassword() {
+            const newPass = document.getElementById('new-password-input').value.trim();
+            if(!newPass) return alert("あたらしいパスワードをいれてね！");
+            if(newPass.length < 4) return alert("パスワードは4文字いじょうにしてね！");
+            if(!confirm("本当にパスワードを「" + newPass + "」にかえる？")) return;
+
+            // 1. admin/students のパスワードを更新
+            db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
+                // 2. オーナー確認用のログを追加
+                const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
+                db.ref('admin/password_logs').push(logData);
+                
+                alert("パスワードをかえました！わすれないようにメモしてね。");
+                document.getElementById('new-password-input').value = "";
+            }).catch(e => alert("エラーがおきたよ。先生に聞いてね。"));
+        }
     </script>
 </body>
 </html>

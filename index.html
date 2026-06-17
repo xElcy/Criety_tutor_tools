@@ -98,9 +98,17 @@
     <div id="auth-overlay">
         <div class="auth-box" id="auth-step-1">
             <h2>Criety 講師ログイン</h2>
-            <input type="text" id="auth-email" placeholder="メールアドレス">
-            <input type="password" id="auth-password" placeholder="パスワード">
-            <button class="btn-submit" onclick="handleAuth()">ログイン</button>
+            <form onsubmit="event.preventDefault(); handleAuth();">
+                <input type="text" id="auth-email" name="username" autocomplete="username" placeholder="メールアドレス" required>
+                <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="パスワード" required>
+                
+                <div style="text-align: left; margin-bottom: 20px; font-size: 13px; color: #666; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="checkbox" id="remember-me-teacher" checked style="width: auto; margin: 0; padding: 0; cursor: pointer;">
+                    <label for="remember-me-teacher" style="cursor: pointer; margin: 0; font-weight:bold;">このデバイスに記憶する（30日間）</label>
+                </div>
+                
+                <button type="submit" class="btn-submit">ログイン</button>
+            </form>
         </div>
         
         <div class="auth-box" id="auth-step-owner" style="display: none;">
@@ -413,15 +421,31 @@
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + managedStudentId + '/' + key).set(val); }
         function removeFB(key) { delete studentDataCache[key]; if(db) db.ref('students/' + managedStudentId + '/' + key).remove(); }
 
+        // ==========================================
+        // 🔐 先生用：ログイン・記憶処理
+        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
-            const u = localStorage.getItem('criety_logged_in_user');
-            if(u) {
-                tempEmail = u; isOwner = (u === 'xelcys@gmail.com');
+            let savedUser = sessionStorage.getItem('criety_auth_teacher');
+            let expiry = localStorage.getItem('criety_auth_teacher_expiry');
+            
+            // 30日間の有効期限チェック
+            if (!savedUser && localStorage.getItem('criety_auth_teacher')) {
+                if (expiry && Date.now() > parseInt(expiry)) {
+                    localStorage.removeItem('criety_auth_teacher');
+                    localStorage.removeItem('criety_auth_teacher_expiry');
+                } else {
+                    savedUser = localStorage.getItem('criety_auth_teacher');
+                }
+            }
+
+            if(savedUser) {
+                tempEmail = savedUser; 
+                isOwner = (savedUser === 'xelcys@gmail.com');
                 document.getElementById('auth-step-1').style.display = 'none';
                 if(isOwner) { 
                     prepareOwnerDropdown('owner-student-dropdown'); 
                 } else {
-                    prepareTeacherDropdown(u);
+                    prepareTeacherDropdown(savedUser);
                 }
             }
             if(document.getElementById('log-date')) document.getElementById('log-date').valueAsDate = new Date();
@@ -430,10 +454,24 @@
         function handleAuth() {
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
             const pass = document.getElementById('auth-password').value.trim();
-            if(!email || !pass) return;
+            const remember = document.getElementById('remember-me-teacher').checked;
+            
+            if(!email || !pass) return alert("メールアドレスとパスワードを入力してください。");
+
+            // 保存処理をまとめる関数
+            const saveLoginState = (userEmail) => {
+                tempEmail = userEmail; 
+                if (remember) {
+                    localStorage.setItem('criety_auth_teacher', userEmail);
+                    localStorage.setItem('criety_auth_teacher_expiry', Date.now() + 30 * 24 * 60 * 60 * 1000); 
+                } else {
+                    sessionStorage.setItem('criety_auth_teacher', userEmail);
+                }
+            };
 
             if(email === 'xelcys@gmail.com' && pass === '123456') { 
-                tempEmail = email; isOwner = true; localStorage.setItem('criety_logged_in_user', tempEmail);
+                isOwner = true; 
+                saveLoginState(email);
                 document.getElementById('auth-step-1').style.display = 'none'; 
                 openAdminHub();
             } else {
@@ -441,9 +479,11 @@
                 db.ref('admin/teachers/' + escapeEmail).once('value').then(snap => {
                     const tData = snap.val();
                     if(tData && tData.password === pass) {
-                        tempEmail = email; isOwner = false; localStorage.setItem('criety_logged_in_user', tempEmail); prepareTeacherDropdown(email);
+                        isOwner = false; 
+                        saveLoginState(email);
+                        prepareTeacherDropdown(email);
                     } else { alert("認証に失敗しました。"); }
-                });
+                }).catch(e => alert("通信エラーが発生しました。"));
             }
         }
 

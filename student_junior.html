@@ -69,8 +69,7 @@
         .btn-complete { padding: 10px; background: var(--success); color: #fff; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 13px; transition: 0.2s;}
         .btn-complete:hover { background: #2f855a; }
 
-        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; font-size: 12px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 4px; transition: 0.2s;}
-        .tool-btn:hover { background: #f7fafc; }
+        .tool-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; font-size: 13px; font-weight: bold; color: var(--text-main);}
         .tool-btn.active { background: #ebf8ff; border-color: #63b3ed; color: #2b6cb0; }
         .slide-item { background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; text-align: center; position: relative;}
         .slide-item img { width: 100%; border-radius: 6px; border: 1px solid #cbd5e0; cursor: pointer; }
@@ -159,9 +158,7 @@
 
             <div class="mid-card">
                 <h3><i class="fa-solid fa-pen-to-square"></i> 提出用ホワイトボード</h3>
-                <p style="font-size:11px; color:var(--text-light); margin-bottom:10px;">写真を読み込んだ後は、2本指で「ズーム（拡大）」や「移動」ができます！</p>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;" id="student-drawing-tools">
-                    
                     <button class="tool-btn" style="color: #fff; background: var(--accent); border-color: var(--accent);" onclick="document.getElementById('camera-input').click()">
                         <i class="fa-solid fa-camera"></i> ワークを撮る
                     </button>
@@ -174,11 +171,14 @@
                         <i class="fa-solid fa-magnifying-glass-minus"></i> 表示リセット
                     </button>
 
-                    <input type="color" id="color-picker" value="#e53e3e" onchange="setColor(this.value)" style="width: 32px; height: 32px; border: none; padding: 0; cursor: pointer; border-radius:4px; margin-left: auto;">
+                    <input type="color" id="color-picker" value="#2b6cb0" onchange="setColor(this.value)" style="width: 32px; height: 32px; border: none; padding: 0; cursor: pointer; border-radius:4px; margin-left: auto;">
                 </div>
-                
+                <div id="text-controls" style="display: none; justify-content: center; gap: 8px; margin-bottom: 12px;">
+                    <button class="tool-btn" onclick="changeTextScale(0.2)">サイズ ＋</button>
+                    <button class="tool-btn" onclick="changeTextScale(-0.2)">サイズ ➖</button>
+                    <button class="tool-btn" style="background:var(--success); color:white; border:none;" onclick="fixText()">配置を確定</button>
+                </div>
                 <canvas id="student-whiteboard" width="800" height="600" style="width: 100%; border: 1px solid #cbd5e0; border-radius: 8px; background: white; touch-action: none; display: block; margin-bottom: 12px;"></canvas>
-                
                 <div style="display: flex; gap: 10px;">
                     <button onclick="submitSlide()" style="flex: 2; padding: 14px; background: var(--main); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:14px;"><i class="fa-regular fa-paper-plane"></i> 先生に送信する</button>
                     <button onclick="clearBoard()" style="flex: 1; padding: 14px; background: #edf2f7; color: var(--danger); border: 1px solid #e2e8f0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:13px;"><i class="fa-solid fa-trash-can"></i> 全消去</button>
@@ -320,7 +320,7 @@
         }
 
         // ==========================================
-        // 📅 カレンダー＆宿題機能
+        // 📅 カレンダー機能
         // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
@@ -394,7 +394,6 @@
         const canvas = document.getElementById('student-whiteboard'); 
         const ctx = canvas.getContext('2d');
         
-        // オフスクリーンキャンバス（実際の高解像度データを保持）
         const offCanvas = document.createElement('canvas'); 
         offCanvas.width = 800; offCanvas.height = 600; 
         const oCtx = offCanvas.getContext('2d');
@@ -405,7 +404,6 @@
         let initialDist = 0, lastCenter = {x:0, y:0};
         let currentTool = 'pen'; let currentColor = '#e53e3e'; let lineWidth = 5;
 
-        // 画面のタップ座標を、ズーム・移動を考慮した「本当のキャンバス座標」に変換
         function getRealPos(clientX, clientY) { 
             const rect = canvas.getBoundingClientRect(); 
             const sx = (clientX - rect.left) * (canvas.width / rect.width); 
@@ -413,7 +411,6 @@
             return { x: (sx - panX) / zoom, y: (sy - panY) / zoom }; 
         }
 
-        // オフスクリーンから表示用キャンバスへ描画（ズーム・パンを適用）
         function redrawCanvas() { 
             ctx.setTransform(1,0,0,1,0,0); 
             ctx.clearRect(0,0,canvas.width,canvas.height); 
@@ -421,7 +418,6 @@
             ctx.drawImage(offCanvas,0,0); 
         }
 
-        // カメラ（またはフォルダ）から画像を読み込み、オフスクリーンに定着
         function loadCameraImage(e) {
             const file = e.target.files[0]; if(!file) return;
             const reader = new FileReader();
@@ -432,7 +428,7 @@
                     const scale = Math.min(800/img.width, 600/img.height);
                     const w = img.width * scale, h = img.height * scale;
                     oCtx.drawImage(img, (800-w)/2, (600-h)/2, w, h);
-                    zoom = 1; panX = 0; panY = 0; // 表示リセット
+                    zoom = 1; panX = 0; panY = 0; 
                     redrawCanvas();
                 };
                 img.src = event.target.result;
@@ -441,13 +437,10 @@
             e.target.value = ""; 
         }
 
-        // ズーム・移動をリセット
         function resetZoom() { zoom = 1; panX = 0; panY = 0; redrawCanvas(); }
 
         function handleStart(e) { 
             if(e.type === 'touchstart') e.preventDefault(); 
-            
-            // ★ 2本指タップならピンチズーム準備
             if(e.touches && e.touches.length === 2) {
                 isPinching = true;
                 initialDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
@@ -455,58 +448,38 @@
                 return;
             }
             if(isPinching) return;
-
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             const rp = getRealPos(clientX, clientY);
-            
-            isDrawing = true; 
-            oCtx.beginPath(); oCtx.moveTo(rp.x, rp.y); 
+            isDrawing = true; oCtx.beginPath(); oCtx.moveTo(rp.x, rp.y); 
         }
 
         function handleMove(e) { 
             if(e.type === 'touchmove') e.preventDefault(); 
-            
-            // ★ 2本指でのズームと移動処理
             if(e.touches && e.touches.length === 2 && isPinching) {
                 const cDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 const cCenter = { x: (e.touches[0].clientX + e.touches[1].clientX)/2, y: (e.touches[0].clientY + e.touches[1].clientY)/2 };
-                
                 let nZoom = zoom * (cDist / initialDist); 
                 if(nZoom < 0.5) nZoom = 0.5; if(nZoom > 5) nZoom = 5;
-                
                 const rect = canvas.getBoundingClientRect();
                 const ccX = (cCenter.x - rect.left) * (canvas.width / rect.width);
                 const ccY = (cCenter.y - rect.top) * (canvas.height / rect.height);
-                
-                panX = ccX - (ccX - panX) * (nZoom / zoom);
-                panY = ccY - (ccY - panY) * (nZoom / zoom);
-                panX += (cCenter.x - lastCenter.x) * (canvas.width / rect.width);
-                panY += (cCenter.y - lastCenter.y) * (canvas.height / rect.height);
-                
+                panX = ccX - (ccX - panX) * (nZoom / zoom); panY = ccY - (ccY - panY) * (nZoom / zoom);
+                panX += (cCenter.x - lastCenter.x) * (canvas.width / rect.width); panY += (cCenter.y - lastCenter.y) * (canvas.height / rect.height);
                 zoom = nZoom; initialDist = cDist; lastCenter = cCenter;
                 redrawCanvas(); 
                 return;
             }
-
             if(!isDrawing || isPinching) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             const rp = getRealPos(clientX, clientY);
-            
-            // ★ オフスクリーンに描画
-            oCtx.lineTo(rp.x, rp.y); 
-            oCtx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
-            oCtx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; 
-            oCtx.lineCap = 'round'; oCtx.lineJoin = 'round'; oCtx.stroke(); 
-            redrawCanvas(); // 画面に反映
+            oCtx.lineTo(rp.x, rp.y); oCtx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
+            oCtx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; oCtx.lineCap = 'round'; oCtx.lineJoin = 'round'; oCtx.stroke(); 
+            redrawCanvas(); 
         }
         
-        function handleEnd(e) { 
-            if(e.touches && e.touches.length < 2) isPinching = false;
-            isDrawing = false; 
-        }
-        
+        function handleEnd(e) { if(e.touches && e.touches.length < 2) isPinching = false; isDrawing = false; }
         function setTool(t) { currentTool = t; document.querySelectorAll('#student-drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
@@ -515,29 +488,26 @@
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('mouseout', handleEnd);
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
 
-        // ★ オフスクリーン（高解像度）の画像をそのまま先生へ送信
+        // ★ 修正：送信後はサイレントにリセット
         function submitSlide() { 
             try { 
                 let slides = loadFB('student_wb_slides', []); 
                 slides.push({ id: Date.now(), data: offCanvas.toDataURL('image/jpeg', 0.8) }); 
                 saveFB('student_wb_slides', slides); 
                 alert("🚀 先生に送信しました！"); 
-                clearBoard(); 
+                // ダイアログを出さずに消去
+                oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600); resetZoom();
             } catch(e) { alert("エラーが発生しました。写真のサイズが大きい可能性があります。"); } 
         }
 
         function renderMySentSlides() { const container = document.getElementById('my-sent-slides-container'); const slides = loadFB('student_wb_slides', []); if(slides.length === 0) { container.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">送信したノートはありません</div>`; return; } container.innerHTML = [...slides].reverse().map((s, idx) => `<div class="slide-item"><button class="slide-delete-btn" onclick="deleteMySlide(${s.id})"><i class="fa-solid fa-xmark"></i></button><div style="font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:8px; text-align:left;">送信済み ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); }
         function deleteMySlide(id) { if(!confirm("送信を取り消しますか？")) return; let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); }
 
-        // ==========================================
-        // 🔄 データの表示
-        // ==========================================
         function syncData() {
             const targetTitle = studentDataCache['target_title']; 
             const area = document.getElementById('countdown-area');
             if(targetTitle) { area.style.display = 'block'; document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; } 
             else { area.style.display = 'none'; }
-            
             const files = loadFB('materials', []); const list = document.getElementById('material-list');
             if(files.length > 0) { list.innerHTML = files.map(f => `<div style="display:flex; align-items:center; gap:12px; padding:12px; background:#f7fafc; border-radius:8px; border:1px solid #edf2f7; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'" onclick="openFile('${f.url}', '${f.type}')"><span style="font-size:20px; color:var(--main);">${f.type==='pdf'?'<i class="fa-solid fa-file-pdf"></i>':'<i class="fa-regular fa-image"></i>'}</span><div style="font-size:13px; font-weight:bold; color:var(--text-main);">${f.name}</div></div>`).join(''); } else { list.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">配布された教材はありません</div>`; }
             renderTeacherSlides();

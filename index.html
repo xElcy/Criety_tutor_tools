@@ -167,6 +167,53 @@
                 <select id="owner-student-dropdown-hub" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; font-weight: bold;"></select>
                 <button class="btn-submit" style="background:#d4af37; color:#1a2530;" onclick="startManage('hub')">この生徒のダッシュボードを開く</button>
             </div>
+
+            <div class="admin-panel" style="border-top: 4px solid #9c27b0;">
+                <h3 style="color: #7b1fa2;">🔐 4. 【セキュリティ】生徒のパスワード変更ログ</h3>
+                <p style="font-size:13px; color:#555;">生徒が自身でパスワードを変更した履歴です。（最新のパスワードはここで確認できます）</p>
+                <button class="btn-submit" style="background:#9c27b0; width:auto; padding:8px 15px; font-size:12px; margin-bottom:10px;" onclick="loadPasswordLogs()">🔄 ログを最新に更新</button>
+                <div class="scrollable-wrap">
+                    <table class="list-table">
+                        <thead><tr><th>変更日時</th><th>生徒ID</th><th>変更後のパスワード</th></tr></thead>
+                        <tbody id="password-change-log-list">
+                            <tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">ログの読み込み中...または変更履歴なし</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ```
+
+**▼ 追加するJavaScript（index.html の `<script>` の最後）**
+```javascript
+        // ★追加機能：オーナー用パスワード変更ログ読み込み
+        function loadPasswordLogs() {
+            if(!isOwner) return;
+            db.ref('admin/password_logs').once('value').then(snap => {
+                const logs = snap.val() || {};
+                const tbody = document.getElementById('password-change-log-list');
+                const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp); // 新しい順
+                
+                if (logArray.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">パスワードの変更履歴はありません</td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = logArray.map(log => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        <td style="font-weight:bold; color:#1976d2;">${log.studentId}</td>
+                        <td style="font-family:monospace; font-weight:bold; color:#d32f2f;">${log.newPassword}</td>
+                    </tr>
+                `).join('');
+            });
+        }
+        
+        // オーナーハブを開く関数を少し拡張して、開いた時に自動でログを読み込むようにします。
+        const originalOpenAdminHub = openAdminHub;
+        openAdminHub = function() {
+            originalOpenAdminHub();
+            loadPasswordLogs();
+        };
         </div>
     </div>
 

@@ -16,14 +16,14 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-dark); color: var(--text-light); display: flex; height: 100vh; overflow: hidden; }
 
         /* --- 左側：コントロールパネル --- */
-        .admin-sidebar { width: 300px; background-color: var(--sidebar-bg); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; overflow-y: auto; }
+        .admin-sidebar { width: 320px; background-color: var(--sidebar-bg); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; overflow-y: auto; }
         .admin-sidebar h1 { color: var(--accent); font-size: 20px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
         .admin-sidebar p { font-size: 12px; color: #888; margin-bottom: 30px; }
 
         .menu-section { margin-bottom: 25px; }
         .menu-section h2 { font-size: 12px; color: #666; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-transform: uppercase; }
         
-        .menu-btn { display: block; width: 100%; text-align: left; background: transparent; color: #ccc; border: 1px solid transparent; padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .menu-btn { display: block; width: 100%; text-align: left; background: transparent; color: #ccc; border: 1px solid transparent; padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
         .menu-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .menu-btn.active { background: rgba(212, 175, 55, 0.1); color: var(--accent); border-color: var(--accent); font-weight: bold; }
 
@@ -40,7 +40,7 @@
         /* スマホのモックアップフレーム */
         .device-frame { width: 400px; height: 800px; background: #fff; border: 12px solid #222; border-radius: 40px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; transition: all 0.3s ease; }
         /* iPhoneのノッチ風デザイン */
-        .device-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 25px; background: #222; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; }
+        .device-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 25px; background: #222; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10; pointer-events: none;}
         
         iframe { width: 100%; height: 100%; border: none; background: #fff; }
 
@@ -62,13 +62,15 @@
 
         <div class="menu-section">
             <h2>Student Apps (Mobile)</h2>
-            <button class="menu-btn completed" onclick="loadPage('student_elementary.html', '🌸 小学生用 UI', 'mobile', this)">1. student_elementary.html</button>
-            <button class="menu-btn completed" onclick="loadPage('student_junior.html', '📘 中学生用 UI (カメラ対応版)', 'mobile', this)">2. student_junior.html</button>
+            <button class="menu-btn completed" onclick="loadPage('student_elementary.html', '🌸 小学生用 UI (一般)', 'mobile', this)">1. student_elementary.html</button>
+            <button class="menu-btn completed" onclick="loadPage('student_exam_elem.html', '🏫 中学受験用 UI (カウントダウン有)', 'mobile', this)">2. student_exam_elem.html</button>
+            <button class="menu-btn completed" onclick="loadPage('student_middle.html', '📘 中学生用 UI (一般)', 'mobile', this)">3. student_middle.html</button>
+            <button class="menu-btn completed" onclick="loadPage('student_exam_mid.html', '🔥 高校受験用 UI (カウントダウン有)', 'mobile', this)">4. student_exam_mid.html</button>
+            <button class="menu-btn completed" onclick="loadPage('student_high.html', '🎓 高校生用 UI (スマート・ミニマル)', 'mobile', this)">5. student_high.html</button>
         </div>
         
         <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #333;">
-            <p style="font-size: 11px; color: #555;">※LocalStorageとFirebaseのデータは全iframeで共有されるため、先生画面から操作し、そのままここで生徒画面に切り替えて連携テストが可能です。</p>
-            <p style="font-size: 11px; color: #4caf50; margin-top: 10px;">緑色の線がついているファイルが現在機能テスト可能な完成版です。</p>
+            <p style="font-size: 11px; color: #aaa; line-height: 1.5;">※LocalStorageとFirebaseのデータは全iframeで共有されます。先生画面で「生徒のID」に入室し、目標や宿題を追加してから、各生徒用の画面に切り替えて動作テストを行ってください。</p>
         </div>
     </div>
 

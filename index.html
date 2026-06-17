@@ -181,39 +181,6 @@
                     </table>
                 </div>
             </div>
-            ```
-
-**▼ 追加するJavaScript（index.html の `<script>` の最後）**
-```javascript
-        // ★追加機能：オーナー用パスワード変更ログ読み込み
-        function loadPasswordLogs() {
-            if(!isOwner) return;
-            db.ref('admin/password_logs').once('value').then(snap => {
-                const logs = snap.val() || {};
-                const tbody = document.getElementById('password-change-log-list');
-                const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp); // 新しい順
-                
-                if (logArray.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">パスワードの変更履歴はありません</td></tr>`;
-                    return;
-                }
-                
-                tbody.innerHTML = logArray.map(log => `
-                    <tr>
-                        <td>${new Date(log.timestamp).toLocaleString()}</td>
-                        <td style="font-weight:bold; color:#1976d2;">${log.studentId}</td>
-                        <td style="font-family:monospace; font-weight:bold; color:#d32f2f;">${log.newPassword}</td>
-                    </tr>
-                `).join('');
-            });
-        }
-        
-        // オーナーハブを開く関数を少し拡張して、開いた時に自動でログを読み込むようにします。
-        const originalOpenAdminHub = openAdminHub;
-        openAdminHub = function() {
-            originalOpenAdminHub();
-            loadPasswordLogs();
-        };
         </div>
     </div>
 
@@ -726,6 +693,35 @@
         function deleteSlide(id, type) { const key = type === 'student' ? 'student_wb_slides' : 'wb_slides'; if(!confirm("削除しますか？")) return; let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s); type === 'student' ? renderStudentSlides() : renderWbSlides(); }
         function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "画像プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; }
+        // ★追加機能：オーナー用パスワード変更ログ読み込み
+        function loadPasswordLogs() {
+            if(!isOwner) return;
+            db.ref('admin/password_logs').once('value').then(snap => {
+                const logs = snap.val() || {};
+                const tbody = document.getElementById('password-change-log-list');
+                const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp); // 新しい順
+                
+                if (logArray.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">パスワードの変更履歴はありません</td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = logArray.map(log => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        <td style="font-weight:bold; color:#1976d2;">${log.studentId}</td>
+                        <td style="font-family:monospace; font-weight:bold; color:#d32f2f;">${log.newPassword}</td>
+                    </tr>
+                `).join('');
+            });
+        }
+        
+        // オーナーハブを開く関数を少し拡張して、開いた時に自動でログを読み込むようにします。
+        const originalOpenAdminHub = openAdminHub;
+        openAdminHub = function() {
+            originalOpenAdminHub();
+            loadPasswordLogs();
+        };
     </script>
 </body>
 </html>

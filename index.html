@@ -262,11 +262,9 @@
 
             <div id="profile" class="page">
                 <div class="header"><h1>生徒情報・指導カルテ</h1></div>
-                
                 <p id="profile-readonly-msg" style="font-size:13px; font-weight:bold; color:var(--danger); display:none; background:#ffebee; padding:12px; border-radius:6px; margin-bottom:20px; border-left:4px solid var(--danger);">
                     🔒 一般講師アカウントのため、カルテの編集はできません。（閲覧のみ）<br>内容の変更が必要な場合はオーナーへ依頼してください。
                 </p>
-
                 <div class="panel" style="border-top: 4px solid var(--accent-color);">
                     <h3 style="color: var(--accent-color);">👤 基本情報（保護者・連絡先）</h3>
                     <p style="font-size:12px; color:#666;">この情報は現在接続中の生徒IDにのみ紐づき、担当外の講師からは完全に秘匿されます。</p>
@@ -283,7 +281,6 @@
                     <h3 style="color: #2e7d32;">🎯 指導方針・特記事項</h3>
                     <label>現在の目標・指導方針</label><textarea id="prof-policy" rows="3"></textarea>
                     <label>生徒の性格・苦手・メモ</label><textarea id="prof-memo" rows="4"></textarea>
-                    
                     <button id="btn-save-profile" class="btn-submit" style="background:#4caf50;" onclick="saveProfile()">✅ カルテの情報を保存する</button>
                 </div>
             </div>
@@ -422,7 +419,6 @@
                 tempEmail = u; isOwner = (u === 'xelcys@gmail.com');
                 document.getElementById('auth-step-1').style.display = 'none';
                 if(isOwner) { 
-                    cleanupDummyAccounts(); 
                     prepareOwnerDropdown('owner-student-dropdown'); 
                 } else {
                     prepareTeacherDropdown(u);
@@ -438,9 +434,8 @@
 
             if(email === 'xelcys@gmail.com' && pass === '123456') { 
                 tempEmail = email; isOwner = true; localStorage.setItem('criety_logged_in_user', tempEmail);
-                cleanupDummyAccounts(); 
                 document.getElementById('auth-step-1').style.display = 'none'; 
-                prepareOwnerDropdown('owner-student-dropdown');
+                openAdminHub();
             } else {
                 const escapeEmail = email.replace(/\./g, '_');
                 db.ref('admin/teachers/' + escapeEmail).once('value').then(snap => {
@@ -450,11 +445,6 @@
                     } else { alert("認証に失敗しました。"); }
                 });
             }
-        }
-
-        function cleanupDummyAccounts() {
-            if(!db) return;
-            ['kage', '26001'].forEach(id => { db.ref('students/' + id).remove(); db.ref('admin/students/' + id).remove(); });
         }
 
         function prepareOwnerDropdown(targetSelectId) {
@@ -486,9 +476,34 @@
             });
         }
 
+        // ★ オーナーハブを開くときにパスワードログも一緒に読み込む
         function openAdminHub() {
             document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'none'; document.getElementById('admin-hub-layout').style.display = 'block';
             prepareOwnerDropdown('owner-student-dropdown-hub');
+            loadPasswordLogs();
+        }
+
+        // ★ パスワード変更ログの読み込み
+        function loadPasswordLogs() {
+            if(!isOwner) return;
+            db.ref('admin/password_logs').once('value').then(snap => {
+                const logs = snap.val() || {};
+                const tbody = document.getElementById('password-change-log-list');
+                const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp); 
+                
+                if (logArray.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">パスワードの変更履歴はありません</td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = logArray.map(log => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        <td style="font-weight:bold; color:#1976d2;">${log.studentId}</td>
+                        <td style="font-family:monospace; font-weight:bold; color:#d32f2f;">${log.newPassword}</td>
+                    </tr>
+                `).join('');
+            });
         }
 
         function startManage(role) {
@@ -546,7 +561,6 @@
         function saveProfile() { 
             const profile = { name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim() }; 
             saveFB('profile', profile); alert("保存しました。"); 
-            // 名前更新後、即座にトップバーに反映
             let dName = profile.name ? `${profile.name} さん` : `未設定 (ID:${managedStudentId})`; 
             let dGrade = profile.grade ? ` / ${profile.grade}` : ""; 
             document.getElementById('connection-status').innerText = dName + dGrade;
@@ -556,12 +570,10 @@
             const p = loadFB('profile', {}); 
             document.getElementById('prof-name').value = p.name || ""; document.getElementById('prof-grade').value = p.grade || ""; document.getElementById('prof-school').value = p.school || ""; document.getElementById('prof-parent').value = p.parent || ""; document.getElementById('prof-phone').value = p.phone || ""; document.getElementById('prof-email').value = p.email || ""; document.getElementById('prof-policy').value = p.policy || ""; document.getElementById('prof-memo').value = p.memo || ""; 
             
-            // ★ 上部バーの表示更新
             let dName = p.name ? `${p.name} さん` : `未設定 (ID:${managedStudentId})`; 
             let dGrade = p.grade ? ` / ${p.grade}` : ""; 
             document.getElementById('connection-status').innerText = dName + dGrade;
 
-            // ★ 権限ロックの制御
             const inputs = ['prof-name', 'prof-grade', 'prof-school', 'prof-parent', 'prof-phone', 'prof-email', 'prof-policy', 'prof-memo'];
             if(isOwner) { 
                 inputs.forEach(id => document.getElementById(id).readOnly = false); 
@@ -611,7 +623,10 @@
             if (msg) { saveFB_Raw('quick_message', msg); alert("メッセージを送信しました！"); document.getElementById('quick-message-input').value = ""; updateMessageDisplay(); } 
             else { alert("メッセージを入力してください。"); }
         }
-        function clearMessage() { if(!confirm("メッセージを取り下げますか？")) return; removeFB('quick_message'); updateMessageDisplay(); }
+        function clearMessage() {
+            if(!confirm("生徒の画面からメッセージを取り下げますか？")) return;
+            removeFB('quick_message'); updateMessageDisplay();
+        }
 
         function updateTargetDisplay() { 
             const t = loadFB('target_title', ""); const targetDate = loadFB('target_date', ""); const area = document.getElementById('current-target-display'); const noArea = document.getElementById('no-target-display');
@@ -628,7 +643,8 @@
         function sendTarget() { 
             const t = document.getElementById('target-title').value.trim(); const dateEl = document.getElementById('target-date'); const d = dateEl ? dateEl.value : ""; 
             if(t) { 
-                saveFB_Raw('target_title', t); if(d) saveFB_Raw('target_date', d); else removeFB('target_date');
+                saveFB_Raw('target_title', t); 
+                if(d) saveFB_Raw('target_date', d); else removeFB('target_date');
                 alert(`目標を送信・更新しました！`); document.getElementById('target-title').value = ""; if(dateEl) dateEl.value = ""; updateTargetDisplay(); renderCalendar();
             } else { alert("目標名を入力してください。"); }
         }
@@ -693,35 +709,6 @@
         function deleteSlide(id, type) { const key = type === 'student' ? 'student_wb_slides' : 'wb_slides'; if(!confirm("削除しますか？")) return; let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s); type === 'student' ? renderStudentSlides() : renderWbSlides(); }
         function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "画像プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; }
-        // ★追加機能：オーナー用パスワード変更ログ読み込み
-        function loadPasswordLogs() {
-            if(!isOwner) return;
-            db.ref('admin/password_logs').once('value').then(snap => {
-                const logs = snap.val() || {};
-                const tbody = document.getElementById('password-change-log-list');
-                const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp); // 新しい順
-                
-                if (logArray.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">パスワードの変更履歴はありません</td></tr>`;
-                    return;
-                }
-                
-                tbody.innerHTML = logArray.map(log => `
-                    <tr>
-                        <td>${new Date(log.timestamp).toLocaleString()}</td>
-                        <td style="font-weight:bold; color:#1976d2;">${log.studentId}</td>
-                        <td style="font-family:monospace; font-weight:bold; color:#d32f2f;">${log.newPassword}</td>
-                    </tr>
-                `).join('');
-            });
-        }
-        
-        // オーナーハブを開く関数を少し拡張して、開いた時に自動でログを読み込むようにします。
-        const originalOpenAdminHub = openAdminHub;
-        openAdminHub = function() {
-            originalOpenAdminHub();
-            loadPasswordLogs();
-        };
     </script>
 </body>
 </html>

@@ -186,18 +186,16 @@
         <div class="main-content">
             <div id="home" class="page active">
                 <div class="header"><h1>ホーム・ダッシュボード</h1></div>
-                <div id="student-notification" class="notification-banner">🔔 <span id="notification-text">生徒が宿題を完了しました！</span><button onclick="clearNotification()" style="margin-left: auto; background: none; border: none; font-size: 16px; cursor: pointer;">×</button></div>
+                <div id="student-notification" class="notification-banner">🔔 <span id="notification-text"></span><button onclick="clearNotification()" style="margin-left: auto; background: none; border: none; font-size: 16px; cursor: pointer; color: inherit;">×</button></div>
                 
                 <div class="panel" style="border: 2px solid #ff9800; background: #fffcf5;">
                     <h3 style="color: #e65100;">🌸 生徒への目標送信</h3>
-                    
                     <div id="current-target-display" style="margin-bottom: 15px; padding: 12px; background: #fff; border: 1px dashed #ffb74d; border-radius: 8px; display: none;">
                         <span style="color: #666; font-size: 12px;">現在生徒のアプリに表示中の目標：</span><br>
                         <b id="current-target-text" style="color: #e65100; font-size: 18px;"></b> 
                         <span id="current-target-days-text" style="font-weight: bold; margin-left: 5px; font-size: 16px;"></span>
                         <button onclick="clearTarget()" style="margin-top: 8px; display: block; padding: 6px 12px; font-size: 11px; background: #ffe0b2; color: #e65100; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✖ 生徒の画面から消す（目標解除）</button>
                     </div>
-
                     <div class="target-group">
                         <input type="text" id="target-title" placeholder="新しい目標名を入力" style="flex: 2;">
                         <div>
@@ -286,13 +284,16 @@
                     <div class="text-controls" id="text-controls"><button class="text-btn" onclick="changeTextScale(0.2)">大きく ➕</button><button class="text-btn" onclick="changeTextScale(-0.2)">小さく ➖</button><button class="text-btn" onclick="changeTextAngle(15)">回転 ↻</button><button class="text-btn" style="background:#4caf50; color:white; border-color:#388e3c;" onclick="fixText()">✅ 固定</button></div>
                     <canvas id="whiteboard" width="1000" height="600" style="width: 100%; border: 2px solid #ccc; border-radius: 8px; cursor: crosshair; background: white; touch-action: none;"></canvas>
                 </div>
+                
+                <div class="panel" style="border: 2px solid #1565c0;">
+                    <h3 style="color: #1565c0;">👦 生徒から届いたスライド（提出物・写真）</h3>
+                    <p style="font-size:11px; color:#666; margin-bottom:10px;">生徒が送った写真やノートがここに表示されます。タップで拡大確認できます。</p>
+                    <div class="scrollable-wrap" style="display: flex; gap: 10px; padding: 10px; border:none;" id="student-slides-container"></div>
+                </div>
+
                 <div class="panel">
                     <h3 style="color: #d32f2f;">👨‍🏫 先生が送ったスライド（履歴）</h3>
                     <div class="scrollable-wrap" style="display: flex; gap: 10px; padding: 10px; border:none;" id="slides-container"></div>
-                </div>
-                <div class="panel" style="border: 2px solid #1565c0;">
-                    <h3 style="color: #1565c0;">👦 生徒から届いたスライド（提出物）</h3>
-                    <div class="scrollable-wrap" style="display: flex; gap: 10px; padding: 10px; border:none;" id="student-slides-container"></div>
                 </div>
             </div>
 
@@ -367,10 +368,18 @@
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
         let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; let isOwner = false;
 
+        // ★ 新着チェック用変数
+        let prevSlideCount = -1;
+        let prevReportCount = -1;
+
+        // ★ フェイルセーフ強化版：データがどうであれ絶対にエラーで止まらせない
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
             if(data === undefined || data === null) return defaultVal; 
-            try { const parsed = typeof data === 'string' ? JSON.parse(data) : data; return parsed !== null ? parsed : defaultVal; } catch(e) { return defaultVal; } 
+            try { 
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data; 
+                return parsed !== null ? parsed : defaultVal; 
+            } catch(e) { return defaultVal; } 
         }
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + managedStudentId + '/' + key).set(val); }
@@ -381,12 +390,7 @@
             if(u) {
                 tempEmail = u; isOwner = (u === 'xelcys@gmail.com');
                 document.getElementById('auth-step-1').style.display = 'none';
-                if(isOwner) { 
-                    cleanupDummyAccounts(); 
-                    prepareOwnerDropdown('owner-student-dropdown'); 
-                } else {
-                    prepareTeacherDropdown(u);
-                }
+                if(isOwner) { openAdminHub(); } else { prepareTeacherDropdown(u); }
             }
             if(document.getElementById('log-date')) document.getElementById('log-date').valueAsDate = new Date();
         });
@@ -397,42 +401,17 @@
             if(!email || !pass) return;
 
             if(email === 'xelcys@gmail.com' && pass === '123456') { 
-                tempEmail = email; isOwner = true;
-                localStorage.setItem('criety_logged_in_user', tempEmail);
-                cleanupDummyAccounts(); 
-                document.getElementById('auth-step-1').style.display = 'none'; 
-                prepareOwnerDropdown('owner-student-dropdown');
+                tempEmail = email; isOwner = true; localStorage.setItem('criety_logged_in_user', tempEmail);
+                document.getElementById('auth-step-1').style.display = 'none'; openAdminHub();
             } else {
                 const escapeEmail = email.replace(/\./g, '_');
                 db.ref('admin/teachers/' + escapeEmail).once('value').then(snap => {
                     const tData = snap.val();
                     if(tData && tData.password === pass) {
-                        tempEmail = email; isOwner = false;
-                        localStorage.setItem('criety_logged_in_user', tempEmail);
-                        prepareTeacherDropdown(email);
-                    } else { alert("認証に失敗しました。メールアドレスとパスワードを確認してください。"); }
+                        tempEmail = email; isOwner = false; localStorage.setItem('criety_logged_in_user', tempEmail); prepareTeacherDropdown(email);
+                    } else { alert("認証に失敗しました。"); }
                 });
             }
-        }
-
-        function cleanupDummyAccounts() {
-            if(!db) return;
-            ['kage', '26001'].forEach(id => { db.ref('students/' + id).remove(); db.ref('admin/students/' + id).remove(); });
-        }
-
-        function prepareOwnerDropdown(targetSelectId) {
-            db.ref('admin/students').once('value').then(snap => {
-                const students = snap.val() || {};
-                const ids = Object.keys(students);
-                const sel = document.getElementById(targetSelectId);
-                const selHub = document.getElementById('owner-student-dropdown-hub'); 
-                
-                let options = ids.length === 0 ? `<option value="">生徒がいません</option>` : ids.map(id => `<option value="${id}">${id}</option>`).join('');
-                if(sel) sel.innerHTML = options;
-                if(selHub) selHub.innerHTML = options;
-                
-                document.getElementById('auth-step-owner').style.display = 'block';
-            });
         }
 
         function prepareTeacherDropdown(email) {
@@ -441,7 +420,7 @@
                 const tData = snap.val();
                 if(tData) {
                     const assigned = tData.assigned_students || {}; const ids = Object.keys(assigned);
-                    if(ids.length === 0) { alert("現在、あなたに割り当てられている生徒がいません。オーナーに確認してください。"); return; }
+                    if(ids.length === 0) { alert("現在、割り当てられている生徒がいません。"); return; }
                     const sel = document.getElementById('teacher-student-dropdown');
                     sel.innerHTML = ids.map(id => `<option value="${id}">${id}</option>`).join('');
                     document.getElementById('auth-step-1').style.display = 'none'; document.getElementById('auth-step-teacher').style.display = 'block';
@@ -450,21 +429,22 @@
         }
 
         function openAdminHub() {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('admin-hub-layout').style.display = 'block';
-            prepareOwnerDropdown('owner-student-dropdown-hub');
+            document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'none'; document.getElementById('admin-hub-layout').style.display = 'block';
+            db.ref('admin/students').once('value').then(snap => {
+                const ids = Object.keys(snap.val() || {}); const sel = document.getElementById('owner-student-dropdown-hub');
+                sel.innerHTML = ids.length === 0 ? `<option value="">生徒がいません</option>` : ids.map(id => `<option value="${id}">${id}</option>`).join('');
+            });
         }
 
         function startManage(role) {
-            let id = "";
-            if(role === 'owner') id = document.getElementById('owner-student-dropdown').value;
-            else if(role === 'hub') id = document.getElementById('owner-student-dropdown-hub').value;
-            else if(role === 'teacher') id = document.getElementById('teacher-student-dropdown').value;
-            
+            let id = role === 'hub' ? document.getElementById('owner-student-dropdown-hub').value : document.getElementById('teacher-student-dropdown').value;
             if(!id) return alert("生徒が選択されていません。");
             
             managedStudentId = id; sessionStorage.setItem('current_managed_student', id);
+            
+            // 生徒切り替え時に通知カウンターをリセット
+            prevSlideCount = -1; prevReportCount = -1;
+
             document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('admin-hub-layout').style.display = 'none'; 
             document.getElementById('top-bar').style.display = 'flex'; document.getElementById('app-layout').style.display = 'flex';
             document.getElementById('logged-in-display').innerText = tempEmail; document.getElementById('connection-status').innerText = id;
@@ -473,8 +453,15 @@
             
             loadStudentData();
             if(db) db.ref('students/' + managedStudentId).on('value', (snapshot) => {
-                studentDataCache = snapshot.val() || {}; loadStudentData();
-                if(studentDataCache['task_status'] === 'completed') { document.getElementById('student-notification').style.display = 'flex'; saveFB_Raw('task_status', 'notified'); }
+                studentDataCache = snapshot.val() || {}; 
+                loadStudentData(); // 画面更新
+                checkNotifications(); // ★ 新着通知チェック
+                
+                // 宿題完了通知
+                if(studentDataCache['task_status'] === 'completed') { 
+                    showNotification("生徒が宿題を完了しました！"); 
+                    saveFB_Raw('task_status', 'notified'); 
+                }
             });
         }
 
@@ -487,10 +474,10 @@
 
         function registerTeacherAccount() {
             const tEmail = document.getElementById('new-teacher-email').value.trim().toLowerCase(); const tPass = document.getElementById('new-teacher-pass').value.trim(); const assignedStr = document.getElementById('new-teacher-assigned').value.trim();
-            if(!tEmail || !tPass) return alert("講師のアドレスとパスワードを入力してください。");
+            if(!tEmail || !tPass) return alert("入力してください。");
             const escapeEmail = tEmail.replace(/\./g, '_'); let assignedObj = {};
             if(assignedStr) { assignedStr.split(',').forEach(s => { const sid = s.trim().toLowerCase(); if(sid) assignedObj[sid] = true; }); }
-            db.ref('admin/teachers/' + escapeEmail).set({ password: tPass, assigned_students: assignedObj }).then(() => { alert("講師アカウントを正常に作成・担当紐付けしました！"); document.getElementById('new-teacher-email').value = ""; document.getElementById('new-teacher-pass').value = ""; document.getElementById('new-teacher-assigned').value = ""; });
+            db.ref('admin/teachers/' + escapeEmail).set({ password: tPass, assigned_students: assignedObj }).then(() => { alert("講師アカウントを作成・紐付けしました！"); document.getElementById('new-teacher-email').value = ""; document.getElementById('new-teacher-pass').value = ""; document.getElementById('new-teacher-assigned').value = ""; });
         }
 
         function generateStudentAccount() {
@@ -502,64 +489,73 @@
                 db.ref('admin/students/' + nid).set({ password: np, created_at: new Date().toISOString() }).then(() => { 
                     db.ref('admin/counters/student_' + y).set(c); 
                     document.getElementById('new-account-result').style.display = 'block'; document.getElementById('new-student-id').innerText = nid; document.getElementById('new-student-pass').innerText = np; 
-                    alert("生徒アカウントを発行しました。");
-                    if(isOwner) prepareOwnerDropdown('owner-student-dropdown-hub'); 
+                    alert("発行完了しました。"); if(isOwner) openAdminHub(); 
                 }); 
             }); 
         }
 
-        function saveProfile() { const profile = { name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim() }; saveFB('profile', profile); alert("生徒カルテをクラウドに保存しました。"); }
+        function saveProfile() { const profile = { name: document.getElementById('prof-name').value.trim(), grade: document.getElementById('prof-grade').value.trim(), school: document.getElementById('prof-school').value.trim(), parent: document.getElementById('prof-parent').value.trim(), phone: document.getElementById('prof-phone').value.trim(), email: document.getElementById('prof-email').value.trim(), policy: document.getElementById('prof-policy').value.trim(), memo: document.getElementById('prof-memo').value.trim() }; saveFB('profile', profile); alert("保存しました。"); }
         function loadProfile() { const p = loadFB('profile', {}); document.getElementById('prof-name').value = p.name || ""; document.getElementById('prof-grade').value = p.grade || ""; document.getElementById('prof-school').value = p.school || ""; document.getElementById('prof-parent').value = p.parent || ""; document.getElementById('prof-phone').value = p.phone || ""; document.getElementById('prof-email').value = p.email || ""; document.getElementById('prof-policy').value = p.policy || ""; document.getElementById('prof-memo').value = p.memo || ""; }
         function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
         function switchPage(pageId, el) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active')); document.getElementById(pageId).classList.add('active'); if(el) el.classList.add('active'); }
-        function loadStudentData() { renderCalendar(); renderMaterialsList(); renderHwLogList(); renderWbSlides(); renderStudentSlides(); renderSalaryLogs(); renderMistakeReports(); updateTargetDisplay(); loadProfile(); }
         
-        // ★ 修正：目標の日付計算ロジック（先生側表示）
-        function updateTargetDisplay() { 
-            const t = loadFB('target_title', ""); 
-            const targetDate = loadFB('target_date', ""); 
-            const area = document.getElementById('current-target-display'); 
-            
-            if (t) { 
-                area.style.display = 'block'; 
-                document.getElementById('current-target-text').innerText = t; 
-                
-                if (targetDate) {
-                    const today = new Date(); today.setHours(0,0,0,0);
-                    const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
-                    const diff = tDate - today;
-                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    document.getElementById('current-target-days-text').innerText = `（あと ${d} 日）`; 
-                } else {
-                    document.getElementById('current-target-days-text').innerText = ""; 
-                }
-            } else { 
-                area.style.display = 'none'; 
-            } 
+        function loadStudentData() { 
+            try { renderCalendar(); } catch(e) {}
+            try { renderMaterialsList(); } catch(e) {}
+            try { renderHwLogList(); } catch(e) {}
+            try { renderWbSlides(); } catch(e) {}
+            try { renderStudentSlides(); } catch(e) {}
+            try { renderSalaryLogs(); } catch(e) {}
+            try { renderMistakeReports(); } catch(e) {}
+            try { updateTargetDisplay(); } catch(e) {}
+            try { loadProfile(); } catch(e) {}
         }
         
-        // ★ 修正：送信時に「target_date」を保存する
-        function sendTarget() { 
-            const t = document.getElementById('target-title').value.trim(); 
-            const dateEl = document.getElementById('target-date');
-            const d = dateEl ? dateEl.value : ""; 
+        // ★ 新着通知の判定ロジック
+        function checkNotifications() {
+            let slides = loadFB('student_wb_slides', []);
+            let reports = loadFB('mistake_reports', []);
+            if (!Array.isArray(slides)) slides = [];
+            if (!Array.isArray(reports)) reports = [];
+
+            if (prevSlideCount !== -1 && slides.length > prevSlideCount) {
+                showNotification("生徒から新しいノート（写真）が届きました！「📝 ノート」タブを確認してください。");
+            }
+            if (prevReportCount !== -1 && reports.length > prevReportCount) {
+                showNotification("生徒から新しい間違い・質問レポートが届きました！「📊 データ」タブを確認してください。");
+            }
             
+            prevSlideCount = slides.length;
+            prevReportCount = reports.length;
+        }
+
+        function showNotification(msg) {
+            document.getElementById('notification-text').innerText = msg;
+            document.getElementById('student-notification').style.display = 'flex';
+        }
+        function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
+
+        function updateTargetDisplay() { 
+            const t = loadFB('target_title', ""); const targetDate = loadFB('target_date', ""); const area = document.getElementById('current-target-display'); 
+            if (t) { 
+                area.style.display = 'block'; document.getElementById('current-target-text').innerText = t; 
+                if (targetDate) {
+                    const today = new Date(); today.setHours(0,0,0,0); const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
+                    const diff = tDate - today; const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                    document.getElementById('current-target-days-text').innerText = `（あと ${d} 日）`; 
+                } else { document.getElementById('current-target-days-text').innerText = ""; }
+            } else { area.style.display = 'none'; } 
+        }
+        
+        function sendTarget() { 
+            const t = document.getElementById('target-title').value.trim(); const dateEl = document.getElementById('target-date'); const d = dateEl ? dateEl.value : ""; 
             if(t) { 
                 saveFB_Raw('target_title', t); 
-                if(d) {
-                    saveFB_Raw('target_date', d); 
-                } else {
-                    removeFB('target_date'); // 日付空欄なら消す
-                }
-                alert(`目標を送信・更新しました！`); 
-                document.getElementById('target-title').value = ""; 
-                if(dateEl) dateEl.value = ""; 
-                updateTargetDisplay(); renderCalendar();
-            } else {
-                alert("目標名を入力してください。");
-            }
+                if(d) saveFB_Raw('target_date', d); else removeFB('target_date');
+                alert(`目標を送信・更新しました！`); document.getElementById('target-title').value = ""; if(dateEl) dateEl.value = ""; updateTargetDisplay(); renderCalendar();
+            } else { alert("目標名を入力してください。"); }
         }
-        function clearTarget() { if(!confirm("解除して生徒の画面から消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
+        function clearTarget() { if(!confirm("解除して消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
         
         let currentDate = new Date(); let selectedDateStr = "";
         function renderCalendar() { 
@@ -567,20 +563,10 @@
             const fDay = new Date(y, m, 1).getDay(); const dInM = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-grid'); 
             let html = ['日', '月', '火', '水', '木', '金', '土'].map(d => `<div class="calendar-day-head">${d}</div>`).join(''); 
             for(let i = 0; i < fDay; i++) html += `<div class="calendar-day" style="background:#f9f9f9; border:none;"></div>`; 
-            
-            const evs = loadFB('cal_events', {}); const dDict = loadFB('hw_done', {}); 
-            const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
-
+            const evs = loadFB('cal_events', {}); const dDict = loadFB('hw_done', {}); const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
             for(let i = 1; i <= dInM; i++) { 
-                const dStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; 
-                let cls = 'calendar-day' + (dStr === selectedDateStr ? ' selected' : ''); 
-                let bHtml = ''; 
-                
-                // ★カレンダーに目標日を表示
-                if(targetTitle && targetDate === dStr) {
-                    bHtml += `<span class="badge" style="background:#fce4ec; color:#e91e63; border-left:2px solid #e91e63;"><span>🌸 目標: ${targetTitle}</span></span>`;
-                }
-
+                const dStr = `${y}-${String(m+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`; let cls = 'calendar-day' + (dStr === selectedDateStr ? ' selected' : ''); let bHtml = ''; 
+                if(targetTitle && targetDate === dStr) { bHtml += `<span class="badge" style="background:#fce4ec; color:#e91e63; border-left:2px solid #e91e63;"><span>🌸 目標: ${targetTitle}</span></span>`; }
                 if(evs[dStr]) evs[dStr].forEach((ev, idx) => { 
                     let c = ev.type==='lesson'?'lesson':ev.type==='test'?'test':ev.type==='student'?'student':ev.type==='hw'?'hw':'other'; 
                     let txt = ev.type==='lesson'?'👨‍🏫 指導':ev.type==='test'?`📝 ${ev.text}`:ev.type==='student'?`👦 ${ev.text}`:`宿: ${ev.text}`; 
@@ -596,20 +582,33 @@
         function addQuickEvent(type) { if(!selectedDateStr) return alert("日付選択してね"); let text = type==='lesson'?"指導日":prompt("予定:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); saveFB('cal_events', evs); renderCalendar(); } }
         function addHomework() { if(!selectedDateStr) return alert("日付選択してね"); const v = document.getElementById('hw-content').value.trim(); if(!v) return; let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); alert(`宿題送りました`); document.getElementById('hw-content').value = ""; renderCalendar(); }
         window.deleteEvent = function(dStr, idx) { let evs = loadFB('cal_events', {}); if(evs && evs[dStr]) { evs[dStr].splice(idx, 1); if(evs[dStr].length === 0) delete evs[dStr]; saveFB('cal_events', evs); renderCalendar(); } };
+        
+        let salaryMonthDate = new Date();
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
         function saveWageAndCalc() { const w = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', w); }
         function addSalaryLog() { const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim(); if(!d || h === 0) return alert("必須項目エラー"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs); document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; salaryMonthDate = new Date(d); renderSalaryLogs(); }
         function renderSalaryLogs() { const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, target = `${y}-${String(m).padStart(2, '0')}`; let logs = loadFB('logs', []); let mLogs = logs.filter(l => l.date.startsWith(target)); const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0; mLogs.forEach(l => { totalH += l.hours; totalT += l.transport; html += `<tr><td>${l.date}</td><td>${l.hours} h</td><td>${l.transport} 円</td><td>${l.summary}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${l.id})">削除</button></td></tr>`; }); tbody.innerHTML = mLogs.length === 0 ? `<tr><td colspan="5">記録なし</td></tr>` : html; const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} h`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`; }
         function deleteSalaryLog(id) { let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs); renderSalaryLogs(); }
-        function renderMistakeReports() { const tbody = document.getElementById('mistake-report-list'); const r = loadFB('mistake_reports', []); if(r.length === 0) { tbody.innerHTML = `<tr><td colspan="6">なし</td></tr>`; return; } tbody.innerHTML = [...r].reverse().map(x => `<tr><td>${x.date}</td><td><b>${x.mat}</b><br>P.${x.p} 大問${x.q1} 小問${x.q2}</td><td>${x.reason}</td><td>${x.solved}</td><td>⏱️${x.time||0}分<br>${x.memo||''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${x.id})">削除</button></td></tr>`).join(''); }
+        
+        // ★ エラー回避処理強化（配列じゃない場合は無視する）
+        function renderMistakeReports() { 
+            const tbody = document.getElementById('mistake-report-list'); 
+            let r = loadFB('mistake_reports', []); 
+            if (!Array.isArray(r)) r = []; // フェイルセーフ
+            
+            if(r.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#999;">報告はありません</td></tr>`; return; } 
+            tbody.innerHTML = [...r].reverse().map(x => `<tr><td>${x.date}</td><td><b>${x.mat}</b><br><span style="font-size:10px;color:#666;">P.${x.p} 大問${x.q1} 小問${x.q2}</span></td><td style="color:#d32f2f; font-weight:bold;">${x.reason}</td><td>${x.solved && x.solved.includes('はい') ? '<span style="color:#2e7d32;">✅ 解決済</span>' : '<span style="color:#e65100;">❌ 未解決</span>'}</td><td style="font-size:11px;">⏱️${x.time||0}分<br>${x.memo||''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${x.id})">削除</button></td></tr>`).join(''); 
+        }
         function deleteMistakeReport(id) { let r = loadFB('mistake_reports', []); r = r.filter(x => x.id !== id); saveFB('mistake_reports', r); renderMistakeReports(); }
         function clearAllMistakeReports() { removeFB('mistake_reports'); renderMistakeReports(); }
+        
         function sendMaterial() { const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0]; if(!title || !file) return; const r = new FileReader(); r.onload = function(e) { let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type==='application/pdf'?'pdf':'img' }); saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; }; r.readAsDataURL(file); }
         function renderMaterialsList() { const m = loadFB('materials', []); document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join(''); }
         function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); renderMaterialsList(); }
         function renderHwLogList() { const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = ""; Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '💮済' : '⏳進行中'}</td><td><button class="btn-danger" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">完全に消去</button></td></tr>`; } })); document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4">なし</td></tr>`; }
         function deleteHwLog(btn) { if(!confirm("生徒のリスト・カレンダーからも完全に削除しますか？")) return; const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); let evs = loadFB('cal_events', {}); if(evs[d]) { evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t)); if(evs[d].length === 0) delete evs[d]; saveFB('cal_events', evs); } let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); renderHwLogList(); renderCalendar(); }
         function resetAllHwLog() { if(confirm("初期化しますか？")){ removeFB('hw_done'); saveFB_Raw('stamps', 0); renderHwLogList(); renderCalendar(); } }
+        
         const canvas = document.getElementById('whiteboard'); const ctx = canvas.getContext('2d'); let isDrawing = false; let currentTool = 'pen'; let currentColor = '#1a2530'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
         function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; }
         function redrawCanvas() { if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0); if(activeText) { ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180); ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(activeText.text, 0, 0); ctx.restore(); } }
@@ -625,12 +624,31 @@
         function setLineWidth(w) { lineWidth = w; }
         function clearBoard() { if(confirm("消去しますか？")){ activeText=null; savedCanvasData=null; document.getElementById('text-controls').style.display='none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
         function sendWhiteboardSlide() { if(activeText) fixText(); let slides = loadFB('wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('wb_slides', slides); alert(`📡 送信しました！`); renderWbSlides(); }
-        function renderWbSlides() { const container = document.getElementById('slides-container'); const slides = loadFB('wb_slides', []); container.innerHTML = slides.length === 0 ? `<span>なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><div>スライド ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')"><button class="btn-danger" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>`).join(''); }
-        function renderStudentSlides() { const container = document.getElementById('student-slides-container'); const slides = loadFB('student_wb_slides', []); container.innerHTML = slides.length === 0 ? `<span>なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')"><button class="btn-danger" onclick="deleteSlide(${s.id}, 'student')">削除</button></div>`).join(''); }
+        
+        function renderWbSlides() { const container = document.getElementById('slides-container'); const slides = loadFB('wb_slides', []); container.innerHTML = slides.length === 0 ? `<span style="color:#999; font-size:12px; padding:10px;">なし</span>` : [...slides].reverse().map((s, i) => `<div class="slide-preview-box"><div style="font-size:10px; color:#666; margin-bottom:5px;">スライド ${slides.length - i}</div><img src="${s.data}" onclick="openSlidePreview(${s.id}, 'teacher')"><button class="btn-danger" style="width:100%;" onclick="deleteSlide(${s.id}, 'teacher')">削除</button></div>`).join(''); }
+        
+        // ★ エラー回避処理強化（配列じゃない場合は無視する）
+        function renderStudentSlides() { 
+            const container = document.getElementById('student-slides-container'); 
+            let slides = loadFB('student_wb_slides', []); 
+            if (!Array.isArray(slides)) slides = []; // フェイルセーフ
+            
+            if(slides.length > 0) {
+                container.innerHTML = [...slides].reverse().map((s, idx) => `
+                    <div class="slide-preview-box" style="border-color:#bbdefb; background:#e3f2fd;">
+                        <div style="font-size:11px; font-weight:bold; color:#1565c0; margin-bottom:5px;">提出物 ${slides.length - idx}</div>
+                        <img src="${s.data}" onclick="openSlidePreview(${s.id}, 'student')" style="background:#fff;">
+                        <button class="btn-danger" style="width:100%; background:#1976d2;" onclick="deleteSlide(${s.id}, 'student')">削除</button>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<span style="color:#999; font-size:12px; padding:10px;">届いていません</span>`;
+            }
+        }
+        
         function deleteSlide(id, type) { const key = type === 'student' ? 'student_wb_slides' : 'wb_slides'; if(!confirm("削除しますか？")) return; let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s); type === 'student' ? renderStudentSlides() : renderWbSlides(); }
-        function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
+        function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "画像プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; }
-        function clearNotification() { document.getElementById('student-notification').style.display = 'none'; }
     </script>
 </body>
 </html>

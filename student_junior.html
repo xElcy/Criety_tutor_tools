@@ -69,7 +69,8 @@
         .btn-complete { padding: 10px; background: var(--success); color: #fff; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 13px; transition: 0.2s;}
         .btn-complete:hover { background: #2f855a; }
 
-        .tool-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; font-size: 13px; font-weight: bold; color: var(--text-main);}
+        .tool-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; font-size: 12px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 4px; transition: 0.2s;}
+        .tool-btn:hover { background: #f7fafc; }
         .tool-btn.active { background: #ebf8ff; border-color: #63b3ed; color: #2b6cb0; }
         .slide-item { background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; text-align: center; position: relative;}
         .slide-item img { width: 100%; border-radius: 6px; border: 1px solid #cbd5e0; cursor: pointer; }
@@ -158,21 +159,26 @@
 
             <div class="mid-card">
                 <h3><i class="fa-solid fa-pen-to-square"></i> 提出用ホワイトボード</h3>
+                <p style="font-size:11px; color:var(--text-light); margin-bottom:10px;">写真を読み込んだ後は、2本指で「ズーム（拡大）」や「移動」ができます！</p>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;" id="student-drawing-tools">
+                    
+                    <button class="tool-btn" style="color: #fff; background: var(--accent); border-color: var(--accent);" onclick="document.getElementById('camera-input').click()">
+                        <i class="fa-solid fa-camera"></i> ワークを撮る
+                    </button>
+                    <input type="file" accept="image/*" id="camera-input" style="display:none;" onchange="loadCameraImage(event)">
+
                     <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')"><i class="fa-solid fa-pen"></i> ペン</button>
                     <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i> 消しゴム</button>
-                    <button class="tool-btn" id="btn-text" onclick="setTool('text')"><i class="fa-solid fa-t"></i> テキスト</button>
-                    <input type="color" id="color-picker" value="#2b6cb0" onchange="setColor(this.value)" style="width: 32px; height: 32px; border: none; padding: 0; cursor: pointer; border-radius:4px;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight:bold; color:var(--text-light); margin-left:auto;">
-                        太さ<input type="range" id="line-width" min="1" max="20" value="5" onchange="setLineWidth(this.value)" style="width: 70px;">
-                    </div>
+                    
+                    <button class="tool-btn" style="color: var(--text-main);" onclick="resetZoom()">
+                        <i class="fa-solid fa-magnifying-glass-minus"></i> 表示リセット
+                    </button>
+
+                    <input type="color" id="color-picker" value="#e53e3e" onchange="setColor(this.value)" style="width: 32px; height: 32px; border: none; padding: 0; cursor: pointer; border-radius:4px; margin-left: auto;">
                 </div>
-                <div id="text-controls" style="display: none; justify-content: center; gap: 8px; margin-bottom: 12px;">
-                    <button class="tool-btn" onclick="changeTextScale(0.2)">サイズ ＋</button>
-                    <button class="tool-btn" onclick="changeTextScale(-0.2)">サイズ ➖</button>
-                    <button class="tool-btn" style="background:var(--success); color:white; border:none;" onclick="fixText()">配置を確定</button>
-                </div>
-                <canvas id="student-whiteboard" width="600" height="400" style="width: 100%; border: 1px solid #cbd5e0; border-radius: 8px; background: white; touch-action: none; display: block; margin-bottom: 12px;"></canvas>
+                
+                <canvas id="student-whiteboard" width="800" height="600" style="width: 100%; border: 1px solid #cbd5e0; border-radius: 8px; background: white; touch-action: none; display: block; margin-bottom: 12px;"></canvas>
+                
                 <div style="display: flex; gap: 10px;">
                     <button onclick="submitSlide()" style="flex: 2; padding: 14px; background: var(--main); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:14px;"><i class="fa-regular fa-paper-plane"></i> 先生に送信する</button>
                     <button onclick="clearBoard()" style="flex: 1; padding: 14px; background: #edf2f7; color: var(--danger); border: 1px solid #e2e8f0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size:13px;"><i class="fa-solid fa-trash-can"></i> 全消去</button>
@@ -286,6 +292,9 @@
             });
         }
 
+        // ==========================================
+        // ⏱️ タイマー機能
+        // ==========================================
         function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if(audioCtx.state === 'suspended') { audioCtx.resume(); } }
         function playAlarm() { if(!audioCtx) return; try { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} }
         function updateTimerDisplay(elapsedMs) { let displayMs = elapsedMs; if(timerTargetSeconds > 0) { displayMs = (timerTargetSeconds * 1000) - elapsedMs; if(displayMs <= 0) { displayMs = 0; stopTimer(); playAlarm(); setTimeout(() => alert("⏰ 時間です！"), 100); } } let totalSec = Math.floor(displayMs / 1000); let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0'); let m = String(Math.floor(totalSec / 60)).padStart(2, '0'); let s = String(totalSec % 60).padStart(2, '0'); document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`; }
@@ -294,6 +303,9 @@
         function stopTimer() { if(!timerRunning) return; timerRunning = false; timerSavedTime += Date.now() - timerStartTime; clearInterval(timerInterval); document.getElementById('timer-setup').style.opacity = "1"; document.getElementById('timer-setup').style.pointerEvents = "auto"; }
         function resetTimer() { if(confirm("タイマーをリセットしますか？")) { stopTimer(); timerSavedTime = 0; timerTargetSeconds = 0; updateTimerDisplay(0); } }
 
+        // ==========================================
+        // 📝 報告機能
+        // ==========================================
         function submitMistakeReport() {
             const mat = document.getElementById('report-mat').value.trim(); if(!mat) return alert("教材名を入力してください。");
             const report = { id: Date.now(), date: new Date().toLocaleString(), mat: mat, p: document.getElementById('report-p').value, q1: document.getElementById('report-q1').value, q2: document.getElementById('report-q2').value, time: document.getElementById('report-time').value, reason: document.getElementById('report-reason').value, solved: document.getElementById('report-solved').value, memo: document.getElementById('report-memo').value };
@@ -307,6 +319,9 @@
             for(let i=1; i<=STAMP_MAX; i++) grid.innerHTML += `<div class="stamp-slot ${i <= count ? "filled" : ""}">${i <= count ? '<i class="fa-solid fa-check"></i>' : ""}</div>`;
         }
 
+        // ==========================================
+        // 📅 カレンダー＆宿題機能
+        // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -373,40 +388,155 @@
         }
         function hideHw(dateStr, hwText) { if(!confirm("リストから非表示にしますか？")) return; const hwKey = `${dateStr}_${hwText}`; let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true; localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList(); }
 
-        const canvas = document.getElementById('student-whiteboard'); const ctx = canvas.getContext('2d');
-        let isDrawing = false; let currentTool = 'pen'; let currentColor = '#2b6cb0'; let lineWidth = 5; let activeText = null; let isDraggingText = false; let savedCanvasData = null;
-        function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) }; }
-        function redrawCanvas() { if(savedCanvasData) ctx.putImageData(savedCanvasData, 0, 0); if(activeText) { ctx.save(); ctx.translate(activeText.x, activeText.y); ctx.rotate(activeText.angle * Math.PI / 180); ctx.font = `bold ${24 * activeText.scale}px sans-serif`; ctx.fillStyle = activeText.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(activeText.text, 0, 0); ctx.restore(); } }
-        function fixText() { if(!activeText) return; redrawCanvas(); savedCanvasData = null; activeText = null; document.getElementById('text-controls').style.display = 'none'; }
-        function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
-        function handleStart(e) { if(e.type === 'touchstart') e.preventDefault(); const p = getPos(e); if(currentTool === 'text') { if(!activeText) { const txt = prompt("テキスト入力:"); if(txt) { activeText = { text: txt, x: p.x, y: p.y, scale: 1, angle: 0, color: currentColor }; savedCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height); document.getElementById('text-controls').style.display = 'flex'; redrawCanvas(); } } else { isDraggingText = true; activeText.x = p.x; activeText.y = p.y; redrawCanvas(); } return; } if(activeText) fixText(); isDrawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-        function handleMove(e) { if(e.type === 'touchmove') e.preventDefault(); const p = getPos(e); if(currentTool === 'text' && isDraggingText && activeText) { activeText.x = p.x; activeText.y = p.y; redrawCanvas(); return; } if(!isDrawing) return; ctx.lineTo(p.x, p.y); ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; ctx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
-        function handleEnd(e) { isDrawing = false; isDraggingText = false; }
-        function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#student-drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
+        // ==========================================
+        // 🎨 ホワイトボード（★ カメラ連携・ピンチズーム・パン完全対応）
+        // ==========================================
+        const canvas = document.getElementById('student-whiteboard'); 
+        const ctx = canvas.getContext('2d');
+        
+        // オフスクリーンキャンバス（実際の高解像度データを保持）
+        const offCanvas = document.createElement('canvas'); 
+        offCanvas.width = 800; offCanvas.height = 600; 
+        const oCtx = offCanvas.getContext('2d');
+        oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600);
+
+        let zoom = 1, panX = 0, panY = 0;
+        let isDrawing = false, isPinching = false;
+        let initialDist = 0, lastCenter = {x:0, y:0};
+        let currentTool = 'pen'; let currentColor = '#e53e3e'; let lineWidth = 5;
+
+        // 画面のタップ座標を、ズーム・移動を考慮した「本当のキャンバス座標」に変換
+        function getRealPos(clientX, clientY) { 
+            const rect = canvas.getBoundingClientRect(); 
+            const sx = (clientX - rect.left) * (canvas.width / rect.width); 
+            const sy = (clientY - rect.top) * (canvas.height / rect.height); 
+            return { x: (sx - panX) / zoom, y: (sy - panY) / zoom }; 
+        }
+
+        // オフスクリーンから表示用キャンバスへ描画（ズーム・パンを適用）
+        function redrawCanvas() { 
+            ctx.setTransform(1,0,0,1,0,0); 
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+            ctx.setTransform(zoom,0,0,zoom,panX,panY); 
+            ctx.drawImage(offCanvas,0,0); 
+        }
+
+        // カメラ（またはフォルダ）から画像を読み込み、オフスクリーンに定着
+        function loadCameraImage(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600);
+                    const scale = Math.min(800/img.width, 600/img.height);
+                    const w = img.width * scale, h = img.height * scale;
+                    oCtx.drawImage(img, (800-w)/2, (600-h)/2, w, h);
+                    zoom = 1; panX = 0; panY = 0; // 表示リセット
+                    redrawCanvas();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = ""; 
+        }
+
+        // ズーム・移動をリセット
+        function resetZoom() { zoom = 1; panX = 0; panY = 0; redrawCanvas(); }
+
+        function handleStart(e) { 
+            if(e.type === 'touchstart') e.preventDefault(); 
+            
+            // ★ 2本指タップならピンチズーム準備
+            if(e.touches && e.touches.length === 2) {
+                isPinching = true;
+                initialDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                lastCenter = { x: (e.touches[0].clientX + e.touches[1].clientX)/2, y: (e.touches[0].clientY + e.touches[1].clientY)/2 };
+                return;
+            }
+            if(isPinching) return;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rp = getRealPos(clientX, clientY);
+            
+            isDrawing = true; 
+            oCtx.beginPath(); oCtx.moveTo(rp.x, rp.y); 
+        }
+
+        function handleMove(e) { 
+            if(e.type === 'touchmove') e.preventDefault(); 
+            
+            // ★ 2本指でのズームと移動処理
+            if(e.touches && e.touches.length === 2 && isPinching) {
+                const cDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                const cCenter = { x: (e.touches[0].clientX + e.touches[1].clientX)/2, y: (e.touches[0].clientY + e.touches[1].clientY)/2 };
+                
+                let nZoom = zoom * (cDist / initialDist); 
+                if(nZoom < 0.5) nZoom = 0.5; if(nZoom > 5) nZoom = 5;
+                
+                const rect = canvas.getBoundingClientRect();
+                const ccX = (cCenter.x - rect.left) * (canvas.width / rect.width);
+                const ccY = (cCenter.y - rect.top) * (canvas.height / rect.height);
+                
+                panX = ccX - (ccX - panX) * (nZoom / zoom);
+                panY = ccY - (ccY - panY) * (nZoom / zoom);
+                panX += (cCenter.x - lastCenter.x) * (canvas.width / rect.width);
+                panY += (cCenter.y - lastCenter.y) * (canvas.height / rect.height);
+                
+                zoom = nZoom; initialDist = cDist; lastCenter = cCenter;
+                redrawCanvas(); 
+                return;
+            }
+
+            if(!isDrawing || isPinching) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rp = getRealPos(clientX, clientY);
+            
+            // ★ オフスクリーンに描画
+            oCtx.lineTo(rp.x, rp.y); 
+            oCtx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor; 
+            oCtx.lineWidth = currentTool === 'eraser' ? 40 : lineWidth; 
+            oCtx.lineCap = 'round'; oCtx.lineJoin = 'round'; oCtx.stroke(); 
+            redrawCanvas(); // 画面に反映
+        }
+        
+        function handleEnd(e) { 
+            if(e.touches && e.touches.length < 2) isPinching = false;
+            isDrawing = false; 
+        }
+        
+        function setTool(t) { currentTool = t; document.querySelectorAll('#student-drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
-        function clearBoard() { if(confirm("全て消去しますか？")) { activeText = null; savedCanvasData = null; document.getElementById('text-controls').style.display = 'none'; ctx.clearRect(0, 0, canvas.width, canvas.height); } }
-        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseup', handleEnd); canvas.addEventListener('mouseout', handleEnd);
+        function clearBoard() { if(confirm("全て消去しますか？")) { oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600); resetZoom(); } }
+        
+        canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('mouseout', handleEnd);
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
 
-        function submitSlide() { if(activeText) fixText(); try { let slides = loadFB('student_wb_slides', []); slides.push({ id: Date.now(), data: canvas.toDataURL() }); saveFB('student_wb_slides', slides); alert("🚀 送信しました！"); ctx.clearRect(0, 0, canvas.width, canvas.height); } catch(e) { alert("エラーが発生しました。"); } }
+        // ★ オフスクリーン（高解像度）の画像をそのまま先生へ送信
+        function submitSlide() { 
+            try { 
+                let slides = loadFB('student_wb_slides', []); 
+                slides.push({ id: Date.now(), data: offCanvas.toDataURL('image/jpeg', 0.8) }); 
+                saveFB('student_wb_slides', slides); 
+                alert("🚀 先生に送信しました！"); 
+                clearBoard(); 
+            } catch(e) { alert("エラーが発生しました。写真のサイズが大きい可能性があります。"); } 
+        }
+
         function renderMySentSlides() { const container = document.getElementById('my-sent-slides-container'); const slides = loadFB('student_wb_slides', []); if(slides.length === 0) { container.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">送信したノートはありません</div>`; return; } container.innerHTML = [...slides].reverse().map((s, idx) => `<div class="slide-item"><button class="slide-delete-btn" onclick="deleteMySlide(${s.id})"><i class="fa-solid fa-xmark"></i></button><div style="font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:8px; text-align:left;">送信済み ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); }
         function deleteMySlide(id) { if(!confirm("送信を取り消しますか？")) return; let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); }
 
         // ==========================================
-        // 🔄 データの表示（★目標・カウントダウン除外版）
+        // 🔄 データの表示
         // ==========================================
         function syncData() {
             const targetTitle = studentDataCache['target_title']; 
             const area = document.getElementById('countdown-area');
-            
-            // ★ カウントダウンは表示せず、目標バナーのみ表示
-            if(targetTitle) {
-                area.style.display = 'block'; 
-                document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; 
-            } else { 
-                area.style.display = 'none'; 
-            }
+            if(targetTitle) { area.style.display = 'block'; document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; } 
+            else { area.style.display = 'none'; }
             
             const files = loadFB('materials', []); const list = document.getElementById('material-list');
             if(files.length > 0) { list.innerHTML = files.map(f => `<div style="display:flex; align-items:center; gap:12px; padding:12px; background:#f7fafc; border-radius:8px; border:1px solid #edf2f7; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'" onclick="openFile('${f.url}', '${f.type}')"><span style="font-size:20px; color:var(--main);">${f.type==='pdf'?'<i class="fa-solid fa-file-pdf"></i>':'<i class="fa-regular fa-image"></i>'}</span><div style="font-size:13px; font-weight:bold; color:var(--text-main);">${f.name}</div></div>`).join(''); } else { list.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">配布された教材はありません</div>`; }

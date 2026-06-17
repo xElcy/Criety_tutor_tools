@@ -278,10 +278,24 @@
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + myStudentId + '/' + key).set(val); }
 
+        // ==========================================
+        // 🔐 ログイン・パスワード管理機能（全生徒ファイル共通）
+        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
-            const isLoggedIn = localStorage.getItem('student_elementary_logged_in');
-            const savedId = localStorage.getItem('my_elementary_student_id');
-            if(isLoggedIn === 'true' && savedId) {
+            let savedId = sessionStorage.getItem('criety_auth_id');
+            let expiry = localStorage.getItem('criety_auth_expiry');
+            
+            // 30日間の有効期限チェック
+            if (!savedId && localStorage.getItem('criety_auth_id')) {
+                if (expiry && Date.now() > parseInt(expiry)) {
+                    localStorage.removeItem('criety_auth_id');
+                    localStorage.removeItem('criety_auth_expiry');
+                } else {
+                    savedId = localStorage.getItem('criety_auth_id');
+                }
+            }
+
+            if(savedId) {
                 myStudentId = savedId;
                 document.getElementById('auth-overlay').style.display = 'none';
                 startApp();
@@ -291,18 +305,48 @@
         function studentLogin() {
             const id = document.getElementById('student-email').value.trim().toLowerCase();
             const pass = document.getElementById('student-password').value.trim();
-            if(!id || !pass) return alert("IDとパスワードを入力してね。");
+            const remember = document.getElementById('remember-me').checked; 
+            
+            if(!id || !pass) return alert("IDとパスワードを入力してください / Please enter ID and Password");
             
             db.ref('admin/students/' + id).once('value').then(snapshot => {
                 const data = snapshot.val();
                 if (data && data.password === pass) {
-                    myStudentId = id; localStorage.setItem('student_elementary_logged_in', 'true'); localStorage.setItem('my_elementary_student_id', id);
-                    document.getElementById('auth-overlay').style.display = 'none'; startApp();
-                } else { alert("IDかパスワードがちがうよ！"); }
-            }).catch(e => alert("通信エラーがおきました。"));
+                    myStudentId = id; 
+                    if (remember) {
+                        localStorage.setItem('criety_auth_id', id);
+                        localStorage.setItem('criety_auth_expiry', Date.now() + 30 * 24 * 60 * 60 * 1000); 
+                    } else {
+                        sessionStorage.setItem('criety_auth_id', id);
+                    }
+                    document.getElementById('auth-overlay').style.display = 'none'; 
+                    startApp();
+                } else { alert("IDかパスワードが間違っています / Invalid ID or Password"); }
+            }).catch(e => alert("通信エラーが発生しました / Network Error"));
         }
-        function studentLogout() { localStorage.clear(); location.reload(); }
 
+        function studentLogout() { 
+            localStorage.removeItem('criety_auth_id'); 
+            localStorage.removeItem('criety_auth_expiry'); 
+            sessionStorage.removeItem('criety_auth_id');
+            location.reload(); 
+        }
+
+        function changeMyPassword() {
+            const newPass = document.getElementById('new-password-input').value.trim();
+            if(!newPass) return alert("新しいパスワードを入力してください / Please enter a new password");
+            if(newPass.length < 4) return alert("パスワードは4文字以上で設定してください / Minimum 4 characters");
+            if(!confirm("パスワードを「" + newPass + "」に変更しますか？ / Change password to " + newPass + "?")) return;
+
+            db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
+                const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
+                db.ref('admin/password_logs').push(logData);
+                
+                alert("パスワードを変更しました！ / Password updated successfully!");
+                document.getElementById('new-password-input').value = "";
+            }).catch(e => alert("エラーが発生しました / Error occurred"));
+        }
+        
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
             renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();

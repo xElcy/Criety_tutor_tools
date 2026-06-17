@@ -88,9 +88,18 @@
     <div id="auth-overlay">
         <div class="auth-box">
             <h2><i class="fa-solid fa-graduation-cap"></i> Criety ログイン</h2>
-            <input type="text" id="student-email" placeholder="生徒ID">
-            <input type="password" id="student-password" placeholder="パスワード">
-            <button class="btn-auth" onclick="studentLogin()">ログイン</button>
+            <form onsubmit="event.preventDefault(); studentLogin();">
+                <input type="text" id="student-email" name="username" autocomplete="username" placeholder="生徒ID" required>
+                <input type="password" id="student-password" name="password" autocomplete="current-password" placeholder="パスワード" required>
+                <div style="text-align: left; margin-bottom: 20px; font-size: 13px; color: var(--text-light); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="checkbox" id="remember-me" checked style="width: auto; margin: 0; padding: 0; cursor: pointer;">
+                    <label for="remember-me" style="cursor: pointer; margin: 0; font-weight:bold;">このデバイスに記憶する（30日間）</label>
+                </div>
+                <button type="submit" class="btn-auth">ログイン</button>
+            </form>
+            <div style="margin-top: 15px; font-size: 12px;">
+                <a href="privacy.html" target="_blank" style="color: var(--text-light); text-decoration: underline;">プライバシーポリシー（個人情報保護方針）</a>
+            </div>
         </div>
     </div>
 

@@ -247,11 +247,11 @@
                 </div>
 
                 <div class="panel" style="border: 2px solid #9c27b0; background: #f3e5f5;">
-                    <h3 style="color: #7b1fa2;">🤖 AIまかせ！全生徒へ4択クイズ送信</h3>
+                    <h3 style="color: #7b1fa2;">🤖 AIまかせ！担当生徒への4択クイズ送信</h3>
                     <p style="font-size:11px; color:#666; margin-bottom:10px;">問題と正解を入れると、AIが勝手に3つの「間違った選択肢」を作って4択テストにしてくれます。</p>
                     <div class="form-row"><input type="text" id="quiz-q" placeholder="問題文（例: 徳川家康が開いた幕府は？）" style="margin-bottom:8px;"></div>
                     <div class="form-row"><input type="text" id="quiz-a" placeholder="正解（例: 江戸幕府）"></div>
-                    <button class="btn-submit" style="background:#9c27b0;" onclick="generateAndSendQuiz()">✨ AIで選択肢を作って全生徒に送信</button>
+                    <button class="btn-submit" style="background:#9c27b0;" onclick="generateAndSendQuiz()">✨ AIで選択肢を作って生徒に送信</button>
                     <div id="quiz-loading" style="display:none; font-size:12px; color:#7b1fa2; margin-top:10px; font-weight:bold;">⏳ AIがダミーの選択肢を一生懸命考えています...</div>
                 </div>
 
@@ -379,6 +379,21 @@
                     <h3>💮 生徒の獲得ごほうびスタンプ</h3>
                     <div style="display: flex; align-items: center; gap: 20px;"><div style="font-size: 48px;" id="stamp-display-count">0</div><div style="font-size: 18px; color: #666;">個 獲得済み</div></div>
                 </div>
+                
+                <div class="panel" style="border: 2px solid #9c27b0; background: #fdf5ff;">
+                    <h3 style="color: #7b1fa2;">🤖 AIクイズの成績・進捗</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap:wrap; gap:10px;">
+                        <span style="font-size:12px; font-weight:bold; color:#555;">生徒の解答状況と、間違えた回数を確認できます。</span>
+                        <button class="btn-danger" onclick="resetStudentQuizProgress()" style="background:#9c27b0;">🔄 この生徒のクイズ履歴をリセット</button>
+                    </div>
+                    <div class="scrollable-wrap">
+                        <table class="list-table">
+                            <thead><tr><th>クイズ問題</th><th>正解</th><th>ステータス</th><th>ミス回数</th><th>操作</th></tr></thead>
+                            <tbody id="quiz-progress-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="panel" style="border: 2px solid #e91e63;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="margin: 0; color: #c2185b;">🚨 生徒からの間違え直し・質問報告ログ</h3>
@@ -398,8 +413,15 @@
             <div id="settings" class="page">
                 <div class="header"><h1>設定</h1></div>
                 <div class="panel">
-                    <button style="width: 100%; padding: 15px; background: #fff; border: 2px solid #9c27b0; color: #9c27b0; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 15px;" onclick="resetGeminiApiKey()">🔄 AIクイズ用 APIキーのリセット</button>
-                    
+                    <h3>🤖 AI機能の設定</h3>
+                    <label>Gemini APIキー</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="password" id="api-key-input" placeholder="AIzaSy... から始まるキーを入力">
+                        <button class="btn-submit" style="width:auto; background:#9c27b0;" onclick="saveApiKey()">保存する</button>
+                    </div>
+                    <p style="font-size:11px; color:#666; margin-top:5px;">※APIキーはあなたのブラウザの中に安全に保存され、外部に漏れることはありません。</p>
+                </div>
+                <div class="panel">
                     <button style="width: 100%; padding: 15px; background: #fff; border: 2px solid #1976d2; color: #1976d2; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="goBackToMenu()">◀ 選択メニューへ戻る</button>
                     <button style="width: 100%; padding: 15px; margin-top:15px; background: #c62828; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logout()">システムからログアウト</button>
                 </div>
@@ -420,97 +442,40 @@
         };
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
         let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; let isOwner = false;
-
         let prevSlideCount = -1; let prevReportCount = -1;
+        
+        let salaryMonthDate = new Date(); // ★給与の月の初期化バグ修正
 
         // ==========================================
-        // 🤖 Gemini APIキーの安全な管理機能
+        // 🛠️ セーブ＆ロード機能（JSON変換エラー修正）
         // ==========================================
-        function getGeminiApiKey() {
-            let key = localStorage.getItem('criety_gemini_api_key');
-            if (!key) {
-                key = prompt("【初回設定】\nGoogle AI Studioで取得した「Gemini APIキー」を入力してください。\n※このキーはあなたのブラウザ内のみに安全に保存され、外部に漏れることはありません。");
-                if (key && key.trim() !== "") {
-                    localStorage.setItem('criety_gemini_api_key', key.trim());
-                } else {
-                    return null;
-                }
-            }
-            return key;
-        }
-
-        function resetGeminiApiKey() {
-            if(confirm("保存されているGemini APIキーをリセット（消去）しますか？")) {
-                localStorage.removeItem('criety_gemini_api_key');
-                alert("APIキーを消去しました。次にAI機能を使う時に再度入力を求められます。");
-            }
-        }
-
-        // ==========================================
-        // 🤖 Gemini AIによる4択クイズ自動作成・送信
-        // ==========================================
-        async function generateAndSendQuiz() {
-            const q = document.getElementById('quiz-q').value.trim();
-            const a = document.getElementById('quiz-a').value.trim();
-            if(!q || !a) return alert("問題文と正解を入力してください！");
-            
-            // ★コード直書きではなく、ここで安全にキーを呼び出す
-            const apiKey = getGeminiApiKey();
-            if(!apiKey) return alert("APIキーが入力されなかったため、AI機能をキャンセルしました。");
-
-            document.getElementById('quiz-loading').style.display = 'block';
-
-            const prompt = `あなたは優秀なクイズ作成者です。「${q}」という問題で、正解は「${a}」です。この問題に対する、生徒が迷いそうな『もっともらしいが間違っている選択肢（ダミー）』を3つ作成してください。出力は必ずカンマ区切りの文字列（例: ダミー1,ダミー2,ダミー3）のみとし、他の文章は絶対に含めないでください。`;
-
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const dummyText = data.candidates[0].content.parts[0].text.trim();
-                const dummies = dummyText.split(',').map(s => s.trim());
-
-                if(dummies.length < 3) throw new Error("AIがうまく作れませんでした");
-
-                let options = [a, dummies[0], dummies[1], dummies[2]];
-                options.sort(() => Math.random() - 0.5);
-
-                const quizData = { id: Date.now(), question: q, answer: a, options: options };
-
-                db.ref('admin/shared_quizzes').push(quizData).then(() => {
-                    document.getElementById('quiz-loading').style.display = 'none';
-                    alert(`✅ クイズを送信しました！\n\n【生成された選択肢】\n${options.join(' / ')}`);
-                    document.getElementById('quiz-q').value = '';
-                    document.getElementById('quiz-a').value = '';
-                });
-
-            } catch (e) {
-                document.getElementById('quiz-loading').style.display = 'none';
-                if(e.message.includes("400")) {
-                    alert("APIキーが間違っているか、無効です。設定をリセットします。");
-                    localStorage.removeItem('criety_gemini_api_key');
-                } else {
-                    alert("AIの呼び出しでエラーが発生しました。");
-                }
-                console.error(e);
-            }
-        }
-
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
             if(data === undefined || data === null) return defaultVal; 
-            try { const parsed = typeof data === 'string' ? JSON.parse(data) : data; return parsed !== null ? parsed : defaultVal; } catch(e) { return defaultVal; } 
+            try { 
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data; 
+                return parsed !== null ? parsed : defaultVal; 
+            } catch(e) { 
+                return data !== "" ? data : defaultVal; // ★メッセージや目標が消えるバグの修正箇所
+            } 
         }
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + managedStudentId + '/' + key).set(val); }
         function removeFB(key) { delete studentDataCache[key]; if(db) db.ref('students/' + managedStudentId + '/' + key).remove(); }
+
+        // ==========================================
+        // 🤖 APIキー管理（設定タブ対応）
+        // ==========================================
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if(key) {
+                localStorage.setItem('criety_gemini_api_key', key);
+                alert("APIキーを保存しました！");
+            } else {
+                localStorage.removeItem('criety_gemini_api_key');
+                alert("APIキーを消去しました。");
+            }
+        }
 
         // ==========================================
         // 🔐 先生用：ログイン・記憶処理
@@ -527,6 +492,10 @@
                     savedUser = localStorage.getItem('criety_auth_teacher');
                 }
             }
+
+            // 設定タブのAPIキーを復元
+            const savedKey = localStorage.getItem('criety_gemini_api_key');
+            if(savedKey && document.getElementById('api-key-input')) document.getElementById('api-key-input').value = savedKey;
 
             if(savedUser) {
                 tempEmail = savedUser; 
@@ -755,7 +724,7 @@
         }
         function sendQuickMessage() {
             const msg = document.getElementById('quick-message-input').value.trim();
-            if (msg) { saveFB_Raw('quick_message', msg); alert("メッセージを送信しました！"); document.getElementById('quick-message-input').value = ""; updateMessageDisplay(); } 
+            if (msg) { saveFB_Raw('quick_message', msg); alert("メッセージを送信・更新しました！"); document.getElementById('quick-message-input').value = ""; updateMessageDisplay(); } 
             else { alert("メッセージを入力してください。"); }
         }
         function clearMessage() {
@@ -785,47 +754,6 @@
         }
         function clearTarget() { if(!confirm("解除して消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
         
-        function renderQuizProgress() {
-            const tbody = document.getElementById('quiz-progress-list');
-            const progress = loadFB('quiz_progress', {}); 
-            
-            db.ref('admin/shared_quizzes').once('value').then(snap => {
-                const quizzes = snap.val() || {};
-                const qKeys = Object.keys(quizzes);
-                
-                if(qKeys.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">配信されているクイズはありません</td></tr>`;
-                    return;
-                }
-
-                let html = "";
-                qKeys.forEach(key => {
-                    const q = quizzes[key];
-                    const p = progress[q.id] || { status: '未解答', mistakes: 0 };
-                    
-                    let statusHtml = '<span style="color:#999; font-weight:bold;">未解答</span>';
-                    if(p.status === 'cleared') statusHtml = '<span style="color:#2e7d32; font-weight:bold;">✅ クリア済</span>';
-                    else if(p.status === 'failed') statusHtml = '<span style="color:#d32f2f; font-weight:bold;">🔥 復習中</span>';
-
-                    html += `<tr>
-                        <td>${q.question}</td>
-                        <td style="font-weight:bold;">${q.answer}</td>
-                        <td>${statusHtml}</td>
-                        <td style="color:${p.mistakes > 0 ? '#d32f2f' : '#333'}; font-weight:bold;">${p.mistakes || 0} 回</td>
-                    </tr>`;
-                });
-                tbody.innerHTML = html;
-            });
-        }
-
-        function resetStudentQuizProgress() {
-            if(confirm("この生徒のクイズ履歴（正解/不正解）をリセットし、もう一度最初から解かせますか？")) {
-                removeFB('quiz_progress');
-                renderQuizProgress();
-                alert("リセットしました。生徒の画面に再び全問表示されます。");
-            }
-        }
-        
         // ==========================================
         // 🤖 Gemini AIによる4択クイズ自動作成・送信
         // ==========================================
@@ -834,43 +762,95 @@
             const a = document.getElementById('quiz-a').value.trim();
             if(!q || !a) return alert("問題文と正解を入力してください！");
             
-            if(GEMINI_API_KEY === 'ここに取得したAPIキーを貼り付け') {
-                return alert("コード内の GEMINI_API_KEY に取得したAPIキーを貼り付けてください！");
-            }
+            // ★ 設定タブで保存したAPIキーを取得
+            const apiKey = localStorage.getItem('criety_gemini_api_key');
+            if(!apiKey) return alert("「⚙️ 設定」タブから、取得したGemini APIキーを登録してください。");
 
             document.getElementById('quiz-loading').style.display = 'block';
 
             const prompt = `あなたは優秀なクイズ作成者です。「${q}」という問題で、正解は「${a}」です。この問題に対する、生徒が迷いそうな『もっともらしいが間違っている選択肢（ダミー）』を3つ作成してください。出力は必ずカンマ区切りの文字列（例: ダミー1,ダミー2,ダミー3）のみとし、他の文章は絶対に含めないでください。`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
 
+                if (!response.ok) throw new Error("API Error");
+
                 const data = await response.json();
                 const dummyText = data.candidates[0].content.parts[0].text.trim();
                 const dummies = dummyText.split(',').map(s => s.trim());
 
-                if(dummies.length < 3) throw new Error("AIがうまく作れませんでした");
+                if(dummies.length < 3) throw new Error("生成エラー");
 
                 let options = [a, dummies[0], dummies[1], dummies[2]];
                 options.sort(() => Math.random() - 0.5);
 
                 const quizData = { id: Date.now(), question: q, answer: a, options: options };
 
-                db.ref('admin/shared_quizzes').push(quizData).then(() => {
-                    document.getElementById('quiz-loading').style.display = 'none';
-                    alert(`✅ クイズを送信しました！\n\n【生成された選択肢】\n${options.join(' / ')}`);
-                    document.getElementById('quiz-q').value = '';
-                    document.getElementById('quiz-a').value = '';
-                });
+                // ★ 個別生徒専用のデータベースに保存する
+                let quizzes = loadFB('quizzes', []);
+                if (!Array.isArray(quizzes)) quizzes = [];
+                quizzes.push(quizData);
+                saveFB('quizzes', quizzes);
+
+                document.getElementById('quiz-loading').style.display = 'none';
+                alert(`✅ クイズを送信しました！\n\n【選択肢】\n${options.join(' / ')}`);
+                document.getElementById('quiz-q').value = '';
+                document.getElementById('quiz-a').value = '';
+                
+                renderQuizProgress();
 
             } catch (e) {
                 document.getElementById('quiz-loading').style.display = 'none';
-                alert("AIの呼び出しでエラーが発生しました。");
-                console.error(e);
+                alert("AIエラーが発生しました。設定タブのAPIキーが間違っている可能性があります。");
+            }
+        }
+        
+        function renderQuizProgress() {
+            const tbody = document.getElementById('quiz-progress-list');
+            const quizzes = loadFB('quizzes', []);
+            const progress = loadFB('quiz_progress', {}); 
+            
+            if(!Array.isArray(quizzes) || quizzes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; color:#999;">配信されているクイズはありません</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            quizzes.forEach((q, idx) => {
+                const p = progress[q.id] || { status: '未解答', mistakes: 0 };
+                
+                let statusHtml = '<span style="color:#999; font-weight:bold;">未解答</span>';
+                if(p.status === 'cleared') statusHtml = '<span style="color:#2e7d32; font-weight:bold;">✅ クリア済</span>';
+                else if(p.status === 'failed') statusHtml = '<span style="color:#d32f2f; font-weight:bold;">🔥 復習中</span>';
+
+                html += `<tr>
+                    <td>${q.question}</td>
+                    <td style="font-weight:bold;">${q.answer}</td>
+                    <td>${statusHtml}</td>
+                    <td style="color:${p.mistakes > 0 ? '#d32f2f' : '#333'}; font-weight:bold;">${p.mistakes || 0} 回</td>
+                    <td><button class="btn-danger" onclick="deleteQuiz(${idx})">削除</button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function deleteQuiz(idx) {
+            if(!confirm("このクイズを削除しますか？")) return;
+            let quizzes = loadFB('quizzes', []);
+            quizzes.splice(idx, 1);
+            saveFB('quizzes', quizzes);
+            renderQuizProgress();
+        }
+
+        function resetStudentQuizProgress() {
+            if(confirm("この生徒のクイズ履歴（正解/不正解）をリセットし、もう一度最初から解かせますか？")) {
+                removeFB('quiz_progress');
+                renderQuizProgress();
+                alert("リセットしました。生徒の画面に再び全問表示されます。");
             }
         }
         
@@ -899,16 +879,38 @@
         function addQuickEvent(type) { if(!selectedDateStr) return alert("日付選択してね"); let text = type==='lesson'?"指導日":prompt("予定:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); saveFB('cal_events', evs); renderCalendar(); } }
         function addHomework() { if(!selectedDateStr) return alert("日付選択してね"); const v = document.getElementById('hw-content').value.trim(); if(!v) return; let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); alert(`宿題送りました`); document.getElementById('hw-content').value = ""; renderCalendar(); }
         window.deleteEvent = function(dStr, idx) { let evs = loadFB('cal_events', {}); if(evs && evs[dStr]) { evs[dStr].splice(idx, 1); if(evs[dStr].length === 0) delete evs[dStr]; saveFB('cal_events', evs); renderCalendar(); } };
+        
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
         function saveWageAndCalc() { const w = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', w); }
         function addSalaryLog() { const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim(); if(!d || h === 0) return alert("必須項目エラー"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs); document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; salaryMonthDate = new Date(d); renderSalaryLogs(); }
-        function renderSalaryLogs() { const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, target = `${y}-${String(m).padStart(2, '0')}`; let logs = loadFB('logs', []); let mLogs = logs.filter(l => l.date.startsWith(target)); const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0; mLogs.forEach(l => { totalH += l.hours; totalT += l.transport; html += `<tr><td>${l.date}</td><td>${l.hours} h</td><td>${l.transport} 円</td><td>${l.summary}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${l.id})">削除</button></td></tr>`; }); tbody.innerHTML = mLogs.length === 0 ? `<tr><td colspan="5">記録なし</td></tr>` : html; const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} h`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`; }
+        function renderSalaryLogs() { 
+            // ★給与の月表示バグの修正箇所
+            document.getElementById('salary-month-display').innerText = `${salaryMonthDate.getFullYear()}年 ${salaryMonthDate.getMonth() + 1}月`;
+            
+            const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, target = `${y}-${String(m).padStart(2, '0')}`; let logs = loadFB('logs', []); let mLogs = logs.filter(l => l.date.startsWith(target)); const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0; mLogs.forEach(l => { totalH += l.hours; totalT += l.transport; html += `<tr><td>${l.date}</td><td>${l.hours} h</td><td>${l.transport} 円</td><td>${l.summary}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${l.id})">削除</button></td></tr>`; }); tbody.innerHTML = mLogs.length === 0 ? `<tr><td colspan="5">記録なし</td></tr>` : html; const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} h`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`; 
+        }
         function deleteSalaryLog(id) { let logs = loadFB('logs', []); logs = logs.filter(l => l.id !== id); saveFB('logs', logs); renderSalaryLogs(); }
         function renderMistakeReports() { const tbody = document.getElementById('mistake-report-list'); let r = loadFB('mistake_reports', []); if (!Array.isArray(r)) r = []; if(r.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#999;">報告はありません</td></tr>`; return; } tbody.innerHTML = [...r].reverse().map(x => `<tr><td>${x.date}</td><td><b>${x.mat}</b><br><span style="font-size:10px;color:#666;">P.${x.p} 大問${x.q1} 小問${x.q2}</span></td><td style="color:#d32f2f; font-weight:bold;">${x.reason}</td><td>${x.solved && x.solved.includes('はい') ? '<span style="color:#2e7d32;">✅ 解決済</span>' : '<span style="color:#e65100;">❌ 未解決</span>'}</td><td style="font-size:11px;">⏱️${x.time||0}分<br>${x.memo||''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${x.id})">削除</button></td></tr>`).join(''); }
         function deleteMistakeReport(id) { let r = loadFB('mistake_reports', []); r = r.filter(x => x.id !== id); saveFB('mistake_reports', r); renderMistakeReports(); }
         function clearAllMistakeReports() { removeFB('mistake_reports'); renderMistakeReports(); }
         function sendMaterial() { const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0]; if(!title || !file) return; const r = new FileReader(); r.onload = function(e) { let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type==='application/pdf'?'pdf':'img' }); saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; }; r.readAsDataURL(file); }
         function renderMaterialsList() { const m = loadFB('materials', []); document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join(''); }
+        
+        // ★教材のプレビュー確認ボタン用関数の追加
+        function openMaterialPreview(idx) {
+            const m = loadFB('materials', []);
+            if(m[idx]) {
+                document.getElementById('preview-title').innerText = m[idx].name;
+                const frame = document.getElementById('preview-frame');
+                if(m[idx].type === 'pdf') {
+                    frame.outerHTML = `<iframe id="preview-frame" style="flex:1; border:none;" src="${m[idx].url}"></iframe>`;
+                } else {
+                    frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; background:#eee;" src="${m[idx].url}">`;
+                }
+                document.getElementById('preview-modal').style.display = 'flex';
+            }
+        }
+
         function delMat(i) { let m = loadFB('materials', []); m.splice(i,1); saveFB('materials', m); renderMaterialsList(); }
         function renderHwLogList() { const evs = loadFB('cal_events', {}), done = loadFB('hw_done', {}); let html = ""; Object.keys(evs).sort().forEach(d => evs[d].forEach(ev => { if(ev.type === 'hw') { const isD = done[`${d}_${ev.text}`]; html += `<tr><td>${d}</td><td>${ev.text}</td><td>${isD ? '💮済' : '⏳進行中'}</td><td><button class="btn-danger" onclick="deleteHwLog(this)" data-date="${d}" data-text="${ev.text}">完全に消去</button></td></tr>`; } })); document.getElementById('hw-log-list').innerHTML = html || `<tr><td colspan="4">なし</td></tr>`; }
         function deleteHwLog(btn) { if(!confirm("生徒のリスト・カレンダーからも完全に削除しますか？")) return; const d = btn.getAttribute('data-date'); const t = btn.getAttribute('data-text'); let evs = loadFB('cal_events', {}); if(evs[d]) { evs[d] = evs[d].filter(ev => !(ev.type === 'hw' && ev.text === t)); if(evs[d].length === 0) delete evs[d]; saveFB('cal_events', evs); } let done = loadFB('hw_done', {}); delete done[`${d}_${t}`]; saveFB('hw_done', done); saveFB_Raw('task_status', 'pending'); let stamps = parseInt(studentDataCache['stamps']) || 0; if(stamps > 0) saveFB_Raw('stamps', stamps - 1); renderHwLogList(); renderCalendar(); }

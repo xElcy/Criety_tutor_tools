@@ -734,6 +734,7 @@
             try { updateTargetDisplay(); } catch(e) {}
             try { updateMessageDisplay(); } catch(e) {} 
             try { loadProfile(); } catch(e) {}
+            try { renderQuizProgress(); } catch(e) {}
         }
         
         function checkNotifications() {
@@ -783,6 +784,47 @@
             } else { alert("目標名を入力してください。"); }
         }
         function clearTarget() { if(!confirm("解除して消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
+        
+        function renderQuizProgress() {
+            const tbody = document.getElementById('quiz-progress-list');
+            const progress = loadFB('quiz_progress', {}); 
+            
+            db.ref('admin/shared_quizzes').once('value').then(snap => {
+                const quizzes = snap.val() || {};
+                const qKeys = Object.keys(quizzes);
+                
+                if(qKeys.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">配信されているクイズはありません</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                qKeys.forEach(key => {
+                    const q = quizzes[key];
+                    const p = progress[q.id] || { status: '未解答', mistakes: 0 };
+                    
+                    let statusHtml = '<span style="color:#999; font-weight:bold;">未解答</span>';
+                    if(p.status === 'cleared') statusHtml = '<span style="color:#2e7d32; font-weight:bold;">✅ クリア済</span>';
+                    else if(p.status === 'failed') statusHtml = '<span style="color:#d32f2f; font-weight:bold;">🔥 復習中</span>';
+
+                    html += `<tr>
+                        <td>${q.question}</td>
+                        <td style="font-weight:bold;">${q.answer}</td>
+                        <td>${statusHtml}</td>
+                        <td style="color:${p.mistakes > 0 ? '#d32f2f' : '#333'}; font-weight:bold;">${p.mistakes || 0} 回</td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            });
+        }
+
+        function resetStudentQuizProgress() {
+            if(confirm("この生徒のクイズ履歴（正解/不正解）をリセットし、もう一度最初から解かせますか？")) {
+                removeFB('quiz_progress');
+                renderQuizProgress();
+                alert("リセットしました。生徒の画面に再び全問表示されます。");
+            }
+        }
         
         // ==========================================
         // 🤖 Gemini AIによる4択クイズ自動作成・送信

@@ -146,6 +146,13 @@
                 <h3><i class="fa-solid fa-list"></i> 課題リスト</h3>
                 <div class="hw-list" id="hw-list"></div>
             </div>
+            
+            <div class="mid-card" style="border-color:#9c27b0;">
+                <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> ミニテスト（4択）</h3>
+                <div id="quiz-container" style="font-size:14px; font-weight:bold; color:var(--text-main);">
+                    先生からテストが届くとここに表示されるよ！
+                </div>
+            </div>
         </div>
 
         <div class="dashboard-col col-center">
@@ -248,7 +255,7 @@
                 <div class="form-row">
                     <input type="text" id="new-password-input" placeholder="新しいパスワードを入力">
                 </div>
-                <button onclick="changeMyPassword()" style="width:100%; padding:10px; background:#475569; color:white; border:none; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer; transition:0.2s;">
+                <button onclick="changeMyPassword()" style="width:100%; padding:10px; background:#4a5568; color:white; border:none; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer; transition:0.2s;">
                     <i class="fa-solid fa-lock"></i> パスワードを変更する
                 </button>
             </div>
@@ -284,7 +291,6 @@
             let savedId = sessionStorage.getItem('criety_auth_id');
             let expiry = localStorage.getItem('criety_auth_expiry');
             
-            // 30日間の有効期限チェック
             if (!savedId && localStorage.getItem('criety_auth_id')) {
                 if (expiry && Date.now() > parseInt(expiry)) {
                     localStorage.removeItem('criety_auth_id');
@@ -345,9 +351,10 @@
                 document.getElementById('new-password-input').value = "";
             }).catch(e => alert("エラーが発生しました / Error occurred"));
         }
+
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
-            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
+            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes();
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
@@ -551,14 +558,12 @@
         canvas.addEventListener('mousedown', handleStart); canvas.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('mouseout', handleEnd);
         canvas.addEventListener('touchstart', handleStart, { passive: false }); canvas.addEventListener('touchmove', handleMove, { passive: false }); canvas.addEventListener('touchend', handleEnd);
 
-        // ★ 修正：送信後はサイレントにリセット
         function submitSlide() { 
             try { 
                 let slides = loadFB('student_wb_slides', []); 
                 slides.push({ id: Date.now(), data: offCanvas.toDataURL('image/jpeg', 0.8) }); 
                 saveFB('student_wb_slides', slides); 
                 alert("🚀 先生に送信しました！"); 
-                // ダイアログを出さずに消去
                 oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600); resetZoom();
             } catch(e) { alert("エラーが発生しました。写真のサイズが大きい可能性があります。"); } 
         }
@@ -579,19 +584,57 @@
         function renderTeacherSlides() { const slides = loadFB('wb_slides', []); const boardCard = document.getElementById('shared-board-card'); const container = document.getElementById('teacher-slides-container'); if(slides.length > 0) { boardCard.style.display = 'block'; const html = [...slides].reverse().map((s, idx) => `<div class="slide-item"><div style="font-size:11px; font-weight:bold; color:var(--main); margin-bottom:8px; text-align:left;">共有ノート ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); if (container.innerHTML !== html) container.innerHTML = html; } else { boardCard.style.display = 'none'; container.innerHTML = ''; } }
         function openFile(url, type) { const content = document.getElementById('file-content'); content.innerHTML = type==='pdf' ? `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:8px;"></iframe>` : `<img src="${url}" style="max-width:100%; max-height:85vh; border-radius:8px;">`; document.getElementById('preview-overlay').style.display='flex'; }
         function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
-        function changeMyPassword() {
-            const newPass = document.getElementById('new-password-input').value.trim();
-            if(!newPass) return alert("新しいパスワードを入力してください。");
-            if(newPass.length < 4) return alert("パスワードは4文字以上で設定してください。");
-            if(!confirm("パスワードを「" + newPass + "」に変更しますか？\n※次回からこのパスワードでログインします。")) return;
 
-            db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
-                const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
-                db.ref('admin/password_logs').push(logData);
+        // ==========================================
+        // 🤖 クイズ受信・回答機能
+        // ==========================================
+        function loadQuizzes() {
+            db.ref('admin/shared_quizzes').on('value', snap => {
+                const quizzes = snap.val();
+                const container = document.getElementById('quiz-container');
+                if(!quizzes) {
+                    container.innerHTML = "今はテストはないよ！";
+                    return;
+                }
+
+                const doneQuizzes = loadFB('done_quizzes', {});
+                let html = "";
                 
-                alert("パスワードを変更しました。忘れないように管理してください。");
-                document.getElementById('new-password-input').value = "";
-            }).catch(e => alert("エラーが発生しました。先生に連絡してください。"));
+                Object.keys(quizzes).forEach(key => {
+                    const q = quizzes[key];
+                    if(doneQuizzes[q.id]) return; 
+
+                    let optionsHtml = q.options.map((opt, i) => `
+                        <button onclick="answerQuiz('${key}', '${q.id}', '${opt}', '${q.answer}')" 
+                                style="display:block; width:100%; text-align:left; padding:12px; margin-bottom:8px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:8px; font-weight:bold; cursor:pointer;">
+                            ${i+1}. ${opt}
+                        </button>
+                    `).join('');
+
+                    html += `
+                        <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
+                            <div style="margin-bottom:15px; font-size:16px;">Q. ${q.question}</div>
+                            ${optionsHtml}
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html || "ぜんぶクリアしました！💮";
+            });
+        }
+
+        function answerQuiz(dbKey, quizId, selectedOpt, correctAns) {
+            if(selectedOpt === correctAns) {
+                alert("⭕ 大正解！！");
+                let doneDict = loadFB('done_quizzes', {});
+                doneDict[quizId] = true;
+                saveFB('done_quizzes', doneDict);
+                
+                let count = parseInt(studentDataCache['stamps']) || 0; 
+                saveFB_Raw('stamps', count + 1); 
+            } else {
+                alert(`❌ ざんねん！\n\n正解は「${correctAns}」でした。`);
+            }
         }
     </script>
 </body>

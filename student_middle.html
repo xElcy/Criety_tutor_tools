@@ -117,6 +117,15 @@
     <div class="app-container">
         
         <div class="dashboard-col col-left">
+            
+            <div id="quick-message-area" style="display: none; background: #ebf8ff; border-left: 4px solid var(--accent); border-radius: 8px; padding: 15px 20px; margin-bottom: 10px; align-items: flex-start; gap: 15px;">
+                <div style="font-size: 20px; color: var(--accent);"><i class="fa-solid fa-envelope-open-text"></i></div>
+                <div>
+                    <div style="font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 4px;">先生からのメッセージ</div>
+                    <div id="quick-message-text" style="font-size: 14px; color: var(--text-main); font-weight: bold; line-height: 1.4;"></div>
+                </div>
+            </div>
+
             <div class="mid-countdown" id="countdown-area" style="display: none;">
                 <h2 id="countdown-title"></h2>
             </div>
@@ -291,13 +300,20 @@
         let myStudentId = ""; let studentDataCache = {}; const STAMP_MAX = 10; let selectedDateStr = "";
         let timerInterval = null; let timerRunning = false; let timerStartTime = 0; let timerSavedTime = 0; let timerTargetSeconds = 0; let audioCtx = null;
 
-        function loadFB(key, defaultVal) { const data = studentDataCache[key]; if(data === undefined || data === null) return defaultVal; try { const parsed = typeof data === 'string' ? JSON.parse(data) : data; return parsed !== null ? parsed : defaultVal; } catch(e) { return defaultVal; } }
+        // ★ 修正：先生用と同じ、最新の堅牢なロード機能に統一
+        function loadFB(key, defaultVal) { 
+            const data = studentDataCache[key]; 
+            if(data === undefined || data === null) return defaultVal; 
+            try { 
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data; 
+                return parsed !== null ? parsed : defaultVal; 
+            } catch(e) { 
+                return data !== "" ? data : defaultVal; 
+            } 
+        }
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + myStudentId + '/' + key).set(val); }
 
-        // ==========================================
-        // 🔐 ログイン・パスワード管理機能
-        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
             let savedId = sessionStorage.getItem('criety_auth_id');
             let expiry = localStorage.getItem('criety_auth_expiry');
@@ -323,7 +339,7 @@
             const pass = document.getElementById('student-password').value.trim();
             const remember = document.getElementById('remember-me').checked; 
             
-            if(!id || !pass) return alert("IDとパスワードを入力してください / Please enter ID and Password");
+            if(!id || !pass) return alert("IDとパスワードを入力してください");
             
             db.ref('admin/students/' + id).once('value').then(snapshot => {
                 const data = snapshot.val();
@@ -337,8 +353,8 @@
                     }
                     document.getElementById('auth-overlay').style.display = 'none'; 
                     startApp();
-                } else { alert("IDかパスワードが間違っています / Invalid ID or Password"); }
-            }).catch(e => alert("通信エラーが発生しました / Network Error"));
+                } else { alert("IDかパスワードが間違っています"); }
+            }).catch(e => alert("通信エラーが発生しました"));
         }
 
         function studentLogout() { 
@@ -350,33 +366,29 @@
 
         function changeMyPassword() {
             const newPass = document.getElementById('new-password-input').value.trim();
-            if(!newPass) return alert("新しいパスワードを入力してください / Please enter a new password");
-            if(newPass.length < 4) return alert("パスワードは4文字以上で設定してください / Minimum 4 characters");
-            if(!confirm("パスワードを「" + newPass + "」に変更しますか？ / Change password to " + newPass + "?")) return;
+            if(!newPass) return alert("新しいパスワードを入力してください");
+            if(newPass.length < 4) return alert("パスワードは4文字以上で設定してください");
+            if(!confirm("パスワードを「" + newPass + "」に変更しますか？")) return;
 
             db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
                 const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
                 db.ref('admin/password_logs').push(logData);
-                
-                alert("パスワードを変更しました！ / Password updated successfully!");
+                alert("パスワードを変更しました！忘れないように管理してください。");
                 document.getElementById('new-password-input').value = "";
-            }).catch(e => alert("エラーが発生しました / Error occurred"));
+            }).catch(e => alert("エラーが発生しました"));
         }
 
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
-            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
+            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes();
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); 
-                loadQuizzes(); // ★データベースが更新されるたびにクイズUIとプログレスバーも更新する
+                loadQuizzes(); 
             });
         }
 
-        // ==========================================
-        // ⏱️ タイマー機能
-        // ==========================================
         function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if(audioCtx.state === 'suspended') { audioCtx.resume(); } }
         function playAlarm() { if(!audioCtx) return; try { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} }
         function updateTimerDisplay(elapsedMs) { let displayMs = elapsedMs; if(timerTargetSeconds > 0) { displayMs = (timerTargetSeconds * 1000) - elapsedMs; if(displayMs <= 0) { displayMs = 0; stopTimer(); playAlarm(); setTimeout(() => alert("⏰ 時間です！"), 100); } } let totalSec = Math.floor(displayMs / 1000); let centi = String(Math.floor((displayMs % 1000) / 10)).padStart(2, '0'); let m = String(Math.floor(totalSec / 60)).padStart(2, '0'); let s = String(totalSec % 60).padStart(2, '0'); document.getElementById('timer-display').innerText = `${m}:${s}.${centi}`; }
@@ -385,9 +397,6 @@
         function stopTimer() { if(!timerRunning) return; timerRunning = false; timerSavedTime += Date.now() - timerStartTime; clearInterval(timerInterval); document.getElementById('timer-setup').style.opacity = "1"; document.getElementById('timer-setup').style.pointerEvents = "auto"; }
         function resetTimer() { if(confirm("タイマーをリセットしますか？")) { stopTimer(); timerSavedTime = 0; timerTargetSeconds = 0; updateTimerDisplay(0); } }
 
-        // ==========================================
-        // 📝 報告機能
-        // ==========================================
         function submitMistakeReport() {
             const mat = document.getElementById('report-mat').value.trim(); if(!mat) return alert("教材名を入力してください。");
             const report = { id: Date.now(), date: new Date().toLocaleString(), mat: mat, p: document.getElementById('report-p').value, q1: document.getElementById('report-q1').value, q2: document.getElementById('report-q2').value, time: document.getElementById('report-time').value, reason: document.getElementById('report-reason').value, solved: document.getElementById('report-solved').value, memo: document.getElementById('report-memo').value };
@@ -401,9 +410,6 @@
             for(let i=1; i<=STAMP_MAX; i++) grid.innerHTML += `<div class="stamp-slot ${i <= count ? "filled" : ""}">${i <= count ? '<i class="fa-solid fa-check"></i>' : ""}</div>`;
         }
 
-        // ==========================================
-        // 📅 カレンダー機能
-        // ==========================================
         function renderCalendar() {
             const grid = document.getElementById('mini-calendar'); grid.innerHTML = "";
             const today = new Date(); const year = today.getFullYear(), month = today.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -470,12 +476,8 @@
         }
         function hideHw(dateStr, hwText) { if(!confirm("リストから非表示にしますか？")) return; const hwKey = `${dateStr}_${hwText}`; let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true; localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList(); }
 
-        // ==========================================
-        // 🎨 ホワイトボード（★ カメラ連携・ピンチズーム・パン完全対応）
-        // ==========================================
         const canvas = document.getElementById('student-whiteboard'); 
         const ctx = canvas.getContext('2d');
-        
         const offCanvas = document.createElement('canvas'); 
         offCanvas.width = 800; offCanvas.height = 600; 
         const oCtx = offCanvas.getContext('2d');
@@ -584,6 +586,18 @@
         function deleteMySlide(id) { if(!confirm("送信を取り消しますか？")) return; let slides = loadFB('student_wb_slides', []); slides = slides.filter(s => s.id !== id); saveFB('student_wb_slides', slides); }
 
         function syncData() {
+            // ★ 追加：メッセージの表示
+            const quickMsg = loadFB('quick_message', "");
+            const msgArea = document.getElementById('quick-message-area');
+            if (msgArea) {
+                if (quickMsg) { 
+                    msgArea.style.display = 'flex'; 
+                    document.getElementById('quick-message-text').innerText = quickMsg; 
+                } else { 
+                    msgArea.style.display = 'none'; 
+                }
+            }
+
             const targetTitle = studentDataCache['target_title']; 
             const area = document.getElementById('countdown-area');
             if(targetTitle) { area.style.display = 'block'; document.getElementById('countdown-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> ${targetTitle}`; } 
@@ -598,29 +612,35 @@
         function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
 
         // ==========================================
-        // 🤖 クイズ受信・回答機能（完全マスター方式）
+        // 🤖 クイズ受信・回答機能（完全強化版）
         // ==========================================
         function loadQuizzes() {
-            // ★ 個別生徒のデータベース（quizzes）から読み込む
             const quizzes = loadFB('quizzes', []);
             const container = document.getElementById('quiz-container');
             const pBar = document.getElementById('quiz-progress-bar');
             const pText = document.getElementById('quiz-progress-text');
             
-            if(!Array.isArray(quizzes) || quizzes.length === 0) {
+            // ★ 堅牢化：どんな形式で保存されても確実に配列として取り出す
+            let quizArray = [];
+            if (Array.isArray(quizzes)) {
+                quizArray = quizzes;
+            } else if (typeof quizzes === 'object') {
+                quizArray = Object.values(quizzes);
+            }
+
+            if(quizArray.length === 0) {
                 container.innerHTML = "今はテストはないよ！";
                 if(pBar) pBar.style.width = "0%";
                 if(pText) pText.innerText = "0 / 0";
                 return;
             }
 
-            // 履歴データの取得
             const progress = loadFB('quiz_progress', {});
             let html = "";
             let total = 0;
             let cleared = 0;
             
-            quizzes.forEach((q) => {
+            quizArray.forEach((q) => {
                 total++;
                 const p = progress[q.id] || { status: 'unanswered', mistakes: 0 };
 
@@ -629,18 +649,21 @@
                     return; // 正解済みのものは画面に出さない
                 }
 
-                // 選択肢のシャッフル（場所での丸暗記を防止）
                 let options = [...q.options];
                 options.sort(() => Math.random() - 0.5);
 
-                let optionsHtml = options.map((opt, i) => `
-                    <button onclick="answerQuiz('${q.id}', '${opt}', '${q.answer}')" 
-                            style="display:block; width:100%; text-align:left; padding:12px; margin-bottom:8px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s;">
-                        ${i+1}. ${opt}
-                    </button>
-                `).join('');
+                let optionsHtml = options.map((opt, i) => {
+                    // ★ 大事な修正：AIのテキストに「'」や「"」が含まれていても画面が壊れないようにエスケープ
+                    const safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAns = q.answer.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `
+                        <button onclick="answerQuiz('${q.id}', '${safeOpt}', '${safeAns}')" 
+                                style="display:block; width:100%; text-align:left; padding:12px; margin-bottom:8px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s;">
+                            ${i+1}. ${opt}
+                        </button>
+                    `;
+                }).join('');
 
-                // 間違えた問題には「🔥復習」バッジをつける
                 let badge = p.status === 'failed' ? `<span style="background:#e53e3e; color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px; vertical-align:middle;">🔥復習 (ミス: ${p.mistakes}回)</span>` : '';
 
                 html += `
@@ -672,10 +695,9 @@
             
             if(selectedOpt === correctAns) {
                 alert("⭕ 大正解！！よくできました！");
-                progress[quizId].status = 'cleared'; // 状態を「クリア」にする
-                saveFB('quiz_progress', progress); // Firebaseに保存（先生に伝わる）
+                progress[quizId].status = 'cleared'; 
+                saveFB('quiz_progress', progress); 
                 
-                // 正解したらスタンプをあげる＆レベルアップ判定
                 let count = parseInt(studentDataCache['stamps']) || 0; 
                 let cards = parseInt(studentDataCache['stamp_cards']) || 1;
                 count++;
@@ -687,9 +709,9 @@
                     saveFB_Raw('stamps', count); 
                 }
             } else {
-                progress[quizId].status = 'failed'; // 状態を「失敗」にする
-                progress[quizId].mistakes += 1;     // ミス回数を＋1する
-                saveFB('quiz_progress', progress); // Firebaseに保存（先生に伝わる）
+                progress[quizId].status = 'failed'; 
+                progress[quizId].mistakes += 1;     
+                saveFB('quiz_progress', progress); 
                 
                 alert(`❌ ざんねん！ちがいます。\n\n「${selectedOpt}」ではないみたい...。\nもう一度考えて、正解するまでやり直そう！`);
             }

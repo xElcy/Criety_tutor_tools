@@ -306,9 +306,20 @@
                 <div class="header"><h1>教材・ファイル送信</h1></div>
                 <div class="panel">
                     <h3>📥 生徒アプリに教材ファイルを送る</h3>
-                    <label>教材のタイトル</label><input type="text" id="mat-title">
-                    <label>ファイルを選択 (PDF / 画像)</label><input type="file" id="mat-file-input" accept=".pdf, image/png, image/jpeg">
-                    <button class="btn-submit" onclick="sendMaterial()">🚀 送信する</button>
+                    <p style="font-size:12px; color:#c62828; font-weight:bold; margin-bottom:10px;">※完全無料化のため、PDFはGoogleドライブ等のリンクを使用します。</p>
+                    <label>教材のタイトル</label><input type="text" id="mat-title" placeholder="例: 数学 対策プリント">
+                    
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                        <div style="flex: 1; min-width: 200px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+                            <label style="margin-top:0; color:#1976d2;"><i class="fa-regular fa-image"></i> 画像を直接アップロード</label>
+                            <input type="file" id="mat-file-input" accept="image/png, image/jpeg">
+                        </div>
+                        <div style="flex: 1; min-width: 200px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+                            <label style="margin-top:0; color:#d32f2f;"><i class="fa-solid fa-file-pdf"></i> PDFのリンクを貼る</label>
+                            <input type="text" id="mat-url-input" placeholder="Googleドライブの共有リンク">
+                        </div>
+                    </div>
+                    <button class="btn-submit" style="margin-top: 15px;" onclick="sendMaterial()">🚀 送信する</button>
                 </div>
                 <div class="panel">
                     <h3>📋 送信済みの教材一覧</h3>
@@ -416,7 +427,7 @@
                     <h3>🤖 AI機能の設定</h3>
                     <label>Gemini APIキー</label>
                     <div style="display:flex; gap:10px;">
-                        <input type="password" id="api-key-input" placeholder="取得したAPIキーを貼り付け">
+                        <input type="password" id="api-key-input" placeholder="キーを入力">
                         <button class="btn-submit" style="width:auto; background:#9c27b0;" onclick="saveApiKey()">保存する</button>
                     </div>
                     <p style="font-size:11px; color:#666; margin-top:5px;">※APIキーはあなたのブラウザの中に安全に保存され、外部に漏れることはありません。</p>
@@ -428,7 +439,7 @@
             </div>
         </div>
     </div>
-    <div id="preview-modal"><div class="preview-content"><div style="padding: 10px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 14px;" id="preview-title"></h3><button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 4px;">閉じる</button></div><iframe id="preview-frame" style="flex: 1; border: none;"></iframe></div></div>
+    <div id="preview-modal"><div class="preview-content"><div style="padding: 10px; background: #f4f6f8; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 14px;" id="preview-title"></h3><button onclick="closePreview()" style="background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 4px;">閉じる</button></div><div id="preview-frame" style="flex:1; display:flex;"></div></div></div>
 
     <script>
         const firebaseConfig = {
@@ -444,11 +455,8 @@
         let tempEmail = ""; let managedStudentId = ""; let studentDataCache = {}; let isOwner = false;
         let prevSlideCount = -1; let prevReportCount = -1;
         
-        let salaryMonthDate = new Date(); // ★給与の月の初期化バグ修正
+        let salaryMonthDate = new Date(); 
 
-        // ==========================================
-        // 🛠️ セーブ＆ロード機能（JSON変換エラー修正）
-        // ==========================================
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
             if(data === undefined || data === null) return defaultVal; 
@@ -456,16 +464,13 @@
                 const parsed = typeof data === 'string' ? JSON.parse(data) : data; 
                 return parsed !== null ? parsed : defaultVal; 
             } catch(e) { 
-                return data !== "" ? data : defaultVal; // ★メッセージや目標が消えるバグの修正箇所
+                return data !== "" ? data : defaultVal; 
             } 
         }
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + managedStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + managedStudentId + '/' + key).set(val); }
         function removeFB(key) { delete studentDataCache[key]; if(db) db.ref('students/' + managedStudentId + '/' + key).remove(); }
 
-        // ==========================================
-        // 🤖 APIキー管理（設定タブ対応）
-        // ==========================================
         function saveApiKey() {
             const key = document.getElementById('api-key-input').value.trim();
             if(key) {
@@ -477,9 +482,6 @@
             }
         }
 
-        // ==========================================
-        // 🔐 先生用：ログイン・記憶処理
-        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
             let savedUser = sessionStorage.getItem('criety_auth_teacher');
             let expiry = localStorage.getItem('criety_auth_teacher_expiry');
@@ -493,7 +495,6 @@
                 }
             }
 
-            // 設定タブのAPIキーを復元
             const savedKey = localStorage.getItem('criety_gemini_api_key');
             if(savedKey && document.getElementById('api-key-input')) document.getElementById('api-key-input').value = savedKey;
 
@@ -754,9 +755,6 @@
         }
         function clearTarget() { if(!confirm("解除して消去しますか？")) return; removeFB('target_title'); removeFB('target_date'); updateTargetDisplay(); renderCalendar(); }
         
-        // ==========================================
-        // 🤖 Gemini AIによる4択クイズ自動作成・送信
-        // ==========================================
         async function generateAndSendQuiz() {
             const q = document.getElementById('quiz-q').value.trim();
             const a = document.getElementById('quiz-a').value.trim();
@@ -770,7 +768,6 @@
             const prompt = `あなたは優秀なクイズ作成者です。「${q}」という問題で、正解は「${a}」です。この問題に対する、生徒が迷いそうな『もっともらしいが間違っている選択肢（ダミー）』を3つ作成してください。出力は必ずカンマ区切りの文字列（例: ダミー1,ダミー2,ダミー3）のみとし、他の文章は絶対に含めないでください。`;
 
             try {
-                // ★大修正：スクショ通り、最新の「gemini-3.5-flash」を指定します！
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -887,7 +884,6 @@
         function saveWageAndCalc() { const w = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', w); }
         function addSalaryLog() { const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim(); if(!d || h === 0) return alert("必須項目エラー"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs); document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; salaryMonthDate = new Date(d); renderSalaryLogs(); }
         function renderSalaryLogs() { 
-            // ★給与の月表示バグの修正箇所
             document.getElementById('salary-month-display').innerText = `${salaryMonthDate.getFullYear()}年 ${salaryMonthDate.getMonth() + 1}月`;
             
             const y = salaryMonthDate.getFullYear(), m = salaryMonthDate.getMonth() + 1, target = `${y}-${String(m).padStart(2, '0')}`; let logs = loadFB('logs', []); let mLogs = logs.filter(l => l.date.startsWith(target)); const tbody = document.getElementById('salary-log-list'); let html = ""; let totalH = 0; let totalT = 0; mLogs.forEach(l => { totalH += l.hours; totalT += l.transport; html += `<tr><td>${l.date}</td><td>${l.hours} h</td><td>${l.transport} 円</td><td>${l.summary}</td><td><button class="btn-danger" onclick="deleteSalaryLog(${l.id})">削除</button></td></tr>`; }); tbody.innerHTML = mLogs.length === 0 ? `<tr><td colspan="5">記録なし</td></tr>` : html; const wage = parseInt(document.getElementById('hourly-wage').value) || 0; document.getElementById('total-hours').innerText = `${totalH} h`; document.getElementById('total-transport').innerText = `${totalT} 円`; document.getElementById('total-salary').innerText = `${(totalH * wage) + totalT} 円`; 
@@ -896,17 +892,80 @@
         function renderMistakeReports() { const tbody = document.getElementById('mistake-report-list'); let r = loadFB('mistake_reports', []); if (!Array.isArray(r)) r = []; if(r.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#999;">報告はありません</td></tr>`; return; } tbody.innerHTML = [...r].reverse().map(x => `<tr><td>${x.date}</td><td><b>${x.mat}</b><br><span style="font-size:10px;color:#666;">P.${x.p} 大問${x.q1} 小問${x.q2}</span></td><td style="color:#d32f2f; font-weight:bold;">${x.reason}</td><td>${x.solved && x.solved.includes('はい') ? '<span style="color:#2e7d32;">✅ 解決済</span>' : '<span style="color:#e65100;">❌ 未解決</span>'}</td><td style="font-size:11px;">⏱️${x.time||0}分<br>${x.memo||''}</td><td><button class="btn-danger" onclick="deleteMistakeReport(${x.id})">削除</button></td></tr>`).join(''); }
         function deleteMistakeReport(id) { let r = loadFB('mistake_reports', []); r = r.filter(x => x.id !== id); saveFB('mistake_reports', r); renderMistakeReports(); }
         function clearAllMistakeReports() { removeFB('mistake_reports'); renderMistakeReports(); }
-        function sendMaterial() { const title = document.getElementById('mat-title').value.trim(), file = document.getElementById('mat-file-input').files[0]; if(!title || !file) return; const r = new FileReader(); r.onload = function(e) { let mats = loadFB('materials', []); mats.push({ name: title, url: e.target.result, type: file.type==='application/pdf'?'pdf':'img' }); saveFB('materials', mats); alert(`送信しました！`); document.getElementById('mat-title').value = ""; document.getElementById('mat-file-input').value = ""; }; r.readAsDataURL(file); }
+
+        // ★ 変更：Firebase Storageを使って安全にアップロードする
+        async function sendMaterial() { 
+            const title = document.getElementById('mat-title').value.trim();
+            const file = document.getElementById('mat-file-input').files[0]; 
+            const pdfUrl = document.getElementById('mat-url-input').value.trim(); // 追加：PDFのURL
+
+            if(!title) return alert("タイトルを入力してください"); 
+            if(!file && !pdfUrl) return alert("画像を選択するか、PDFのリンクを貼ってください"); 
+
+            // PDFリンクが入力されている場合（優先）
+            if(pdfUrl) {
+                let mats = loadFB('materials', []);
+                mats.push({ name: title, url: pdfUrl, type: 'pdf' });
+                saveFB('materials', mats);
+                alert(`🚀 PDFリンクを送信しました！`);
+                document.getElementById('mat-title').value = "";
+                document.getElementById('mat-url-input').value = "";
+                renderMaterialsList();
+                return;
+            }
+
+            // 画像ファイルが選択されている場合
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // 画質を保ちつつリサイズ＆圧縮
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 圧縮されたBase64を取得
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                        let mats = loadFB('materials', []);
+                        mats.push({ name: title, url: compressedBase64, type: 'img' });
+                        saveFB('materials', mats);
+                        
+                        alert(`🚀 画像を送信しました！`);
+                        document.getElementById('mat-title').value = "";
+                        document.getElementById('mat-file-input').value = "";
+                        renderMaterialsList();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function renderMaterialsList() { const m = loadFB('materials', []); document.getElementById('sent-materials-list').innerHTML = m.length === 0 ? `<tr><td colspan="3">なし</td></tr>` : m.map((x, i) => `<tr><td>${x.name}</td><td>${x.type}</td><td><button class="btn-danger" onclick="openMaterialPreview(${i})">確認</button> <button class="btn-danger" onclick="delMat(${i})">削除</button></td></tr>`).join(''); }
         
-        // ★教材のプレビュー確認ボタン用関数の追加
         function openMaterialPreview(idx) {
             const m = loadFB('materials', []);
             if(m[idx]) {
                 document.getElementById('preview-title').innerText = m[idx].name;
                 const frame = document.getElementById('preview-frame');
+                
                 if(m[idx].type === 'pdf') {
-                    frame.outerHTML = `<iframe id="preview-frame" style="flex:1; border:none;" src="${m[idx].url}"></iframe>`;
+                    // Googleドライブのリンクはiframeで開けない設定になっていることが多いので、別タブで開く
+                    window.open(m[idx].url, '_blank');
+                    return; // モーダルは開かない
                 } else {
                     frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; background:#eee;" src="${m[idx].url}">`;
                 }

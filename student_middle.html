@@ -149,6 +149,17 @@
             
             <div class="mid-card" style="border-color:#9c27b0;">
                 <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> ミニテスト（4択）</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:5px;">
+                        <span>テスト達成度</span>
+                        <span id="quiz-progress-text">0 / 0</span>
+                    </div>
+                    <div style="width:100%; background:#edf2f7; border-radius:10px; height:10px; overflow:hidden;">
+                        <div id="quiz-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #ba68c8, #9c27b0); transition:0.3s;"></div>
+                    </div>
+                </div>
+
                 <div id="quiz-container" style="font-size:14px; font-weight:bold; color:var(--text-main);">
                     先生からテストが届くとここに表示されるよ！
                 </div>
@@ -586,54 +597,94 @@
         function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
 
         // ==========================================
-        // 🤖 クイズ受信・回答機能
+        // 🤖 クイズ受信・回答機能（完全マスター方式）
         // ==========================================
         function loadQuizzes() {
             db.ref('admin/shared_quizzes').on('value', snap => {
                 const quizzes = snap.val();
                 const container = document.getElementById('quiz-container');
+                const pBar = document.getElementById('quiz-progress-bar');
+                const pText = document.getElementById('quiz-progress-text');
+                
                 if(!quizzes) {
                     container.innerHTML = "今はテストはないよ！";
+                    if(pBar) pBar.style.width = "0%";
+                    if(pText) pText.innerText = "0 / 0";
                     return;
                 }
 
-                const doneQuizzes = loadFB('done_quizzes', {});
+                // 履歴データの取得
+                const progress = loadFB('quiz_progress', {});
                 let html = "";
+                let total = 0;
+                let cleared = 0;
                 
                 Object.keys(quizzes).forEach(key => {
                     const q = quizzes[key];
-                    if(doneQuizzes[q.id]) return; 
+                    total++;
+                    const p = progress[q.id] || { status: 'unanswered', mistakes: 0 };
 
-                    let optionsHtml = q.options.map((opt, i) => `
-                        <button onclick="answerQuiz('${key}', '${q.id}', '${opt}', '${q.answer}')" 
-                                style="display:block; width:100%; text-align:left; padding:12px; margin-bottom:8px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:8px; font-weight:bold; cursor:pointer;">
+                    if(p.status === 'cleared') {
+                        cleared++;
+                        return; // 正解済みのものは画面に出さない
+                    }
+
+                    // 選択肢のシャッフル（場所での丸暗記を防止）
+                    let options = [...q.options];
+                    options.sort(() => Math.random() - 0.5);
+
+                    let optionsHtml = options.map((opt, i) => `
+                        <button onclick="answerQuiz('${q.id}', '${opt}', '${q.answer}')" 
+                                style="display:block; width:100%; text-align:left; padding:12px; margin-bottom:8px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s;">
                             ${i+1}. ${opt}
                         </button>
                     `).join('');
 
+                    // 間違えた問題には「🔥復習」バッジをつける
+                    let badge = p.status === 'failed' ? `<span style="background:#e53e3e; color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px; vertical-align:middle;">🔥復習 (ミス: ${p.mistakes}回)</span>` : '';
+
                     html += `
-                        <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
-                            <div style="margin-bottom:15px; font-size:16px;">Q. ${q.question}</div>
+                        <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="margin-bottom:15px; font-size:16px; line-height:1.4;">Q. ${q.question} ${badge}</div>
                             ${optionsHtml}
                         </div>
                     `;
                 });
 
-                container.innerHTML = html || "ぜんぶクリアしました！💮";
+                // プログレスバーの更新
+                if(pBar && pText) {
+                    let pct = total === 0 ? 0 : Math.round((cleared / total) * 100);
+                    pBar.style.width = pct + "%";
+                    pText.innerText = `${cleared} / ${total} 完了 (${pct}%)`;
+                }
+
+                // 全問正解した時の表示
+                if (total > 0 && cleared === total) {
+                    container.innerHTML = `<div style="text-align:center; padding:20px; background:#f0fff4; border:2px dashed #48bb78; border-radius:8px; color:#2f855a;"><i class="fa-solid fa-crown" style="font-size:30px; margin-bottom:10px;"></i><br>全問正解！<br>すばらしい！</div>`;
+                } else {
+                    container.innerHTML = html;
+                }
             });
         }
 
-        function answerQuiz(dbKey, quizId, selectedOpt, correctAns) {
+        function answerQuiz(quizId, selectedOpt, correctAns) {
+            let progress = loadFB('quiz_progress', {});
+            if(!progress[quizId]) progress[quizId] = { status: 'unanswered', mistakes: 0 };
+            
             if(selectedOpt === correctAns) {
-                alert("⭕ 大正解！！");
-                let doneDict = loadFB('done_quizzes', {});
-                doneDict[quizId] = true;
-                saveFB('done_quizzes', doneDict);
+                alert("⭕ 大正解！！よくできました！");
+                progress[quizId].status = 'cleared'; // 状態を「クリア」にする
+                saveFB('quiz_progress', progress); // Firebaseに保存（先生に伝わる）
                 
+                // 正解したらスタンプをあげる
                 let count = parseInt(studentDataCache['stamps']) || 0; 
                 saveFB_Raw('stamps', count + 1); 
             } else {
-                alert(`❌ ざんねん！\n\n正解は「${correctAns}」でした。`);
+                progress[quizId].status = 'failed'; // 状態を「失敗」にする
+                progress[quizId].mistakes += 1;     // ミス回数を＋1する
+                saveFB('quiz_progress', progress); // Firebaseに保存（先生に伝わる）
+                
+                alert(`❌ ざんねん！ちがいます。\n\n「${selectedOpt}」ではないみたい...。\nもう一度考えて、正解するまでやり直そう！`);
             }
         }
     </script>

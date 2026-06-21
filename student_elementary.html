@@ -36,7 +36,6 @@
         .mid-countdown { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 10px; box-shadow: 0 6px 15px rgba(255,154,158,0.4); }
         .mid-countdown h2 { font-size: 18px; margin: 0; font-weight: bold;}
 
-        /* メッセージ表示エリア */
         #quick-message-area { display: none; grid-column: 1 / -1; background: #fffcf5; border: 3px dashed #ffb74d; border-radius: 16px; padding: 15px 20px; margin-bottom: 5px; box-shadow: 0 4px 12px rgba(255,152,0,0.1); align-items: center; gap: 15px; }
 
         .timer-display { font-size: 52px; font-weight: 900; color: var(--main); text-align: center; margin: 15px 0; background: #fffdf5; padding: 15px; border-radius: 20px; border: 3px dashed #ffb74d; font-family: monospace; letter-spacing: 2px;}
@@ -120,6 +119,26 @@
         <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
+    <div id="fc-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; width:100%; max-width:500px; border-radius:16px; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="padding:15px; background:#00897b; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="fc-modal-title" style="margin:0; font-size:16px;">たんご帳</h3>
+                <button onclick="closeFlashcards()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">✖</button>
+            </div>
+            
+            <div id="fc-card-area" style="padding:40px 20px; text-align:center; min-height:250px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; background:#f7fafc; margin:20px; border-radius:12px; border:3px dashed #b2dfdb; position:relative; user-select:none; transition:0.2s;" onclick="flipFlashcard()">
+                <div id="fc-progress" style="position:absolute; top:10px; left:15px; font-size:14px; font-weight:bold; color:#00897b;"></div>
+                <div id="fc-content" style="font-size:32px; font-weight:bold; color:#2d3748; word-break:break-word;">もんだい</div>
+                <div id="fc-hint" style="position:absolute; bottom:10px; font-size:13px; color:#a0aec0; font-weight:bold;"><i class="fa-solid fa-hand-pointer"></i> タップしてうらがえす</div>
+            </div>
+            
+            <div style="padding:15px; display:flex; justify-content:space-between; gap:10px; background:#e0f2f1;">
+                <button id="fc-btn-prev" onclick="prevFlashcard()" style="flex:1; padding:16px; border:none; border-radius:12px; background:#a0aec0; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">◀ まえ</button>
+                <button id="fc-btn-next" onclick="nextFlashcard()" style="flex:2; padding:16px; border:none; border-radius:12px; background:#00897b; color:#fff; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 0 #00695c;">つぎへ ▶</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         
         <div id="quick-message-area">
@@ -159,6 +178,22 @@
             <div class="mid-card">
                 <h3><i class="fa-solid fa-list-check"></i> しゅくだいリスト</h3>
                 <div class="hw-list" id="hw-list"></div>
+            </div>
+
+            <div class="mid-card" style="border-color:#9c27b0;">
+                <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> 4たくテスト</h3>
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:5px;">
+                        <span>すすみぐあい</span>
+                        <span id="quiz-progress-text">0 / 0</span>
+                    </div>
+                    <div style="width:100%; background:#edf2f7; border-radius:10px; height:10px; overflow:hidden;">
+                        <div id="quiz-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #ba68c8, #9c27b0); transition:0.3s;"></div>
+                    </div>
+                </div>
+                <div id="quiz-container" style="font-size:14px; font-weight:bold; color:var(--text-main);">
+                    先生からテストがとどくとここにでるよ！
+                </div>
             </div>
         </div>
 
@@ -211,6 +246,14 @@
         </div>
 
         <div class="dashboard-col col-right">
+            
+            <div class="mid-card" style="border-color:#00897b;">
+                <h3 style="color:#00695c;"><i class="fa-solid fa-layer-group"></i> 📇 たんご帳・あんきカード</h3>
+                <div id="flashcard-list" style="display:flex; flex-direction: column; gap:8px;">
+                    <div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">カードはまだないよ</div>
+                </div>
+            </div>
+
             <div class="mid-card">
                 <h3><i class="fa-solid fa-triangle-exclamation"></i> まちがい・質問の報告</h3>
                 <div class="form-row"><label>教材の名前</label><input type="text" id="report-mat" placeholder="例: 算数ドリル"></div>
@@ -282,18 +325,24 @@
         let myStudentId = ""; let studentDataCache = {}; const STAMP_MAX = 10; let selectedDateStr = "";
         let timerInterval = null; let timerRunning = false; let timerStartTime = 0; let timerSavedTime = 0; let timerTargetSeconds = 0; let audioCtx = null;
 
-        function loadFB(key, defaultVal) { const data = studentDataCache[key]; if(data === undefined || data === null) return defaultVal; try { const parsed = typeof data === 'string' ? JSON.parse(data) : data; return parsed !== null ? parsed : defaultVal; } catch(e) { return defaultVal; } }
+        // ★ JSON読み込みバグ対応の安全な関数
+        function loadFB(key, defaultVal) { 
+            const data = studentDataCache[key]; 
+            if(data === undefined || data === null) return defaultVal; 
+            try { 
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data; 
+                return parsed !== null ? parsed : defaultVal; 
+            } catch(e) { 
+                return data !== "" ? data : defaultVal; 
+            } 
+        }
         function saveFB(key, data) { studentDataCache[key] = typeof data === 'string' ? data : JSON.parse(JSON.stringify(data)); if(db) db.ref('students/' + myStudentId + '/' + key).set(JSON.stringify(data)); }
         function saveFB_Raw(key, val) { studentDataCache[key] = val; if(db) db.ref('students/' + myStudentId + '/' + key).set(val); }
 
-        // ==========================================
-        // 🔐 ログイン・パスワード管理機能（全生徒ファイル共通）
-        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
             let savedId = sessionStorage.getItem('criety_auth_id');
             let expiry = localStorage.getItem('criety_auth_expiry');
             
-            // 30日間の有効期限チェック
             if (!savedId && localStorage.getItem('criety_auth_id')) {
                 if (expiry && Date.now() > parseInt(expiry)) {
                     localStorage.removeItem('criety_auth_id');
@@ -315,7 +364,7 @@
             const pass = document.getElementById('student-password').value.trim();
             const remember = document.getElementById('remember-me').checked; 
             
-            if(!id || !pass) return alert("IDとパスワードを入力してください / Please enter ID and Password");
+            if(!id || !pass) return alert("IDとパスワードをいれてね！");
             
             db.ref('admin/students/' + id).once('value').then(snapshot => {
                 const data = snapshot.val();
@@ -329,8 +378,8 @@
                     }
                     document.getElementById('auth-overlay').style.display = 'none'; 
                     startApp();
-                } else { alert("IDかパスワードが間違っています / Invalid ID or Password"); }
-            }).catch(e => alert("通信エラーが発生しました / Network Error"));
+                } else { alert("IDかパスワードがちがうみたい！"); }
+            }).catch(e => alert("通信エラーがおきたよ"));
         }
 
         function studentLogout() { 
@@ -342,26 +391,27 @@
 
         function changeMyPassword() {
             const newPass = document.getElementById('new-password-input').value.trim();
-            if(!newPass) return alert("新しいパスワードを入力してください / Please enter a new password");
-            if(newPass.length < 4) return alert("パスワードは4文字以上で設定してください / Minimum 4 characters");
-            if(!confirm("パスワードを「" + newPass + "」に変更しますか？ / Change password to " + newPass + "?")) return;
+            if(!newPass) return alert("あたらしいパスワードをいれてね！");
+            if(newPass.length < 4) return alert("パスワードは4文字いじょうにしてね！");
+            if(!confirm("本当にパスワードを「" + newPass + "」にかえる？")) return;
 
             db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
                 const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
                 db.ref('admin/password_logs').push(logData);
                 
-                alert("パスワードを変更しました！ / Password updated successfully!");
+                alert("パスワードをかえました！わすれないようにメモしてね。");
                 document.getElementById('new-password-input').value = "";
-            }).catch(e => alert("エラーが発生しました / Error occurred"));
+            }).catch(e => alert("エラーがおきたよ。先生に聞いてね。"));
         }
         
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
-            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData();
+            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes(); renderFlashcardsList();
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); 
+                loadQuizzes(); renderFlashcardsList();
             });
         }
 
@@ -611,28 +661,22 @@
             const targetTitle = studentDataCache['target_title']; 
             const targetDate = studentDataCache['target_date'];
             const area = document.getElementById('countdown-area');
-            const daysEl = document.getElementById('countdown-days');
             
             // クイックメッセージ
-            const quickMsg = studentDataCache['quick_message'];
+            const quickMsg = loadFB('quick_message', "");
             const msgArea = document.getElementById('quick-message-area');
-            if (quickMsg) { msgArea.style.display = 'flex'; document.getElementById('quick-message-text').innerText = quickMsg; } 
-            else { msgArea.style.display = 'none'; }
+            if (msgArea) {
+                if (quickMsg) { 
+                    msgArea.style.display = 'flex'; 
+                    document.getElementById('quick-message-text').innerText = quickMsg; 
+                } else { 
+                    msgArea.style.display = 'none'; 
+                }
+            }
             
             if(targetTitle) {
                 area.style.display = 'block'; 
                 document.getElementById('countdown-title').innerHTML = `🌸 ${targetTitle}`; 
-                
-                if(targetDate) {
-                    const today = new Date(); today.setHours(0,0,0,0);
-                    const tDate = new Date(targetDate); tDate.setHours(0,0,0,0);
-                    const diff = tDate - today;
-                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    daysEl.style.display = 'block';
-                    daysEl.innerText = `あと ${d} 日`;
-                } else {
-                    daysEl.style.display = 'none'; 
-                }
             } else { area.style.display = 'none'; }
             
             const files = loadFB('materials', []); const list = document.getElementById('material-list');
@@ -641,23 +685,232 @@
         }
 
         function renderTeacherSlides() { const slides = loadFB('wb_slides', []); const boardCard = document.getElementById('shared-board-card'); const container = document.getElementById('teacher-slides-container'); if(slides.length > 0) { boardCard.style.display = 'block'; const html = [...slides].reverse().map((s, idx) => `<div class="slide-item"><div style="font-size:11px; font-weight:bold; color:var(--main); margin-bottom:8px; text-align:left;">先生のノート ${slides.length - idx}</div><img src="${s.data}" onclick="openFile('${s.data}', 'img')"></div>`).join(''); if (container.innerHTML !== html) container.innerHTML = html; } else { boardCard.style.display = 'none'; container.innerHTML = ''; } }
-        function openFile(url, type) { const content = document.getElementById('file-content'); content.innerHTML = type==='pdf' ? `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:8px;"></iframe>` : `<img src="${url}" style="max-width:100%; max-height:85vh; border-radius:8px;">`; document.getElementById('preview-overlay').style.display='flex'; }
-        function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
-        function changeMyPassword() {
-            const newPass = document.getElementById('new-password-input').value.trim();
-            if(!newPass) return alert("あたらしいパスワードをいれてね！");
-            if(newPass.length < 4) return alert("パスワードは4文字いじょうにしてね！");
-            if(!confirm("本当にパスワードを「" + newPass + "」にかえる？")) return;
+        
+        function openFile(url, type) { 
+            if(type === 'pdf') {
+                window.open(url, '_blank');
+            } else {
+                const content = document.getElementById('file-content');
+                content.innerHTML = `<img src="${url}" style="max-width:100%; max-height:85vh; border-radius:8px;">`; 
+                document.getElementById('preview-overlay').style.display='flex'; 
+            }
+        }
 
-            // 1. admin/students のパスワードを更新
-            db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
-                // 2. オーナー確認用のログを追加
-                const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
-                db.ref('admin/password_logs').push(logData);
+        function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
+
+        // ==========================================
+        // 🎮 4択クイズ
+        // ==========================================
+        function loadQuizzes() {
+            const quizzes = loadFB('quizzes', []);
+            const container = document.getElementById('quiz-container');
+            const pBar = document.getElementById('quiz-progress-bar');
+            const pText = document.getElementById('quiz-progress-text');
+            
+            let quizArray = [];
+            if (Array.isArray(quizzes)) {
+                quizArray = quizzes;
+            } else if (typeof quizzes === 'object') {
+                quizArray = Object.values(quizzes);
+            }
+
+            if(quizArray.length === 0) {
+                container.innerHTML = "いまはテストはないよ！";
+                if(pBar) pBar.style.width = "0%";
+                if(pText) pText.innerText = "0 / 0";
+                return;
+            }
+
+            const progress = loadFB('quiz_progress', {});
+            let html = "";
+            let total = 0;
+            let cleared = 0;
+            
+            quizArray.forEach((q) => {
+                total++;
+                const p = progress[q.id] || { status: 'unanswered', mistakes: 0 };
+
+                if(p.status === 'cleared') {
+                    cleared++;
+                    return; 
+                }
+
+                let options = [...q.options];
+                options.sort(() => Math.random() - 0.5);
+
+                let optionsHtml = options.map((opt, i) => {
+                    const safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAns = q.answer.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `
+                        <button onclick="answerQuiz('${q.id}', '${safeOpt}', '${safeAns}')" 
+                                style="display:block; width:100%; text-align:left; padding:14px; margin-bottom:10px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s; font-size:15px; box-shadow:0 3px 0 #ce93d8;">
+                            ${i+1}. ${opt}
+                        </button>
+                    `;
+                }).join('');
+
+                let badge = p.status === 'failed' ? `<span style="background:#e53e3e; color:white; padding:4px 8px; border-radius:6px; font-size:11px; margin-left:8px; vertical-align:middle;">🔥ふくしゅう (ミス: ${p.mistakes}回)</span>` : '';
+
+                html += `
+                    <div style="background:#fff; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="margin-bottom:15px; font-size:16px; line-height:1.4;">Q. ${q.question} ${badge}</div>
+                        ${optionsHtml}
+                    </div>
+                `;
+            });
+
+            if(pBar && pText) {
+                let pct = total === 0 ? 0 : Math.round((cleared / total) * 100);
+                pBar.style.width = pct + "%";
+                pText.innerText = `${cleared} / ${total} 完了 (${pct}%)`;
+            }
+
+            if (total > 0 && cleared === total) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; background:#f0fff4; border:3px dashed #48bb78; border-radius:12px; color:#2f855a;"><i class="fa-solid fa-crown" style="font-size:36px; margin-bottom:10px;"></i><br>ぜんもん大せいかい！<br>すばらしい！💮</div>`;
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        function answerQuiz(quizId, selectedOpt, correctAns) {
+            let progress = loadFB('quiz_progress', {});
+            if(!progress[quizId]) progress[quizId] = { status: 'unanswered', mistakes: 0 };
+            
+            if(selectedOpt === correctAns) {
+                alert("⭕ 大せいかい！！よくできました！");
+                progress[quizId].status = 'cleared'; 
+                saveFB('quiz_progress', progress); 
                 
-                alert("パスワードをかえました！わすれないようにメモしてね。");
-                document.getElementById('new-password-input').value = "";
-            }).catch(e => alert("エラーがおきたよ。先生に聞いてね。"));
+                let count = parseInt(studentDataCache['stamps']) || 0; 
+                let cards = parseInt(studentDataCache['stamp_cards']) || 1;
+                count++;
+                if(count >= STAMP_MAX) { 
+                    saveFB_Raw('stamps', 0); 
+                    saveFB_Raw('stamp_cards', cards + 1); 
+                    alert("🎉 レベルアップ！つぎのスタンプカードへすすんだよ！"); 
+                } else { 
+                    saveFB_Raw('stamps', count); 
+                }
+            } else {
+                progress[quizId].status = 'failed'; 
+                progress[quizId].mistakes += 1;     
+                saveFB('quiz_progress', progress); 
+                
+                alert(`❌ ざんねん！ちがうみたい…。\n\nもういっかい考えて、せいかいするまでやりなおそう！`);
+            }
+        }
+
+        // ==========================================
+        // 📇 単語帳（フラッシュカード）
+        // ==========================================
+        let currentDeck = [];
+        let currentCardIndex = 0;
+        let isCardFlipped = false;
+
+        function renderFlashcardsList() {
+            const decks = loadFB('flashcards', []);
+            const container = document.getElementById('flashcard-list');
+            
+            if(!Array.isArray(decks) || decks.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">カードはまだないよ</div>`;
+                return;
+            }
+
+            container.innerHTML = decks.map((d, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#e0f2f1; border:2px solid #b2dfdb; border-radius:12px; cursor:pointer; margin-bottom:8px;" onclick="openFlashcards(${idx})">
+                    <div>
+                        <div style="font-size:15px; font-weight:bold; color:#00695c; margin-bottom:4px;">${d.title}</div>
+                        <div style="font-size:12px; color:#00897b; font-weight:bold;">📇 ぜんぶで ${d.cards.length} 問</div>
+                    </div>
+                    <button style="background:#00897b; color:#fff; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:13px; box-shadow:0 4px 0 #00695c;">はじめる！</button>
+                </div>
+            `).join('');
+        }
+
+        function openFlashcards(deckIdx) {
+            const decks = loadFB('flashcards', []);
+            if(!decks[deckIdx] || decks[deckIdx].cards.length === 0) return;
+            
+            currentDeck = decks[deckIdx].cards;
+            document.getElementById('fc-modal-title').innerText = decks[deckIdx].title;
+            currentCardIndex = 0;
+            isCardFlipped = false;
+            
+            showCurrentFlashcard();
+            document.getElementById('fc-modal').style.display = 'flex';
+        }
+
+        function closeFlashcards() {
+            document.getElementById('fc-modal').style.display = 'none';
+        }
+
+        function showCurrentFlashcard() {
+            if(!currentDeck || currentDeck.length === 0) return;
+            
+            isCardFlipped = false;
+            const card = currentDeck[currentCardIndex];
+            
+            const contentEl = document.getElementById('fc-content');
+            contentEl.innerText = card.q;
+            contentEl.style.color = '#2d3748';
+            contentEl.style.fontSize = card.q.length > 20 ? '24px' : '32px'; 
+            
+            document.getElementById('fc-hint').innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップしてこたえをみる';
+            document.getElementById('fc-progress').innerText = `${currentCardIndex + 1} / ${currentDeck.length}`;
+            
+            const prevBtn = document.getElementById('fc-btn-prev');
+            prevBtn.style.opacity = currentCardIndex === 0 ? "0.5" : "1";
+            prevBtn.disabled = currentCardIndex === 0;
+            
+            const nextBtn = document.getElementById('fc-btn-next');
+            if(currentCardIndex === currentDeck.length - 1) {
+                nextBtn.innerText = "クリア！ 💮";
+                nextBtn.style.background = "#4caf50";
+                nextBtn.style.boxShadow = "0 4px 0 #388e3c";
+            } else {
+                nextBtn.innerText = "つぎへ ▶";
+                nextBtn.style.background = "#00897b";
+                nextBtn.style.boxShadow = "0 4px 0 #00695c";
+            }
+        }
+
+        function flipFlashcard() {
+            if(!currentDeck || currentDeck.length === 0) return;
+            
+            const card = currentDeck[currentCardIndex];
+            const contentEl = document.getElementById('fc-content');
+            const hintEl = document.getElementById('fc-hint');
+            
+            if(isCardFlipped) {
+                contentEl.innerText = card.q;
+                contentEl.style.color = '#2d3748';
+                contentEl.style.fontSize = card.q.length > 20 ? '24px' : '32px';
+                hintEl.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップしてこたえをみる';
+            } else {
+                contentEl.innerText = card.a;
+                contentEl.style.color = '#e53e3e';
+                contentEl.style.fontSize = card.a.length > 20 ? '24px' : '32px';
+                hintEl.innerHTML = '<i class="fa-solid fa-rotate-left"></i> タップしてもんだいにもどる';
+            }
+            
+            isCardFlipped = !isCardFlipped;
+        }
+
+        function nextFlashcard() {
+            if(currentCardIndex < currentDeck.length - 1) {
+                currentCardIndex++;
+                showCurrentFlashcard();
+            } else {
+                alert("おつかれさま！ぜんぶおわったよ！💮");
+                closeFlashcards();
+            }
+        }
+
+        function prevFlashcard() {
+            if(currentCardIndex > 0) {
+                currentCardIndex--;
+                showCurrentFlashcard();
+            }
         }
     </script>
 </body>

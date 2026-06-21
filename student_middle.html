@@ -115,6 +115,26 @@
         <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
+    <div id="fc-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; width:100%; max-width:500px; border-radius:12px; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="padding:15px; background:#00897b; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="fc-modal-title" style="margin:0; font-size:16px;">単語帳</h3>
+                <button onclick="closeFlashcards()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">✖</button>
+            </div>
+            
+            <div id="fc-card-area" style="padding:40px 20px; text-align:center; min-height:250px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; background:#f7fafc; margin:20px; border-radius:12px; border:2px dashed #cbd5e0; position:relative; user-select:none; transition:0.2s;" onclick="flipFlashcard()">
+                <div id="fc-progress" style="position:absolute; top:10px; left:15px; font-size:12px; font-weight:bold; color:#718096;"></div>
+                <div id="fc-content" style="font-size:28px; font-weight:bold; color:#2d3748; word-break:break-word;">問題</div>
+                <div id="fc-hint" style="position:absolute; bottom:10px; font-size:12px; color:#a0aec0; font-weight:bold;"><i class="fa-solid fa-hand-pointer"></i> タップして裏返す</div>
+            </div>
+            
+            <div style="padding:15px; display:flex; justify-content:space-between; gap:10px; background:#edf2f7;">
+                <button id="fc-btn-prev" onclick="prevFlashcard()" style="flex:1; padding:14px; border:none; border-radius:8px; background:#a0aec0; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">◀ 前のカード</button>
+                <button id="fc-btn-next" onclick="nextFlashcard()" style="flex:2; padding:14px; border:none; border-radius:8px; background:#00897b; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">次のカード ▶</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         
         <div class="dashboard-col col-left">
@@ -158,7 +178,7 @@
             </div>
             
             <div class="mid-card" style="border-color:#9c27b0;">
-                <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> ミニテスト（4択）</h3>
+                <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> 4択テスト</h3>
                 
                 <div style="margin-bottom: 15px;">
                     <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:5px;">
@@ -229,6 +249,14 @@
         </div>
 
         <div class="dashboard-col col-right">
+            
+            <div class="mid-card" style="border-color:#00897b;">
+                <h3 style="color:#00695c;"><i class="fa-solid fa-layer-group"></i> 📇 単語帳・暗記カード</h3>
+                <div id="flashcard-list" style="display:flex; flex-direction: column; gap:8px;">
+                    <div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">単語帳はまだありません</div>
+                </div>
+            </div>
+
             <div class="mid-card">
                 <h3><i class="fa-solid fa-triangle-exclamation"></i> 質問・間違い直しレポート</h3>
                 <div class="form-row"><label>教材名</label><input type="text" id="report-mat" placeholder="例: 数学 新ワーク"></div>
@@ -261,13 +289,13 @@
             </div>
 
             <div class="mid-card">
-                <h3><i class="fa-solid fa-clock-rotate-left"></i> 送信済みノート履歴</h3>
-                <div id="my-sent-slides-container" style="display:flex; flex-direction: column; gap:10px; max-height: 250px; overflow-y: auto;"></div>
+                <h3><i class="fa-solid fa-file-pdf"></i> 配布教材</h3>
+                <div id="material-list" style="display:flex; flex-direction: column; gap:8px;"></div>
             </div>
 
             <div class="mid-card">
-                <h3><i class="fa-solid fa-file-pdf"></i> 配布教材</h3>
-                <div id="material-list" style="display:flex; flex-direction: column; gap:8px;"></div>
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> 送信済みノート履歴</h3>
+                <div id="my-sent-slides-container" style="display:flex; flex-direction: column; gap:10px; max-height: 250px; overflow-y: auto;"></div>
             </div>
             
             <div class="mid-card">
@@ -380,12 +408,12 @@
 
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
-            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes();
+            renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes(); renderFlashcardsList();
             if(!db) return;
             db.ref('students/' + myStudentId).on('value', (snapshot) => {
                 studentDataCache = snapshot.val() || {};
                 renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); 
-                loadQuizzes(); 
+                loadQuizzes(); renderFlashcardsList();
             });
         }
 
@@ -620,6 +648,9 @@
 
         function closeFile() { document.getElementById('preview-overlay').style.display='none'; }
 
+        // ==========================================
+        // 📝 4択クイズ
+        // ==========================================
         function loadQuizzes() {
             const quizzes = loadFB('quizzes', []);
             const container = document.getElementById('quiz-container');
@@ -716,6 +747,120 @@
                 saveFB('quiz_progress', progress); 
                 
                 alert(`❌ ざんねん！ちがいます。\n\n「${selectedOpt}」ではないみたい...。\nもう一度考えて、正解するまでやり直そう！`);
+            }
+        }
+
+        // ==========================================
+        // 📇 単語帳（フラッシュカード）機能（生徒側）
+        // ==========================================
+        let currentDeck = [];
+        let currentCardIndex = 0;
+        let isCardFlipped = false;
+
+        function renderFlashcardsList() {
+            const decks = loadFB('flashcards', []);
+            const container = document.getElementById('flashcard-list');
+            
+            if(!Array.isArray(decks) || decks.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">単語帳はまだありません</div>`;
+                return;
+            }
+
+            container.innerHTML = decks.map((d, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#e0f2f1; border:1px solid #b2dfdb; border-radius:8px; cursor:pointer;" onclick="openFlashcards(${idx})">
+                    <div>
+                        <div style="font-size:14px; font-weight:bold; color:#00695c; margin-bottom:4px;">${d.title}</div>
+                        <div style="font-size:11px; color:#00897b; font-weight:bold;">📇 全 ${d.cards.length} 問</div>
+                    </div>
+                    <button style="background:#00897b; color:#fff; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">学習する</button>
+                </div>
+            `).join('');
+        }
+
+        function openFlashcards(deckIdx) {
+            const decks = loadFB('flashcards', []);
+            if(!decks[deckIdx] || decks[deckIdx].cards.length === 0) return;
+            
+            currentDeck = decks[deckIdx].cards;
+            document.getElementById('fc-modal-title').innerText = decks[deckIdx].title;
+            currentCardIndex = 0;
+            isCardFlipped = false;
+            
+            showCurrentFlashcard();
+            document.getElementById('fc-modal').style.display = 'flex';
+        }
+
+        function closeFlashcards() {
+            document.getElementById('fc-modal').style.display = 'none';
+        }
+
+        function showCurrentFlashcard() {
+            if(!currentDeck || currentDeck.length === 0) return;
+            
+            isCardFlipped = false;
+            const card = currentDeck[currentCardIndex];
+            
+            const contentEl = document.getElementById('fc-content');
+            contentEl.innerText = card.q;
+            contentEl.style.color = '#2d3748';
+            contentEl.style.fontSize = card.q.length > 20 ? '20px' : '28px'; // 長い文字は少し小さく
+            
+            document.getElementById('fc-hint').innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップして答えを見る';
+            document.getElementById('fc-progress').innerText = `${currentCardIndex + 1} / ${currentDeck.length}`;
+            
+            // ボタンの制御
+            const prevBtn = document.getElementById('fc-btn-prev');
+            prevBtn.style.opacity = currentCardIndex === 0 ? "0.5" : "1";
+            prevBtn.disabled = currentCardIndex === 0;
+            
+            const nextBtn = document.getElementById('fc-btn-next');
+            if(currentCardIndex === currentDeck.length - 1) {
+                nextBtn.innerText = "完了！ 💮";
+                nextBtn.style.background = "#38a169";
+            } else {
+                nextBtn.innerText = "次のカード ▶";
+                nextBtn.style.background = "#00897b";
+            }
+        }
+
+        function flipFlashcard() {
+            if(!currentDeck || currentDeck.length === 0) return;
+            
+            const card = currentDeck[currentCardIndex];
+            const contentEl = document.getElementById('fc-content');
+            const hintEl = document.getElementById('fc-hint');
+            
+            if(isCardFlipped) {
+                // 表面に戻る
+                contentEl.innerText = card.q;
+                contentEl.style.color = '#2d3748';
+                contentEl.style.fontSize = card.q.length > 20 ? '20px' : '28px';
+                hintEl.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップして答えを見る';
+            } else {
+                // 裏面（答え）にする
+                contentEl.innerText = card.a;
+                contentEl.style.color = '#e53e3e';
+                contentEl.style.fontSize = card.a.length > 20 ? '20px' : '28px';
+                hintEl.innerHTML = '<i class="fa-solid fa-rotate-left"></i> タップして問題に戻る';
+            }
+            
+            isCardFlipped = !isCardFlipped;
+        }
+
+        function nextFlashcard() {
+            if(currentCardIndex < currentDeck.length - 1) {
+                currentCardIndex++;
+                showCurrentFlashcard();
+            } else {
+                alert("お疲れ様でした！この単語帳を最後まで学習しました！");
+                closeFlashcards();
+            }
+        }
+
+        function prevFlashcard() {
+            if(currentCardIndex > 0) {
+                currentCardIndex--;
+                showCurrentFlashcard();
             }
         }
     </script>

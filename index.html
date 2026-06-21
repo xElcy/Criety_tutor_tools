@@ -7,6 +7,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
 
     <style>
         :root { --bg-color: #f4f6f8; --sidebar-bg: #1a2530; --text-main: #333333; --text-light: #ffffff; --accent-color: #d4af37; --border-color: #dddddd; }
@@ -199,7 +200,7 @@
                 <li class="nav-item active" onclick="switchPage('home', this)">🏠 ホーム</li>
                 <li class="nav-item" onclick="switchPage('profile', this)">📂 生徒カルテ</li>
                 <li class="nav-item" onclick="switchPage('materials', this)">📚 教材送信</li>
-                <li class="nav-item" onclick="switchPage('notes', this)">📝 ノート</li>
+                <li class="nav-item" onclick="switchPage('flashcards', this)">📇 単語帳</li> <li class="nav-item" onclick="switchPage('notes', this)">📝 ノート</li>
                 <li class="nav-item" onclick="switchPage('salary', this)">💰 給与・ログ</li>
                 <li class="nav-item" onclick="switchPage('data', this)">📊 データ</li>
                 <li class="nav-item" onclick="switchPage('settings', this)">⚙️ 設定</li>
@@ -329,6 +330,35 @@
                 </div>
             </div>
 
+            <div id="flashcards" class="page">
+                <div class="header"><h1>単語帳・暗記カード作成</h1></div>
+                
+                <div class="panel" style="border: 2px solid #00897b; background: #e0f2f1;">
+                    <h3 style="color: #00695c;">🆕 新しい単語帳を作成して送信</h3>
+                    <p style="font-size:11px; color:#555; margin-bottom:10px;">英単語や歴史の年号など、一問一答形式の暗記カードを作成できます。</p>
+                    
+                    <label>単語帳のタイトル</label>
+                    <div class="form-row"><input type="text" id="fc-title" placeholder="例: 中1 英語 Unit 1 新出単語"></div>
+                    
+                    <label>カードの内容（表面と裏面）</label>
+                    <div id="fc-rows" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+                        </div>
+                    
+                    <button class="btn-submit" style="background:#00897b; margin-bottom:15px; width:auto; padding:8px 15px;" onclick="addFlashcardRow()">➕ 行を追加する</button>
+                    <button class="btn-submit" style="background:#00695c; font-size:16px; padding:15px;" onclick="sendFlashcardDeck()">🚀 単語帳を生徒に送信</button>
+                </div>
+
+                <div class="panel">
+                    <h3>📋 送信済みの単語帳一覧</h3>
+                    <div class="scrollable-wrap">
+                        <table class="list-table">
+                            <thead><tr><th>タイトル</th><th>問題数</th><th>操作</th></tr></thead>
+                            <tbody id="sent-flashcards-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div id="notes" class="page">
                 <div class="header"><h1>指導ノート（双方向スライド）</h1></div>
                 <div class="panel" style="padding:15px;">
@@ -402,7 +432,7 @@
                 </div>
                 
                 <div class="panel" style="border: 2px solid #9c27b0; background: #fdf5ff;">
-                    <h3 style="color: #7b1fa2;">🤖 クイズの成績・進捗</h3>
+                    <h3 style="color: #7b1fa2;">🤖 4択クイズの成績・進捗</h3>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap:wrap; gap:10px;">
                         <span style="font-size:12px; font-weight:bold; color:#555;">生徒の解答状況と、間違えた回数を確認できます。</span>
                         <button class="btn-danger" onclick="resetStudentQuizProgress()" style="background:#9c27b0;">🔄 この生徒のクイズ履歴をリセット</button>
@@ -457,7 +487,7 @@
         let prevSlideCount = -1; let prevReportCount = -1;
         
         let salaryMonthDate = new Date(); 
-        const STAMP_MAX = 10; // ★追加：スタンプの最大値
+        const STAMP_MAX = 10; 
 
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
@@ -693,12 +723,10 @@
             try { updateMessageDisplay(); } catch(e) {} 
             try { loadProfile(); } catch(e) {}
             try { renderQuizProgress(); } catch(e) {}
-            try { renderStamps(); } catch(e) {} // ★追加：スタンプ表示の読み込み
+            try { renderStamps(); } catch(e) {} 
+            try { renderFlashcardsList(); } catch(e) {} // ★単語帳の読み込み
         }
 
-        // ==========================================
-        // 💮 スタンプ管理機能（先生側）
-        // ==========================================
         function renderStamps() {
             let count = parseInt(studentDataCache['stamps']) || 0;
             let cards = parseInt(studentDataCache['stamp_cards']) || 1;
@@ -855,6 +883,93 @@
             }
         }
         
+        // ==========================================
+        // 📇 単語帳（フラッシュカード）機能
+        // ==========================================
+        let flashcardRowCount = 1;
+        
+        function renderInitialFlashcardRows() {
+            document.getElementById('fc-rows').innerHTML = '';
+            flashcardRowCount = 0;
+            // 初期状態で3行用意する
+            addFlashcardRow();
+            addFlashcardRow();
+            addFlashcardRow();
+        }
+
+        function addFlashcardRow() {
+            flashcardRowCount++;
+            const div = document.createElement('div');
+            div.className = 'form-row form-col-3';
+            div.style.marginBottom = '8px';
+            div.style.alignItems = 'center';
+            div.innerHTML = `
+                <div style="flex:2;"><input type="text" id="fc-q-${flashcardRowCount}" placeholder="表面（問題）例: apple"></div>
+                <div style="flex:2;"><input type="text" id="fc-a-${flashcardRowCount}" placeholder="裏面（答え）例: りんご"></div>
+                <div style="flex:0.5;"><button class="btn-danger" style="width:100%; height:100%; padding:10px;" onclick="this.parentElement.parentElement.remove()">✖</button></div>
+            `;
+            document.getElementById('fc-rows').appendChild(div);
+        }
+
+        function sendFlashcardDeck() {
+            const title = document.getElementById('fc-title').value.trim();
+            if(!title) return alert("単語帳のタイトルを入力してください。");
+            
+            const cards = [];
+            const rows = document.getElementById('fc-rows').children;
+            
+            for(let i=0; i<rows.length; i++) {
+                const qInput = rows[i].querySelector('input[id^="fc-q-"]');
+                const aInput = rows[i].querySelector('input[id^="fc-a-"]');
+                if(qInput && aInput) {
+                    const q = qInput.value.trim();
+                    const a = aInput.value.trim();
+                    if(q && a) cards.push({ q, a });
+                }
+            }
+            
+            if(cards.length === 0) return alert("最低1つ以上のカード（問題と答えの両方）を入力してください。");
+
+            let decks = loadFB('flashcards', []);
+            if(!Array.isArray(decks)) decks = [];
+            decks.push({ id: Date.now(), title: title, cards: cards });
+            saveFB('flashcards', decks);
+
+            alert(`✅ 単語帳「${title}」(${cards.length}問) を生徒に送信しました！`);
+            document.getElementById('fc-title').value = '';
+            renderInitialFlashcardRows(); // 入力欄を初期化
+            renderFlashcardsList();
+        }
+
+        function renderFlashcardsList() {
+            const tbody = document.getElementById('sent-flashcards-list');
+            const decks = loadFB('flashcards', []);
+            
+            if(!Array.isArray(decks) || decks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">送信した単語帳はありません</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = decks.map((d, idx) => `
+                <tr>
+                    <td style="font-weight:bold;">${d.title}</td>
+                    <td>${d.cards.length} 問</td>
+                    <td><button class="btn-danger" onclick="deleteFlashcardDeck(${idx})">削除</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteFlashcardDeck(idx) {
+            if(!confirm("この単語帳を削除しますか？（生徒の画面からも消えます）")) return;
+            let decks = loadFB('flashcards', []);
+            decks.splice(idx, 1);
+            saveFB('flashcards', decks);
+            renderFlashcardsList();
+        }
+        
+        // ==========================================
+        // カレンダー・給与・ホワイトボード関連の既存機能
+        // ==========================================
         let currentDate = new Date(); let selectedDateStr = "";
         function renderCalendar() { 
             const y = currentDate.getFullYear(); const m = currentDate.getMonth(); document.getElementById('cal-month-year').innerText = `${y}年 ${m + 1}月`; 
@@ -880,7 +995,6 @@
         function addQuickEvent(type) { if(!selectedDateStr) return alert("日付選択してね"); let text = type==='lesson'?"指導日":prompt("予定:"); if(text) { let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type, text}); saveFB('cal_events', evs); renderCalendar(); } }
         function addHomework() { if(!selectedDateStr) return alert("日付選択してね"); const v = document.getElementById('hw-content').value.trim(); if(!v) return; let evs = loadFB('cal_events', {}); if(!evs[selectedDateStr]) evs[selectedDateStr] = []; evs[selectedDateStr].push({type:'hw', text:v}); saveFB('cal_events', evs); saveFB_Raw('task_status', 'pending'); alert(`宿題送りました`); document.getElementById('hw-content').value = ""; renderCalendar(); }
         window.deleteEvent = function(dStr, idx) { let evs = loadFB('cal_events', {}); if(evs && evs[dStr]) { evs[dStr].splice(idx, 1); if(evs[dStr].length === 0) delete evs[dStr]; saveFB('cal_events', evs); renderCalendar(); } };
-        
         function changeSalaryMonth(d) { salaryMonthDate.setMonth(salaryMonthDate.getMonth() + d); renderSalaryLogs(); }
         function saveWageAndCalc() { const w = document.getElementById('hourly-wage').value; saveFB_Raw('salary_wage', w); }
         function addSalaryLog() { const d = document.getElementById('log-date').value, h = parseFloat(document.getElementById('log-hours').value) || 0, t = parseInt(document.getElementById('log-transport').value) || 0, s = document.getElementById('log-summary').value.trim(); if(!d || h === 0) return alert("必須項目エラー"); let logs = loadFB('logs', []); logs.push({ id: Date.now(), date: d, hours: h, transport: t, summary: s }); saveFB('logs', logs); document.getElementById('log-hours').value = ""; document.getElementById('log-transport').value = ""; document.getElementById('log-summary').value = ""; salaryMonthDate = new Date(d); renderSalaryLogs(); }
@@ -992,6 +1106,10 @@
         function deleteSlide(id, type) { const key = type === 'student' ? 'student_wb_slides' : 'wb_slides'; if(!confirm("削除しますか？")) return; let s = loadFB(key, []); s = s.filter(x => x.id !== id); saveFB(key, s); type === 'student' ? renderStudentSlides() : renderWbSlides(); }
         function openSlidePreview(id, type) { const slides = loadFB(type === 'student' ? 'student_wb_slides' : 'wb_slides', []); const slide = slides.find(s => s.id === id); if(slide) { document.getElementById('preview-title').innerText = "画像プレビュー"; const frame = document.getElementById('preview-frame'); frame.outerHTML = `<img id="preview-frame" style="flex:1; object-fit:contain; border-radius:0 0 8px 8px; width:100%; height:100%; background:#eee;" src="${slide.data}">`; document.getElementById('preview-modal').style.display = 'flex'; } }
         function closePreview() { document.getElementById('preview-modal').style.display = 'none'; }
+        
+        // 初回ロード時にフラッシュカードの入力欄を3行用意する
+        renderInitialFlashcardRows();
+
     </script>
 </body>
 </html>

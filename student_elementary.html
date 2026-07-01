@@ -119,22 +119,23 @@
         <div id="file-content" style="flex:1; overflow:auto; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
+    <!-- たんご帳（フラッシュカード）用モーダル -->
     <div id="fc-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; width:100%; max-width:500px; border-radius:16px; display:flex; flex-direction:column; overflow:hidden;">
-            <div style="padding:15px; background:#00897b; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+            <div style="padding:15px; background:#ff9800; color:#fff; display:flex; justify-content:space-between; align-items:center;">
                 <h3 id="fc-modal-title" style="margin:0; font-size:16px;">たんご帳</h3>
                 <button onclick="closeFlashcards()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">✖</button>
             </div>
             
-            <div id="fc-card-area" style="padding:40px 20px; text-align:center; min-height:250px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; background:#f7fafc; margin:20px; border-radius:12px; border:3px dashed #b2dfdb; position:relative; user-select:none; transition:0.2s;" onclick="flipFlashcard()">
-                <div id="fc-progress" style="position:absolute; top:10px; left:15px; font-size:14px; font-weight:bold; color:#00897b;"></div>
-                <div id="fc-content" style="font-size:32px; font-weight:bold; color:#2d3748; word-break:break-word;">もんだい</div>
-                <div id="fc-hint" style="position:absolute; bottom:10px; font-size:13px; color:#a0aec0; font-weight:bold;"><i class="fa-solid fa-hand-pointer"></i> タップしてうらがえす</div>
+            <div id="fc-card-area" style="padding:40px 20px; text-align:center; min-height:250px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; background:#fffcf5; margin:20px; border-radius:12px; border:3px dashed #ffe0b2; position:relative; user-select:none; transition:0.2s;" onclick="flipFlashcard()">
+                <div id="fc-progress" style="position:absolute; top:10px; left:15px; font-size:14px; font-weight:bold; color:#ff9800;"></div>
+                <div id="fc-content" style="font-size:32px; font-weight:bold; color:#4a4a4a; word-break:break-word;">もんだい</div>
+                <div id="fc-hint" style="position:absolute; bottom:10px; font-size:13px; color:#888888; font-weight:bold;"><i class="fa-solid fa-hand-pointer"></i> タップしてうらがえす</div>
             </div>
             
-            <div style="padding:15px; display:flex; justify-content:space-between; gap:10px; background:#e0f2f1;">
-                <button id="fc-btn-prev" onclick="prevFlashcard()" style="flex:1; padding:16px; border:none; border-radius:12px; background:#a0aec0; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">◀ まえ</button>
-                <button id="fc-btn-next" onclick="nextFlashcard()" style="flex:2; padding:16px; border:none; border-radius:12px; background:#00897b; color:#fff; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 0 #00695c;">つぎへ ▶</button>
+            <div style="padding:15px; display:flex; justify-content:space-between; gap:10px; background:#fff9f0;">
+                <button id="fc-btn-prev" onclick="prevFlashcard()" style="flex:1; padding:16px; border:none; border-radius:12px; background:#ccc; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">◀ まえ</button>
+                <button id="fc-btn-next" onclick="nextFlashcard()" style="flex:2; padding:16px; border:none; border-radius:12px; background:#ff9800; color:#fff; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 4px 0 #e68a00;">つぎへ ▶</button>
             </div>
         </div>
     </div>
@@ -180,15 +181,16 @@
                 <div class="hw-list" id="hw-list"></div>
             </div>
 
-            <div class="mid-card" style="border-color:#9c27b0;">
-                <h3 style="color:#8e24aa;"><i class="fa-solid fa-gamepad"></i> 4たくテスト</h3>
+            <!-- 4択クイズパネル -->
+            <div class="mid-card" style="border-color:#ff9800;">
+                <h3 style="color:#ff9800;"><i class="fa-solid fa-gamepad"></i> 4たくテスト</h3>
                 <div style="margin-bottom: 15px;">
                     <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--text-light); margin-bottom:5px;">
                         <span>すすみぐあい</span>
                         <span id="quiz-progress-text">0 / 0</span>
                     </div>
-                    <div style="width:100%; background:#edf2f7; border-radius:10px; height:10px; overflow:hidden;">
-                        <div id="quiz-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #ba68c8, #9c27b0); transition:0.3s;"></div>
+                    <div style="width:100%; background:#fff9f0; border-radius:10px; height:10px; overflow:hidden;">
+                        <div id="quiz-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #ffb74d, #ff9800); transition:0.3s;"></div>
                     </div>
                 </div>
                 <div id="quiz-container" style="font-size:14px; font-weight:bold; color:var(--text-main);">
@@ -223,15 +225,19 @@
 
                     <button class="tool-btn active" id="btn-pen" onclick="setTool('pen')"><i class="fa-solid fa-pen"></i> ペン</button>
                     <button class="tool-btn" id="btn-eraser" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i> 消しゴム</button>
+                    <button class="tool-btn" id="btn-text" onclick="setTool('text')"><i class="fa-solid fa-font"></i> もじ</button>
                     <button class="tool-btn" style="color: var(--text-main);" onclick="resetZoom()"><i class="fa-solid fa-magnifying-glass-minus"></i> もとにもどす</button>
 
                     <input type="color" id="color-picker" value="#ff9800" onchange="setColor(this.value)" style="width: 36px; height: 36px; border: none; padding: 0; cursor: pointer; border-radius:6px; margin-left: auto;">
                 </div>
+                
+                <!-- ★ 追加・修正したテキストコントロール -->
                 <div id="text-controls" style="display: none; justify-content: center; gap: 8px; margin-bottom: 15px;">
                     <button class="tool-btn" onclick="changeTextScale(0.2)">大きく</button>
                     <button class="tool-btn" onclick="changeTextScale(-0.2)">小さく</button>
-                    <button class="tool-btn" style="background:var(--success); color:white; border:none;" onclick="fixText()">決定</button>
+                    <button class="tool-btn" style="background:var(--success); color:white; border:none;" onclick="fixText()">けってい</button>
                 </div>
+                
                 <canvas id="student-whiteboard" width="800" height="600" style="width: 100%; border: 2px solid #eee; border-radius: 12px; background: white; touch-action: none; display: block; margin-bottom: 15px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);"></canvas>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="submitSlide()" style="flex: 2; padding: 16px; background: var(--main); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size:16px; box-shadow: 0 4px 0 #e68a00;"><i class="fa-regular fa-paper-plane"></i> 先生に送る！</button>
@@ -247,8 +253,9 @@
 
         <div class="dashboard-col col-right">
             
-            <div class="mid-card" style="border-color:#00897b;">
-                <h3 style="color:#00695c;"><i class="fa-solid fa-layer-group"></i> 📇 たんご帳・あんきカード</h3>
+            <!-- たんご帳パネル -->
+            <div class="mid-card" style="border-color:#ff9800;">
+                <h3 style="color:#ff9800;"><i class="fa-solid fa-layer-group"></i> 📇 たんご帳・あんきカード</h3>
                 <div id="flashcard-list" style="display:flex; flex-direction: column; gap:8px;">
                     <div style="text-align:center; color:var(--text-light); font-size:12px; padding:10px;">カードはまだないよ</div>
                 </div>
@@ -295,12 +302,12 @@
                 <div id="material-list" style="display:flex; flex-direction: column; gap:8px;"></div>
             </div>
             
-            <div class="mid-card" style="border-color: #9c27b0;">
-                <h3 style="color: #8e24aa; border-bottom-color: #f3e5f5;"><i class="fa-solid fa-key"></i> あんごう（パスワード）をかえる</h3>
+            <div class="mid-card" style="border-color: #ffb74d;">
+                <h3 style="color: #e65100; border-bottom-color: #ffe0b2;"><i class="fa-solid fa-key"></i> あんごう（パスワード）をかえる</h3>
                 <div class="form-row">
                     <input type="text" id="new-password-input" placeholder="あたらしいパスワード（4もじいじょう）">
                 </div>
-                <button onclick="changeMyPassword()" style="width:100%; padding:14px; background:#9c27b0; color:white; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 4px 0 #6a1b9a;">
+                <button onclick="changeMyPassword()" style="width:100%; padding:14px; background:#ff9800; color:white; border:none; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; box-shadow: 0 4px 0 #e68a00;">
                     <i class="fa-solid fa-lock"></i> パスワードをかえる
                 </button>
             </div>
@@ -325,7 +332,6 @@
         let myStudentId = ""; let studentDataCache = {}; const STAMP_MAX = 10; let selectedDateStr = "";
         let timerInterval = null; let timerRunning = false; let timerStartTime = 0; let timerSavedTime = 0; let timerTargetSeconds = 0; let audioCtx = null;
 
-        // ★ JSON読み込みバグ対応の安全な関数
         function loadFB(key, defaultVal) { 
             const data = studentDataCache[key]; 
             if(data === undefined || data === null) return defaultVal; 
@@ -398,12 +404,11 @@
             db.ref('admin/students/' + myStudentId).update({ password: newPass }).then(() => {
                 const logData = { studentId: myStudentId, newPassword: newPass, timestamp: Date.now() };
                 db.ref('admin/password_logs').push(logData);
-                
                 alert("パスワードをかえました！わすれないようにメモしてね。");
                 document.getElementById('new-password-input').value = "";
             }).catch(e => alert("エラーがおきたよ。先生に聞いてね。"));
         }
-        
+
         function startApp() {
             document.getElementById('user-display').innerText = "ID: " + myStudentId;
             renderStamps(); renderCalendar(); renderHomeworkList(); renderMySentSlides(); syncData(); loadQuizzes(); renderFlashcardsList();
@@ -446,7 +451,9 @@
             for(let i=0; i<new Date(year, month, 1).getDay(); i++) grid.innerHTML += `<div></div>`;
             for(let i=1; i<=daysInMonth; i++) {
                 const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`; let badgeHtml = "";
-                if(targetTitle && targetDate === dStr) { badgeHtml += `<div class="cal-badge" style="background:#fce4ec; color:#e91e63; border-left:2px solid #e91e63;">🌸 目標: ${targetTitle}</div>`; }
+                
+                if(targetTitle && targetDate === dStr) { badgeHtml += `<div class="cal-badge" style="background:#fff3e0; color:#e65100; border-left:2px solid #e65100;">🌸 目標: ${targetTitle}</div>`; }
+                
                 if(events[dStr]) events[dStr].forEach(ev => {
                     let color = ev.color || '#a0aec0'; let text = ev.text;
                     if(ev.type === 'hw') { color = doneDict[`${dStr}_${ev.text}`] ? '#4caf50' : '#ff9800'; text = doneDict[`${dStr}_${ev.text}`] ? `済:${ev.text}` : `宿:${ev.text}`; }
@@ -463,7 +470,8 @@
             const listDiv = document.getElementById('selected-date-events-list'); const events = loadFB('cal_events', {}); const evs = events[selectedDateStr] || []; const doneDict = loadFB('hw_done', {});
             const targetTitle = loadFB('target_title', ""); const targetDate = loadFB('target_date', "");
             let html = "";
-            if(targetTitle && targetDate === selectedDateStr) { html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fce4ec; border-left:4px solid #e91e63; padding:8px 10px; border-radius:6px; border: 1px solid #f8bbd0; margin-bottom:5px;"><span style="font-size:13px; font-weight:bold; color:#c2185b;">🌸 目標: ${targetTitle}</span></div>`; }
+            
+            if(targetTitle && targetDate === selectedDateStr) { html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff3e0; border-left:4px solid #e65100; padding:8px 10px; border-radius:6px; border: 1px solid #ffe0b2; margin-bottom:5px;"><span style="font-size:13px; font-weight:bold; color:#e65100;">🌸 目標: ${targetTitle}</span></div>`; }
             if(evs.length === 0 && html === "") { listDiv.innerHTML = `<div style="font-size:12px; color:#a0aec0; text-align:center; padding:10px 0;">よていはありません</div>`; return; }
             
             html += evs.map((ev, idx) => {
@@ -508,11 +516,10 @@
         function hideHw(dateStr, hwText) { if(!confirm("リストから消す？（先生の画面にはのこってるからだいじょうぶだよ！）")) return; const hwKey = `${dateStr}_${hwText}`; let hiddenDict = JSON.parse(localStorage.getItem('criety_hw_hidden_' + myStudentId)) || {}; hiddenDict[hwKey] = true; localStorage.setItem('criety_hw_hidden_' + myStudentId, JSON.stringify(hiddenDict)); renderHomeworkList(); }
 
         // ==========================================
-        // 🎨 ホワイトボード（★ カメラ連携・ピンチズーム・パン完全対応）
+        // 🎨 ホワイトボード（★ カメラ連携・ピンチズーム・パン・テキスト完全対応）
         // ==========================================
         const canvas = document.getElementById('student-whiteboard'); 
         const ctx = canvas.getContext('2d');
-        
         const offCanvas = document.createElement('canvas'); 
         offCanvas.width = 800; offCanvas.height = 600; 
         const oCtx = offCanvas.getContext('2d');
@@ -522,6 +529,7 @@
         let isDrawing = false, isPinching = false;
         let initialDist = 0, lastCenter = {x:0, y:0};
         let currentTool = 'pen'; let currentColor = '#ff9800'; let lineWidth = 5;
+        let activeText = null; let isDraggingText = false; let savedCanvasData = null; // ★ここが抜けていました
 
         function getRealPos(clientX, clientY) { 
             const rect = canvas.getBoundingClientRect(); 
@@ -535,6 +543,17 @@
             ctx.clearRect(0,0,canvas.width,canvas.height); 
             ctx.setTransform(zoom,0,0,zoom,panX,panY); 
             ctx.drawImage(offCanvas,0,0); 
+            
+            // テキスト入力中の描画処理
+            if(activeText) { 
+                ctx.save(); 
+                ctx.translate(activeText.x, activeText.y); 
+                ctx.font = `bold ${24 * activeText.scale}px sans-serif`; 
+                ctx.fillStyle = activeText.color; 
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                ctx.fillText(activeText.text, 0, 0); 
+                ctx.restore(); 
+            }
         }
 
         function loadCameraImage(e) {
@@ -570,6 +589,8 @@
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             const rp = getRealPos(clientX, clientY);
+            
+            // ★ テキストツールの処理
             if(currentTool === 'text') {
                 if(!activeText) {
                     const txt = prompt("文字を入力してね:");
@@ -619,13 +640,13 @@
             redrawCanvas(); 
         }
         
-        function handleEnd(e) { if(e.touches && e.touches.length < 2) isPinching = false; isDrawing = false; }
+        function handleEnd(e) { if(e.touches && e.touches.length < 2) isPinching = false; isDrawing = false; isDraggingText = false;}
         function setTool(t) { if(activeText && t !== 'text') fixText(); currentTool = t; document.querySelectorAll('#student-drawing-tools .tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + t).classList.add('active'); }
         function setColor(c) { currentColor = c; setTool('pen'); }
         function setLineWidth(w) { lineWidth = w; }
         function clearBoard() { if(confirm("ぜんぶ消す？")) { oCtx.fillStyle = 'white'; oCtx.fillRect(0,0,800,600); resetZoom(); activeText = null; document.getElementById('text-controls').style.display = 'none';} }
         
-        // テキスト確定用関数（オフスクリーンに書き込む）
+        function changeTextScale(ds) { if(activeText) { activeText.scale += ds; if(activeText.scale < 0.5) activeText.scale = 0.5; redrawCanvas(); } }
         function fixText() { 
             if(!activeText) return; 
             if(savedCanvasData) oCtx.putImageData(savedCanvasData, 0, 0);
@@ -662,7 +683,6 @@
             const targetDate = studentDataCache['target_date'];
             const area = document.getElementById('countdown-area');
             
-            // クイックメッセージ
             const quickMsg = loadFB('quick_message', "");
             const msgArea = document.getElementById('quick-message-area');
             if (msgArea) {
@@ -743,13 +763,13 @@
                     const safeAns = q.answer.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     return `
                         <button onclick="answerQuiz('${q.id}', '${safeOpt}', '${safeAns}')" 
-                                style="display:block; width:100%; text-align:left; padding:14px; margin-bottom:10px; background:#f3e5f5; border:2px solid #ce93d8; border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s; font-size:15px; box-shadow:0 3px 0 #ce93d8;">
+                                style="display:block; width:100%; text-align:left; padding:14px; margin-bottom:10px; background:#fff9f0; border:2px solid #ffb74d; border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s; font-size:15px; box-shadow:0 3px 0 #ffe0b2; color:#e65100;">
                             ${i+1}. ${opt}
                         </button>
                     `;
                 }).join('');
 
-                let badge = p.status === 'failed' ? `<span style="background:#e53e3e; color:white; padding:4px 8px; border-radius:6px; font-size:11px; margin-left:8px; vertical-align:middle;">🔥ふくしゅう (ミス: ${p.mistakes}回)</span>` : '';
+                let badge = p.status === 'failed' ? `<span style="background:#f44336; color:white; padding:4px 8px; border-radius:6px; font-size:11px; margin-left:8px; vertical-align:middle;">🔥ふくしゅう (ミス: ${p.mistakes}回)</span>` : '';
 
                 html += `
                     <div style="background:#fff; border:2px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
@@ -766,7 +786,7 @@
             }
 
             if (total > 0 && cleared === total) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; background:#f0fff4; border:3px dashed #48bb78; border-radius:12px; color:#2f855a;"><i class="fa-solid fa-crown" style="font-size:36px; margin-bottom:10px;"></i><br>ぜんもん大せいかい！<br>すばらしい！💮</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:20px; background:#fffdf5; border:3px dashed #ffb74d; border-radius:12px; color:#ff9800;"><i class="fa-solid fa-crown" style="font-size:36px; margin-bottom:10px;"></i><br>ぜんもん大せいかい！<br>すばらしい！💮</div>`;
             } else {
                 container.innerHTML = html;
             }
@@ -817,12 +837,12 @@
             }
 
             container.innerHTML = decks.map((d, idx) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#e0f2f1; border:2px solid #b2dfdb; border-radius:12px; cursor:pointer; margin-bottom:8px;" onclick="openFlashcards(${idx})">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fffcf5; border:2px solid #ffe0b2; border-radius:12px; cursor:pointer; margin-bottom:8px;" onclick="openFlashcards(${idx})">
                     <div>
-                        <div style="font-size:15px; font-weight:bold; color:#00695c; margin-bottom:4px;">${d.title}</div>
-                        <div style="font-size:12px; color:#00897b; font-weight:bold;">📇 ぜんぶで ${d.cards.length} 問</div>
+                        <div style="font-size:15px; font-weight:bold; color:#e65100; margin-bottom:4px;">${d.title}</div>
+                        <div style="font-size:12px; color:#ff9800; font-weight:bold;">📇 ぜんぶで ${d.cards.length} 問</div>
                     </div>
-                    <button style="background:#00897b; color:#fff; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:13px; box-shadow:0 4px 0 #00695c;">はじめる！</button>
+                    <button style="background:#ff9800; color:#fff; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:13px; box-shadow:0 4px 0 #e68a00;">はじめる！</button>
                 </div>
             `).join('');
         }
@@ -852,7 +872,7 @@
             
             const contentEl = document.getElementById('fc-content');
             contentEl.innerText = card.q;
-            contentEl.style.color = '#2d3748';
+            contentEl.style.color = '#4a4a4a';
             contentEl.style.fontSize = card.q.length > 20 ? '24px' : '32px'; 
             
             document.getElementById('fc-hint').innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップしてこたえをみる';
@@ -869,8 +889,8 @@
                 nextBtn.style.boxShadow = "0 4px 0 #388e3c";
             } else {
                 nextBtn.innerText = "つぎへ ▶";
-                nextBtn.style.background = "#00897b";
-                nextBtn.style.boxShadow = "0 4px 0 #00695c";
+                nextBtn.style.background = "#ff9800";
+                nextBtn.style.boxShadow = "0 4px 0 #e68a00";
             }
         }
 
@@ -883,12 +903,12 @@
             
             if(isCardFlipped) {
                 contentEl.innerText = card.q;
-                contentEl.style.color = '#2d3748';
+                contentEl.style.color = '#4a4a4a';
                 contentEl.style.fontSize = card.q.length > 20 ? '24px' : '32px';
                 hintEl.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> タップしてこたえをみる';
             } else {
                 contentEl.innerText = card.a;
-                contentEl.style.color = '#e53e3e';
+                contentEl.style.color = '#f44336';
                 contentEl.style.fontSize = card.a.length > 20 ? '24px' : '32px';
                 hintEl.innerHTML = '<i class="fa-solid fa-rotate-left"></i> タップしてもんだいにもどる';
             }
